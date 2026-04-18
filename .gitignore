@@ -1,0 +1,15 @@
+# bin directory
+bin/
+
+# log files
+*.log
+
+# output of build process
+build/
+output/
+
+# temporary files
+*.tmp
+*.temp
+
+
