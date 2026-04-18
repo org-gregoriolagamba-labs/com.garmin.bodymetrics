@@ -39,7 +39,7 @@ class BodyMetricsDomain {
     }
 
     function defaultProfile() as Dictionary {
-        var garmin = _garminProfile.readProfile();
+        var garmin = _garminProfile.readProfile() as Dictionary;
         return {
             :sex => garmin[:sex] != null ? garmin[:sex] : "male",
             :ageBand => garmin[:ageBand] != null ? garmin[:ageBand] : "40_59",
@@ -49,7 +49,7 @@ class BodyMetricsDomain {
     }
 
     function mergedProfileValues() as Dictionary {
-        var garmin = _garminProfile.readProfile();
+        var garmin = _garminProfile.readProfile() as Dictionary;
         var storedSex = Storage.getValue(PROFILE_SEX_KEY);
         var storedAgeBand = Storage.getValue(PROFILE_AGE_BAND_KEY);
         var storedBodyProfile = Storage.getValue(PROFILE_BODY_PROFILE_KEY);
@@ -159,7 +159,7 @@ class BodyMetricsDomain {
     }
 
     function derivedBmrValueForDraft(draft as Dictionary) {
-        var garmin = _garminProfile.readProfile();
+        var garmin = _garminProfile.readProfile() as Dictionary;
         var weightIsGarmin = garmin[:weightKg] != null;
         var weightIsManual = !weightIsGarmin && draft[:weightKg] != null;
         var heightIsGarmin = garmin[:heightCm] != null;
@@ -233,7 +233,7 @@ class BodyMetricsDomain {
     }
 
     function profileFields() as Array {
-        var garmin = _garminProfile.readProfile();
+        var garmin = _garminProfile.readProfile() as Dictionary;
         return [
             {
                 :key => :sex,
@@ -369,7 +369,7 @@ class BodyMetricsDomain {
         var bodySrc = measurements[:bodyCompSource];
 
         // Source classification helpers
-        var garminData    = _garminProfile.readProfile();
+        var garminData = _garminProfile.readProfile() as Dictionary;
         var weightIsGarmin  = weightSrc != null && weightSrc.equals(SOURCE_GARMIN);
         var weightIsManual  = weightSrc != null && weightSrc.equals(SOURCE_MANUAL);
         var heightIsGarmin  = garminData[:heightCm] != null;

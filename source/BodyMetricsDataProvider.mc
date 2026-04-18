@@ -20,17 +20,18 @@ const SOURCE_MANUAL = "manual";
 //! Garmin UserProfile provides weight; other body comp requires manual entry.
 class BodyMetricsDataProvider {
 
-    var _garminProfile;
+    var _garminProfile as BodyMetricsGarminProfile;
 
     //! @param garminProfile shared BodyMetricsGarminProfile instance
-    function initialize(garminProfile) {
+    function initialize(garminProfile as BodyMetricsGarminProfile) {
         _garminProfile = garminProfile;
     }
 
     //! Load measurements: Garmin weight has priority, body comp from Storage only.
     function loadMeasurements() as Dictionary {
         // Garmin weight has priority over manual entry
-        var garminWeight = _garminProfile.hasWeight() ? _garminProfile.readProfile()[:weightKg] : null;
+        var garmin = _garminProfile.readProfile() as Dictionary;
+        var garminWeight = _garminProfile.hasWeight() ? garmin[:weightKg] : null;
         var storageWeight = Storage.getValue(MEAS_WEIGHT_KEY);
         var weightKg = null;
         var weightSource = null;
@@ -112,7 +113,7 @@ class BodyMetricsDataProvider {
 
     //! Definition of measurement fields for the data entry UI.
     function measurementFields(locale as BodyMetricsLocale) as Array {
-        var garmin = _garminProfile.readProfile();
+        var garmin = _garminProfile.readProfile() as Dictionary;
         var weightReadOnly = garmin[:weightKg] != null;
 
         return [
