@@ -721,6 +721,26 @@ class BodyMetricsDomain {
         return zoneRangeTextTarget(metric, zone, value);
     }
 
+    function idealRangeText(metric as Dictionary) as String {
+        var policy = classificationPolicy(metric);
+
+        if (policy.equals(POLICY_LOW_ONLY)) {
+            return fmtThreshold(metric[:greenMin]) + "-" + fmtThreshold(metric[:greenMax]);
+        }
+
+        if (policy.equals(POLICY_HIGH_ONLY)) {
+            return "<= " + fmtThreshold(metric[:greenMax]);
+        }
+
+        if (policy.equals(POLICY_REFERENCE_ONLY)) {
+            return zoneRangeTextReferenceOnly(metric);
+        }
+
+        var greenMin = thresholdOr(metric, :greenMin, :yellowLowMax);
+        var greenMax = thresholdOr(metric, :greenMax, :yellowHighMin);
+        return fmtThreshold(greenMin) + "-" + fmtThreshold(greenMax);
+    }
+
     function zoneRangeTextTarget(metric as Dictionary, zone as Number, value) as String {
         var greenMin = thresholdOr(metric, :greenMin, :yellowLowMax);
         var greenMax = thresholdOr(metric, :greenMax, :yellowHighMin);
@@ -790,7 +810,7 @@ class BodyMetricsDomain {
     }
 
     function zoneRangeTextReferenceOnly(metric as Dictionary) as String {
-        return "Rif " + fmtThreshold(metric[:referenceValue]) + " (+/-" + metric[:toleranceGoodPct].toString() + "%)";
+        return "Rif " + fmtThreshold(metric[:referenceValue]) + " (+/-" + fmtThreshold(metric[:toleranceGoodPct]) + "%)";
     }
 
     function fmtThreshold(value) as String {

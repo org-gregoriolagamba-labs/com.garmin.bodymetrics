@@ -330,6 +330,7 @@ class BodyMetricsView extends WatchUi.View {
         var metric = _domain.metricAt(_selectedMetric) as Dictionary;
         var zone = _domain.classify(metric);
         var policy = _domain.classificationPolicy(metric);
+        var showIdealRange = zone != ZONE_GREEN;
 
         var hLarge = dc.getFontHeight(Graphics.FONT_LARGE);
         var hXtiny = dc.getFontHeight(Graphics.FONT_XTINY);
@@ -366,12 +367,15 @@ class BodyMetricsView extends WatchUi.View {
         // Zone hint and lower safe area
         var hintY = barY + barH + pad + 2;
         var rangeY = hintY + hXtiny + 2;
+        var idealY = rangeY + hXtiny + 2;
         var bottomSafe = h - pct(h, 10);
-        var overflow = (rangeY + hXtiny) - bottomSafe;
+        var contentBottom = showIdealRange ? (idealY + hXtiny) : (rangeY + hXtiny);
+        var overflow = contentBottom - bottomSafe;
         if (overflow > 0) {
             barY -= overflow;
             hintY -= overflow;
             rangeY -= overflow;
+            idealY -= overflow;
         }
 
         drawDetailZoneBar(dc, barX, barY, barW, barH, metric, zone, policy);
@@ -385,6 +389,13 @@ class BodyMetricsView extends WatchUi.View {
         dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
         dc.drawText(cx, rangeY, Graphics.FONT_XTINY,
             rangeText, Graphics.TEXT_JUSTIFY_CENTER);
+
+        if (showIdealRange) {
+            dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(cx, idealY, Graphics.FONT_XTINY,
+                "Ideale: " + _domain.idealRangeText(metric),
+                Graphics.TEXT_JUSTIFY_CENTER);
+        }
     }
 
     // --- Drawing Helpers ---
