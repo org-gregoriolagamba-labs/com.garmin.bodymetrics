@@ -21,11 +21,13 @@ const PROFILE_HEIGHT_KEY = "bodyMetrics.profile.heightCm";
 class BodyMetricsDomain {
 
     var _metrics;
+    var _locale;
     var _profile as Dictionary;
     var _measurements as Dictionary;
     var _hasStoredProfile as Boolean;
 
     function initialize() {
+        _locale = new BodyMetricsLocale();
         _hasStoredProfile = false;
         _profile = loadProfile();
         _measurements = defaultMeasurements();
@@ -102,21 +104,21 @@ class BodyMetricsDomain {
         return [
             {
                 :key => :sex,
-                :label => "Sesso",
+                :label => _locale.text("field.sex"),
                 :type => "option",
                 :values => ["male", "female"],
-                :labels => ["Uomo", "Donna"]
+                :labels => [_locale.text("option.sex.male"), _locale.text("option.sex.female")]
             },
             {
                 :key => :ageBand,
-                :label => "Fascia eta",
+                :label => _locale.text("field.age_band"),
                 :type => "option",
                 :values => ["18_39", "40_59", "60_plus"],
                 :labels => ["18-39", "40-59", "60+"]
             },
             {
                 :key => :heightCm,
-                :label => "Altezza",
+                :label => _locale.text("field.height"),
                 :type => "number",
                 :min => 150,
                 :max => 210,
@@ -124,10 +126,10 @@ class BodyMetricsDomain {
             },
             {
                 :key => :bodyProfile,
-                :label => "Profilo",
+                :label => _locale.text("field.profile"),
                 :type => "option",
                 :values => ["general", "endurance", "strength"],
-                :labels => ["Generale", "Endurance", "Strength"]
+                :labels => [_locale.text("option.profile.general"), _locale.text("option.profile.endurance"), _locale.text("option.profile.strength")]
             }
         ];
     }
@@ -567,13 +569,34 @@ class BodyMetricsDomain {
         return _metrics.size();
     }
 
+    function text(key as String) as String {
+        return _locale.text(key);
+    }
+
+    function currentLanguage() as String {
+        return _locale.currentLanguage();
+    }
+
+    function setLanguage(language as String) as Void {
+        _locale.setLanguage(language);
+        rebuildMetrics();
+    }
+
+    function supportedLanguages() as Array {
+        return _locale.supportedLanguages();
+    }
+
+    function languageLabel(language as String) as String {
+        return _locale.languageLabel(language);
+    }
+
     function metricAt(index as Number) as Dictionary {
         var metrics = _metrics as Array;
         return metrics[index] as Dictionary;
     }
 
     function metricLabel(index as Number) as String {
-        return metricAt(index)[:label].toString();
+        return _locale.metricLabel(metricAt(index)[:id].toString());
     }
 
     function classify(metric as Dictionary) {
@@ -810,7 +833,7 @@ class BodyMetricsDomain {
     }
 
     function zoneRangeTextReferenceOnly(metric as Dictionary) as String {
-        return "Rif " + fmtThreshold(metric[:referenceValue]) + " (+/-" + fmtThreshold(metric[:toleranceGoodPct]) + "%)";
+        return _locale.text("reference.prefix") + " " + fmtThreshold(metric[:referenceValue]) + " (+/-" + fmtThreshold(metric[:toleranceGoodPct]) + "%)";
     }
 
     function fmtThreshold(value) as String {
@@ -837,59 +860,59 @@ class BodyMetricsDomain {
 
         if (policy.equals(POLICY_LOW_ONLY)) {
             if (zone == ZONE_GREEN) {
-                return "Adeguato";
+                return _locale.text("label.low_only.green");
             }
             if (zone == ZONE_YELLOW) {
-                return "Al limite";
+                return _locale.text("label.low_only.yellow");
             }
             if (zone == ZONE_ORANGE) {
-                return "Basso";
+                return _locale.text("label.low_only.orange");
             }
-            return "Molto basso";
+            return _locale.text("label.low_only.red");
         }
 
         if (policy.equals(POLICY_HIGH_ONLY)) {
             if (zone == ZONE_GREEN) {
-                return "Adeguato";
+                return _locale.text("label.high_only.green");
             }
             if (zone == ZONE_YELLOW) {
-                return "Da monitorare";
+                return _locale.text("label.high_only.yellow");
             }
             if (zone == ZONE_ORANGE) {
-                return "Alto";
+                return _locale.text("label.high_only.orange");
             }
-            return "Molto alto";
+            return _locale.text("label.high_only.red");
         }
 
         if (policy.equals(POLICY_REFERENCE_ONLY)) {
             if (zone == ZONE_GREEN) {
-                return "In linea";
+                return _locale.text("label.reference.green");
             }
             if (value.toFloat() < metric[:referenceValue].toFloat()) {
-                return "Sotto rif.";
+                return _locale.text("label.reference.below");
             }
-            return "Sopra rif.";
+            return _locale.text("label.reference.above");
         }
 
         if (zone == ZONE_GREEN) {
-            return "Ottimale";
+            return _locale.text("label.target.green");
         }
         if (zone == ZONE_YELLOW) {
             if (value < metric[:greenMin]) {
-                return "Legg. basso";
+                return _locale.text("label.target.yellow_low");
             }
-            return "Legg. alto";
+            return _locale.text("label.target.yellow_high");
         }
         if (zone == ZONE_ORANGE) {
             if (value < metric[:greenMin]) {
-                return "Basso";
+                return _locale.text("label.target.orange_low");
             }
-            return "Alto";
+            return _locale.text("label.target.orange_high");
         }
         if (value < metric[:greenMin]) {
-            return "Molto basso";
+            return _locale.text("label.target.red_low");
         }
-        return "Molto alto";
+        return _locale.text("label.target.red_high");
     }
 
     function semanticZoneHint(metric as Dictionary) as String {
@@ -899,56 +922,56 @@ class BodyMetricsDomain {
 
         if (policy.equals(POLICY_LOW_ONLY)) {
             if (zone == ZONE_GREEN) {
-                return "Livello adeguato";
+                return _locale.text("hint.low_only.green");
             }
             if (zone == ZONE_YELLOW) {
-                return "Da consolidare";
+                return _locale.text("hint.low_only.yellow");
             }
             if (zone == ZONE_ORANGE) {
-                return "Sotto soglia";
+                return _locale.text("hint.low_only.orange");
             }
-            return "Recupero prioritario";
+            return _locale.text("hint.low_only.red");
         }
 
         if (policy.equals(POLICY_HIGH_ONLY)) {
             if (zone == ZONE_GREEN) {
-                return "Valore gestito";
+                return _locale.text("hint.high_only.green");
             }
             if (zone == ZONE_YELLOW) {
-                return "Attenzione";
+                return _locale.text("hint.high_only.yellow");
             }
             if (zone == ZONE_ORANGE) {
-                return "Oltre soglia";
+                return _locale.text("hint.high_only.orange");
             }
-            return "Ridurre presto";
+            return _locale.text("hint.high_only.red");
         }
 
         if (policy.equals(POLICY_REFERENCE_ONLY)) {
             if (zone == ZONE_GREEN) {
-                return "Coerente col profilo";
+                return _locale.text("hint.reference.green");
             }
             if (value.toFloat() < metric[:referenceValue].toFloat()) {
-                return "Sotto il riferimento";
+                return _locale.text("hint.reference.below");
             }
-            return "Sopra il riferimento";
+            return _locale.text("hint.reference.above");
         }
 
         if (zone == ZONE_GREEN) {
-            return "Nel range";
+            return _locale.text("hint.target.green");
         }
         if (zone == ZONE_YELLOW) {
             if (value < metric[:greenMin]) {
-                return "Poco basso";
+                return _locale.text("hint.target.yellow_low");
             }
-            return "Poco alto";
+            return _locale.text("hint.target.yellow_high");
         }
         if (zone == ZONE_ORANGE) {
-            return "Fuori range";
+            return _locale.text("hint.target.orange");
         }
         if (value < metric[:greenMin]) {
-            return "Deficit marcato";
+            return _locale.text("hint.target.red_low");
         }
-        return "Eccesso marcato";
+        return _locale.text("hint.target.red_high");
     }
 
     function zoneColor(metric as Dictionary, zone as Number) {

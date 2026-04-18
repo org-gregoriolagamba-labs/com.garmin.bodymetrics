@@ -1,5 +1,4 @@
 import Toybox.Lang;
-import Toybox.System;
 import Toybox.WatchUi;
 
 class BodyMetricsInputDelegate extends WatchUi.BehaviorDelegate {
@@ -27,36 +26,21 @@ class BodyMetricsInputDelegate extends WatchUi.BehaviorDelegate {
     }
 
     function onMenu() as Boolean {
-        System.println("onMenu called");
         if (_view.canOpenMenu()) {
-            var menu = new WatchUi.Menu();
-            menu.setTitle("Menu");
-            menu.addItem("Profilo", :profile);
-            WatchUi.pushView(menu, new BodyMetricsMenuDelegate(_view), WatchUi.SLIDE_UP);
+            var items = [] as Array;
+            if (_view.canEditProfile()) {
+                items.add({:label => _view.text("menu.profile"), :id => :profile});
+            }
+            items.add({:label => _view.languageMenuLabel(), :id => :language});
+            var menuView = new BodyMetricsMenuView(_view.text("menu.title"), items);
+            WatchUi.pushView(menuView, new BodyMetricsCustomMenuDelegate(menuView, _view), WatchUi.SLIDE_UP);
         }
         return true;
     }
 
     function onBack() as Boolean {
-        System.println("onBack called");
-        var result = _view.handleBack();
-        System.println("onBack result=" + result);
-        return result;
+        return _view.handleBack();
     }
 }
 
-class BodyMetricsMenuDelegate extends WatchUi.MenuInputDelegate {
-
-    var _view;
-
-    function initialize(view as BodyMetricsView) {
-        MenuInputDelegate.initialize();
-        _view = view;
-    }
-
-    function onMenuItem(item as Symbol) as Void {
-        if (item == :profile) {
-            _view.openProfileSetup();
-        }
-    }
-}
+// Menu delegates are now in BodyMetricsMenuView.mc

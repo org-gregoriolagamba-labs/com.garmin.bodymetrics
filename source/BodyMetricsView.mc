@@ -1,7 +1,6 @@
 import Toybox.Graphics;
 import Toybox.Lang;
 import Toybox.Math;
-import Toybox.System;
 import Toybox.Timer;
 import Toybox.WatchUi;
 
@@ -18,6 +17,7 @@ class BodyMetricsView extends WatchUi.View {
     var _animTimer;
     var _setupIndex;
     var _profileDraft;
+    var _pendingMenuAction;
     function initialize() {
         View.initialize();
         _mode = MODE_SUMMARY;
@@ -27,6 +27,7 @@ class BodyMetricsView extends WatchUi.View {
         _animTimer = null;
         _setupIndex = 0;
         _profileDraft = _domain.currentProfile();
+        _pendingMenuAction = null;
 
         if (!_domain.hasConfiguredProfile()) {
             enterSetupMode();
@@ -42,10 +43,17 @@ class BodyMetricsView extends WatchUi.View {
         }
         _animTimer = new Timer.Timer();
         _animTimer.start(method(:onAnimTick), 1500, true);
+
+        if (_pendingMenuAction != null) {
+            var pendingAction = _pendingMenuAction;
+            _pendingMenuAction = null;
+            if (pendingAction == :openLanguageMenu) {
+                openLanguageMenu();
+            }
+        }
     }
 
     function onUpdate(dc as Dc) as Void {
-        System.println("onUpdate mode=" + _mode);
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
         dc.clear();
 
@@ -56,11 +64,9 @@ class BodyMetricsView extends WatchUi.View {
         } else {
             drawDetail(dc);
         }
-        System.println("onUpdate done");
     }
 
     function onHide() as Void {
-        System.println("onHide");
         if (_animTimer != null) {
             _animTimer.stop();
             _animTimer = null;
@@ -86,7 +92,75 @@ class BodyMetricsView extends WatchUi.View {
     }
 
     function canOpenMenu() as Boolean {
-        return (_mode == MODE_SUMMARY || _mode == MODE_DETAIL) && _domain.hasConfiguredProfile();
+        return true;
+    }
+
+    function canEditProfile() as Boolean {
+        return _domain.hasConfiguredProfile() && (_mode == MODE_SUMMARY || _mode == MODE_DETAIL);
+    }
+
+    function text(key as String) as String {
+        return _domain.text(key);
+    }
+
+    function currentLanguage() as String {
+        return _domain.currentLanguage();
+    }
+
+    function supportedLanguages() as Array {
+        return _domain.supportedLanguages();
+    }
+
+    function languageLabel(language as String) as String {
+        return _domain.languageLabel(language);
+    }
+
+    function currentLanguageLabel() as String {
+        return languageLabel(currentLanguage());
+    }
+
+    function languageMenuLabel() as String {
+        return text("menu.language") + ": " + currentLanguageLabel();
+    }
+
+    function setLanguage(language as String) as Void {
+        _domain.setLanguage(language);
+        WatchUi.requestUpdate();
+    }
+
+    function queueLanguageMenuOpen() as Void {
+        _pendingMenuAction = :openLanguageMenu;
+    }
+
+    function openLanguageMenu() as Void {
+        var items = [] as Array;
+        var codes = supportedLanguages();
+        for (var i = 0; i < codes.size(); i += 1) {
+            var language = codes[i].toString();
+            items.add({:label => languageOptionLabel(language), :id => languageSymbol(language)});
+        }
+        var menuView = new BodyMetricsMenuView(languageMenuLabel(), items);
+        WatchUi.pushView(menuView, new BodyMetricsCustomLanguageMenuDelegate(menuView, self), WatchUi.SLIDE_UP);
+    }
+
+    function languageOptionLabel(language as String) as String {
+        if (language.equals(currentLanguage())) {
+            return "* " + languageLabel(language);
+        }
+        return languageLabel(language);
+    }
+
+    function languageSymbol(language as String) as Symbol {
+        if (language.equals("en")) {
+            return :lang_en;
+        }
+        if (language.equals("fr")) {
+            return :lang_fr;
+        }
+        if (language.equals("es")) {
+            return :lang_es;
+        }
+        return :lang_it;
     }
 
     function nextMetric() as Void {
@@ -133,7 +207,6 @@ class BodyMetricsView extends WatchUi.View {
     }
 
     function handleBack() as Boolean {
-        System.println("handleBack mode=" + _mode);
         if (_mode == MODE_SETUP) {
             if (_setupIndex > 0) {
                 _setupIndex -= 1;
@@ -141,18 +214,15 @@ class BodyMetricsView extends WatchUi.View {
                 _mode = MODE_SUMMARY;
             }
             WatchUi.requestUpdate();
-            System.println("handleBack setup->true");
             return true;
         }
 
         if (_mode == MODE_DETAIL) {
             _mode = MODE_SUMMARY;
             WatchUi.requestUpdate();
-            System.println("handleBack detail->true");
             return true;
         }
 
-        System.println("handleBack summary->true (stay)");
         return true;
     }
 
@@ -220,7 +290,7 @@ class BodyMetricsView extends WatchUi.View {
         var titleY = dotsY + activeR + gap + 2;
         dc.setColor(0x66CCFF, Graphics.COLOR_TRANSPARENT);
         dc.drawText(cx, titleY, Graphics.FONT_XTINY,
-            _domain.hasConfiguredProfile() ? "Modifica profilo" : "Configura profilo",
+            _domain.hasConfiguredProfile() ? text("setup.edit_profile") : text("setup.configure_profile"),
             Graphics.TEXT_JUSTIFY_CENTER);
 
         // --- Arrows hint (up/down triangles flanking the value) ---
@@ -236,7 +306,7 @@ class BodyMetricsView extends WatchUi.View {
         var footerY = h - pct(h, 16) - hXtiny;
         dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
         dc.drawText(cx, footerY, Graphics.FONT_XTINY,
-            _setupIndex == totalSteps - 1 ? "SELECT  salva" : "SELECT  avanti",
+            _setupIndex == totalSteps - 1 ? text("setup.select_save") : text("setup.select_next"),
             Graphics.TEXT_JUSTIFY_CENTER);
     }
 
@@ -393,7 +463,7 @@ class BodyMetricsView extends WatchUi.View {
         if (showIdealRange) {
             dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
             dc.drawText(cx, idealY, Graphics.FONT_XTINY,
-                "Ideale: " + _domain.idealRangeText(metric),
+                text("detail.ideal") + _domain.idealRangeText(metric),
                 Graphics.TEXT_JUSTIFY_CENTER);
         }
     }
