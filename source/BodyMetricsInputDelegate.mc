@@ -31,6 +31,7 @@ class BodyMetricsInputDelegate extends WatchUi.BehaviorDelegate {
             if (_view.canEditProfile()) {
                 items.add({:label => _view.text("menu.profile"), :id => :profile});
             }
+            items.add({:label => _view.text("menu.data"), :id => :data});
             items.add({:label => _view.languageMenuLabel(), :id => :language});
             var menuView = new BodyMetricsMenuView(_view.text("menu.title"), items);
             WatchUi.pushView(menuView, new BodyMetricsCustomMenuDelegate(menuView, _view), WatchUi.SLIDE_UP);

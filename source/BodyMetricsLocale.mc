@@ -67,6 +67,20 @@ class BodyMetricsLocale {
         if (key.equals("menu.title")) { return "Menu"; }
         if (key.equals("menu.profile")) { return "Profilo"; }
         if (key.equals("menu.language")) { return "Lingua"; }
+        if (key.equals("menu.data")) { return "Inserisci dati"; }
+        if (key.equals("data.title")) { return "Dati corporei"; }
+        if (key.equals("data.select_save")) { return "SELECT  salva"; }
+        if (key.equals("data.select_next")) { return "SELECT  avanti"; }
+        if (key.equals("data.read_only")) { return "Valore calcolato"; }
+        if (key.equals("data.from_garmin")) { return "Da Garmin"; }
+        if (key.equals("data.badge_auto")) { return "C"; }
+        if (key.equals("data.badge_garmin")) { return "G"; }
+        if (key.equals("data.weight")) { return "Peso"; }
+        if (key.equals("data.fat_pct")) { return "Grasso %"; }
+        if (key.equals("data.muscle_pct")) { return "Muscoli %"; }
+        if (key.equals("data.water_pct")) { return "Idratazione %"; }
+        if (key.equals("data.bone_kg")) { return "Massa ossea"; }
+        if (key.equals("data.bmr")) { return "BMR"; }
         if (key.equals("language.it")) { return "Italiano"; }
         if (key.equals("language.en")) { return "English"; }
         if (key.equals("language.fr")) { return "Francais"; }
@@ -79,12 +93,12 @@ class BodyMetricsLocale {
         if (key.equals("field.sex")) { return "Sesso"; }
         if (key.equals("field.age_band")) { return "Fascia eta"; }
         if (key.equals("field.height")) { return "Altezza"; }
-        if (key.equals("field.profile")) { return "Profilo"; }
+        if (key.equals("field.profile")) { return "Profilo allenamento"; }
         if (key.equals("option.sex.male")) { return "Uomo"; }
         if (key.equals("option.sex.female")) { return "Donna"; }
-        if (key.equals("option.profile.general")) { return "Generale"; }
-        if (key.equals("option.profile.endurance")) { return "Endurance"; }
-        if (key.equals("option.profile.strength")) { return "Strength"; }
+        if (key.equals("option.profile.general")) { return "Standard"; }
+        if (key.equals("option.profile.endurance")) { return "Resistenza"; }
+        if (key.equals("option.profile.strength")) { return "Forza"; }
         if (key.equals("metric.bmi")) { return "BMI"; }
         if (key.equals("metric.fat_pct")) { return "Grasso %"; }
         if (key.equals("metric.muscle_kg")) { return "Massa muscolare"; }
@@ -129,6 +143,7 @@ class BodyMetricsLocale {
         if (key.equals("label.target.orange_high")) { return "Alto"; }
         if (key.equals("label.target.red_low")) { return "Molto basso"; }
         if (key.equals("label.target.red_high")) { return "Molto alto"; }
+        if (key.equals("hint.unavailable")) { return "Non disponibile"; }
         return key;
     }
 
@@ -136,22 +151,36 @@ class BodyMetricsLocale {
         if (key.equals("menu.title")) { return "Menu"; }
         if (key.equals("menu.profile")) { return "Profile"; }
         if (key.equals("menu.language")) { return "Language"; }
+        if (key.equals("menu.data")) { return "Enter data"; }
+        if (key.equals("data.title")) { return "Body data"; }
+        if (key.equals("data.select_save")) { return "SELECT  save"; }
+        if (key.equals("data.select_next")) { return "SELECT  next"; }
+        if (key.equals("data.read_only")) { return "Calculated"; }
+        if (key.equals("data.from_garmin")) { return "From Garmin"; }
+        if (key.equals("data.badge_auto")) { return "C"; }
+        if (key.equals("data.badge_garmin")) { return "G"; }
+        if (key.equals("data.weight")) { return "Weight"; }
+        if (key.equals("data.fat_pct")) { return "Body fat %"; }
+        if (key.equals("data.muscle_pct")) { return "Muscle %"; }
+        if (key.equals("data.water_pct")) { return "Hydration %"; }
+        if (key.equals("data.bone_kg")) { return "Bone mass"; }
+        if (key.equals("data.bmr")) { return "BMR"; }
         if (key.equals("language.it")) { return "Italiano"; }
         if (key.equals("language.en")) { return "English"; }
         if (key.equals("language.fr")) { return "Francais"; }
         if (key.equals("language.es")) { return "Espanol"; }
-        if (key.equals("setup.edit_profile")) { return "Edit prof."; }
-        if (key.equals("setup.configure_profile")) { return "Set profile"; }
+        if (key.equals("setup.edit_profile")) { return "Edit profile"; }
+        if (key.equals("setup.configure_profile")) { return "Set up profile"; }
         if (key.equals("setup.select_save")) { return "SELECT  save"; }
         if (key.equals("setup.select_next")) { return "SELECT  next"; }
         if (key.equals("detail.ideal")) { return "Ideal: "; }
         if (key.equals("field.sex")) { return "Sex"; }
         if (key.equals("field.age_band")) { return "Age band"; }
         if (key.equals("field.height")) { return "Height"; }
-        if (key.equals("field.profile")) { return "Profile"; }
+        if (key.equals("field.profile")) { return "Training profile"; }
         if (key.equals("option.sex.male")) { return "Male"; }
         if (key.equals("option.sex.female")) { return "Female"; }
-        if (key.equals("option.profile.general")) { return "General"; }
+        if (key.equals("option.profile.general")) { return "Standard"; }
         if (key.equals("option.profile.endurance")) { return "Endurance"; }
         if (key.equals("option.profile.strength")) { return "Strength"; }
         if (key.equals("metric.bmi")) { return "BMI"; }
@@ -198,6 +227,7 @@ class BodyMetricsLocale {
         if (key.equals("label.target.orange_high")) { return "High"; }
         if (key.equals("label.target.red_low")) { return "Very low"; }
         if (key.equals("label.target.red_high")) { return "Very high"; }
+        if (key.equals("hint.unavailable")) { return "Not available"; }
         return textIt(key);
     }
 
@@ -205,24 +235,38 @@ class BodyMetricsLocale {
         if (key.equals("menu.title")) { return "Menu"; }
         if (key.equals("menu.profile")) { return "Profil"; }
         if (key.equals("menu.language")) { return "Langue"; }
+        if (key.equals("menu.data")) { return "Saisir donnees"; }
+        if (key.equals("data.title")) { return "Donnees corp."; }
+        if (key.equals("data.select_save")) { return "SELECT  sauv."; }
+        if (key.equals("data.select_next")) { return "SELECT  suite"; }
+        if (key.equals("data.read_only")) { return "Valeur calculee"; }
+        if (key.equals("data.from_garmin")) { return "Depuis Garmin"; }
+        if (key.equals("data.badge_auto")) { return "C"; }
+        if (key.equals("data.badge_garmin")) { return "G"; }
+        if (key.equals("data.weight")) { return "Poids"; }
+        if (key.equals("data.fat_pct")) { return "Graisse %"; }
+        if (key.equals("data.muscle_pct")) { return "Muscles %"; }
+        if (key.equals("data.water_pct")) { return "Hydratation %"; }
+        if (key.equals("data.bone_kg")) { return "Masse osseuse"; }
+        if (key.equals("data.bmr")) { return "BMR"; }
         if (key.equals("language.it")) { return "Italiano"; }
         if (key.equals("language.en")) { return "English"; }
         if (key.equals("language.fr")) { return "Francais"; }
         if (key.equals("language.es")) { return "Espanol"; }
-        if (key.equals("setup.edit_profile")) { return "Edit. profil"; }
-        if (key.equals("setup.configure_profile")) { return "Config. profil"; }
+        if (key.equals("setup.edit_profile")) { return "Modifier profil"; }
+        if (key.equals("setup.configure_profile")) { return "Configurer profil"; }
         if (key.equals("setup.select_save")) { return "SELECT  sauv."; }
         if (key.equals("setup.select_next")) { return "SELECT  suite"; }
         if (key.equals("detail.ideal")) { return "Cible: "; }
         if (key.equals("field.sex")) { return "Sexe"; }
         if (key.equals("field.age_band")) { return "Age"; }
         if (key.equals("field.height")) { return "Taille"; }
-        if (key.equals("field.profile")) { return "Profil"; }
+        if (key.equals("field.profile")) { return "Profil d'entrainement"; }
         if (key.equals("option.sex.male")) { return "Homme"; }
         if (key.equals("option.sex.female")) { return "Femme"; }
         if (key.equals("option.profile.general")) { return "Standard"; }
         if (key.equals("option.profile.endurance")) { return "Endurance"; }
-        if (key.equals("option.profile.strength")) { return "Puissance"; }
+        if (key.equals("option.profile.strength")) { return "Force"; }
         if (key.equals("metric.bmi")) { return "IMC"; }
         if (key.equals("metric.fat_pct")) { return "Graisse %"; }
         if (key.equals("metric.muscle_kg")) { return "Masse muscl."; }
@@ -267,6 +311,7 @@ class BodyMetricsLocale {
         if (key.equals("label.target.orange_high")) { return "Haut"; }
         if (key.equals("label.target.red_low")) { return "Tres bas"; }
         if (key.equals("label.target.red_high")) { return "Tres haut"; }
+        if (key.equals("hint.unavailable")) { return "Non disponible"; }
         return textIt(key);
     }
 
@@ -274,22 +319,36 @@ class BodyMetricsLocale {
         if (key.equals("menu.title")) { return "Menu"; }
         if (key.equals("menu.profile")) { return "Perfil"; }
         if (key.equals("menu.language")) { return "Idioma"; }
+        if (key.equals("menu.data")) { return "Ingresar datos"; }
+        if (key.equals("data.title")) { return "Datos corporales"; }
+        if (key.equals("data.select_save")) { return "SELECT  guardar"; }
+        if (key.equals("data.select_next")) { return "SELECT  seguir"; }
+        if (key.equals("data.read_only")) { return "Valor calculado"; }
+        if (key.equals("data.from_garmin")) { return "Desde Garmin"; }
+        if (key.equals("data.badge_auto")) { return "C"; }
+        if (key.equals("data.badge_garmin")) { return "G"; }
+        if (key.equals("data.weight")) { return "Peso"; }
+        if (key.equals("data.fat_pct")) { return "Grasa %"; }
+        if (key.equals("data.muscle_pct")) { return "Musculos %"; }
+        if (key.equals("data.water_pct")) { return "Hidratacion %"; }
+        if (key.equals("data.bone_kg")) { return "Masa osea"; }
+        if (key.equals("data.bmr")) { return "BMR"; }
         if (key.equals("language.it")) { return "Italiano"; }
         if (key.equals("language.en")) { return "English"; }
         if (key.equals("language.fr")) { return "Francais"; }
         if (key.equals("language.es")) { return "Espanol"; }
-        if (key.equals("setup.edit_profile")) { return "Editar perf."; }
-        if (key.equals("setup.configure_profile")) { return "Config. perfil"; }
+        if (key.equals("setup.edit_profile")) { return "Editar perfil"; }
+        if (key.equals("setup.configure_profile")) { return "Configurar perfil"; }
         if (key.equals("setup.select_save")) { return "SELECT  guardar"; }
         if (key.equals("setup.select_next")) { return "SELECT  seguir"; }
         if (key.equals("detail.ideal")) { return "Ideal: "; }
         if (key.equals("field.sex")) { return "Sexo"; }
         if (key.equals("field.age_band")) { return "Edad"; }
         if (key.equals("field.height")) { return "Altura"; }
-        if (key.equals("field.profile")) { return "Perfil"; }
+        if (key.equals("field.profile")) { return "Perfil de entrenamiento"; }
         if (key.equals("option.sex.male")) { return "Hombre"; }
         if (key.equals("option.sex.female")) { return "Mujer"; }
-        if (key.equals("option.profile.general")) { return "Normal"; }
+        if (key.equals("option.profile.general")) { return "Estandar"; }
         if (key.equals("option.profile.endurance")) { return "Resistencia"; }
         if (key.equals("option.profile.strength")) { return "Fuerza"; }
         if (key.equals("metric.bmi")) { return "IMC"; }
@@ -336,6 +395,7 @@ class BodyMetricsLocale {
         if (key.equals("label.target.orange_high")) { return "Alto"; }
         if (key.equals("label.target.red_low")) { return "Muy bajo"; }
         if (key.equals("label.target.red_high")) { return "Muy alto"; }
+        if (key.equals("hint.unavailable")) { return "No disponible"; }
         return textIt(key);
     }
 }

@@ -21,7 +21,8 @@ class BodyMetricsMenuView extends WatchUi.View {
     }
 
     function selectedId() {
-        return _items[_selected][:id];
+        var item = _items[_selected] as Dictionary;
+        return item[:id];
     }
 
     function moveUp() as Void {
@@ -83,7 +84,8 @@ class BodyMetricsMenuView extends WatchUi.View {
         var safeW = pct(w, 70);
         var needsSmallFont = false;
         for (var i = 0; i < _items.size(); i++) {
-            if (dc.getTextWidthInPixels(_items[i][:label].toString(), itemFont) > safeW) {
+            var item = _items[i] as Dictionary;
+            if (dc.getTextWidthInPixels(item[:label].toString(), itemFont) > safeW) {
                 needsSmallFont = true;
                 break;
             }
@@ -101,7 +103,8 @@ class BodyMetricsMenuView extends WatchUi.View {
         // Draw items
         for (var i = 0; i < _items.size(); i++) {
             var iy = itemsStartY + i * (itemH + itemGap);
-            var label = _items[i][:label].toString();
+            var item = _items[i] as Dictionary;
+            var label = item[:label].toString();
 
             if (i == _selected) {
                 // Highlight pill for selected item
@@ -115,12 +118,6 @@ class BodyMetricsMenuView extends WatchUi.View {
 
                 dc.setColor(ACCENT_DIM, ACCENT_DIM);
                 dc.fillRoundedRectangle(pillX, pillY, pillW, pillH, pillR);
-
-                // Selection indicator dot
-                var dotR = pct(w, 1);
-                if (dotR < 3) { dotR = 3; }
-                dc.setColor(ACCENT, Graphics.COLOR_TRANSPARENT);
-                dc.fillCircle(pillX + dotR + pct(w, 2), iy + itemH / 2, dotR);
 
                 dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
             } else {
@@ -170,6 +167,9 @@ class BodyMetricsCustomMenuDelegate extends WatchUi.BehaviorDelegate {
         if (id == :profile) {
             WatchUi.popView(WatchUi.SLIDE_DOWN);
             _view.openProfileSetup();
+        } else if (id == :data) {
+            WatchUi.popView(WatchUi.SLIDE_DOWN);
+            _view.openDataEntry();
         } else if (id == :language) {
             WatchUi.popView(WatchUi.SLIDE_DOWN);
             _view.queueLanguageMenuOpen();

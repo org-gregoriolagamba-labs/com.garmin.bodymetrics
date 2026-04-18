@@ -25,65 +25,208 @@ class BodyMetricsDomain {
     var _profile as Dictionary;
     var _measurements as Dictionary;
     var _hasStoredProfile as Boolean;
+    var _dataProvider;
+    var _garminProfile;
 
     function initialize() {
         _locale = new BodyMetricsLocale();
+        _dataProvider = new BodyMetricsDataProvider();
+        _garminProfile = new BodyMetricsGarminProfile();
         _hasStoredProfile = false;
         _profile = loadProfile();
-        _measurements = defaultMeasurements();
+        _measurements = _dataProvider.loadMeasurements();
         rebuildMetrics();
     }
 
     function defaultProfile() as Dictionary {
+        var garmin = _garminProfile.readProfile();
         return {
-            :sex => "male",
-            :ageBand => "40_59",
+            :sex => garmin[:sex] != null ? garmin[:sex] : "male",
+            :ageBand => garmin[:ageBand] != null ? garmin[:ageBand] : "40_59",
             :bodyProfile => "general",
-            :heightCm => 178
+            :heightCm => garmin[:heightCm] != null ? garmin[:heightCm] : 178
         };
     }
 
-    function defaultMeasurements() as Dictionary {
+    function mergedProfileValues() as Dictionary {
+        var garmin = _garminProfile.readProfile();
+        var storedSex = Storage.getValue(PROFILE_SEX_KEY);
+        var storedAgeBand = Storage.getValue(PROFILE_AGE_BAND_KEY);
+        var storedBodyProfile = Storage.getValue(PROFILE_BODY_PROFILE_KEY);
+        var storedHeightCm = Storage.getValue(PROFILE_HEIGHT_KEY);
+
         return {
-            :weightKg => 89.6,
-            :fatPct => 29.2,
-            :musclePct => 38.61,
-            :waterPct => 51.7,
-            :boneKg => 4.7,
-            :bmr => 1796.0
+            :sex => garmin[:sex] != null ? garmin[:sex] : storedSex,
+            :ageBand => garmin[:ageBand] != null ? garmin[:ageBand] : storedAgeBand,
+            :bodyProfile => storedBodyProfile,
+            :heightCm => garmin[:heightCm] != null ? garmin[:heightCm] : storedHeightCm
         };
+    }
+
+    // --- Data provider access ---
+
+    function hasStoredMeasurements() as Boolean {
+        return _dataProvider.hasStoredMeasurements();
+    }
+
+    function lastUpdateLabel() as String {
+        return _dataProvider.lastUpdateLabel();
+    }
+
+    function lastUpdateDateLabel() as String {
+        return _dataProvider.lastUpdateDateLabel();
+    }
+
+    function measurementFields() as Array {
+        return _dataProvider.measurementFields(_locale);
+    }
+
+    function measurementFieldCount() as Number {
+        return measurementFields().size();
+    }
+
+    function measurementFieldDefinition(index as Number) as Dictionary {
+        return measurementFields()[index] as Dictionary;
+    }
+
+    function currentMeasurements() as Dictionary {
+        var draft = {
+            :weightKg => _measurements[:weightKg] != null ? _measurements[:weightKg] : 75.0,
+            :fatPct => _measurements[:fatPct] != null ? _measurements[:fatPct] : 25.0,
+            :musclePct => _measurements[:musclePct] != null ? _measurements[:musclePct] : 38.0,
+            :waterPct => _measurements[:waterPct] != null ? _measurements[:waterPct] : 55.0,
+            :boneKg => _measurements[:boneKg] != null ? _measurements[:boneKg] : 3.5,
+            :bmr => null
+        };
+        return refreshDerivedMeasurementFields(draft);
+    }
+
+    function cycleMeasurementField(draft as Dictionary, index as Number, delta as Number) as Dictionary {
+        var field = measurementFieldDefinition(index);
+        if (field.hasKey(:readOnly) && field[:readOnly]) {
+            return refreshDerivedMeasurementFields(draft);
+        }
+        var key = field[:key];
+        var current = draft[key].toFloat();
+        var step = field[:step].toFloat();
+        var next = current + (delta * step);
+        if (next < field[:min].toFloat()) {
+            next = field[:max].toFloat();
+        } else if (next > field[:max].toFloat()) {
+            next = field[:min].toFloat();
+        }
+        // Round to avoid floating point drift
+        var decimals = field[:decimals].toNumber();
+        if (decimals == 0) {
+            next = Math.round(next).toFloat();
+        } else if (decimals == 1) {
+            next = Math.round(next * 10.0).toFloat() / 10.0;
+        } else {
+            next = Math.round(next * 100.0).toFloat() / 100.0;
+        }
+        draft[key] = next;
+        return refreshDerivedMeasurementFields(draft);
+    }
+
+    function measurementFieldValueLabel(draft as Dictionary, index as Number) as String {
+        var field = measurementFieldDefinition(index);
+        var key = field[:key];
+        if (draft[key] == null) {
+            return _locale.text("hint.unavailable");
+        }
+        var value = draft[key].toFloat();
+        var decimals = field[:decimals].toNumber();
+        var text;
+        if (decimals == 0) {
+            text = value.toNumber().toString();
+        } else if (decimals == 1) {
+            text = fmt1(value);
+        } else {
+            text = fmt2d(value);
+        }
+        return text + " " + field[:unit].toString();
+    }
+
+    function saveMeasurements(draft as Dictionary) as Void {
+        _dataProvider.saveMeasurements(draft);
+        _measurements = _dataProvider.loadMeasurements();
+        rebuildMetrics();
+    }
+
+    function refreshDerivedMeasurementFields(draft as Dictionary) as Dictionary {
+        draft[:bmr] = derivedBmrValueForDraft(draft);
+        return draft;
+    }
+
+    function derivedBmrValueForDraft(draft as Dictionary) {
+        var garmin = _garminProfile.readProfile();
+        var weightIsGarmin = garmin[:weightKg] != null;
+        var weightIsManual = !weightIsGarmin && draft[:weightKg] != null;
+        var heightIsGarmin = garmin[:heightCm] != null;
+        var heightIsManual = !heightIsGarmin && _profile[:heightCm] != null;
+        var sexIsGarmin = garmin[:sex] != null;
+        var sexIsManual = !sexIsGarmin && _profile[:sex] != null;
+        var ageBandIsGarmin = garmin[:ageBand] != null;
+        var ageBandIsManual = !ageBandIsGarmin && _profile[:ageBand] != null;
+
+        if (draft[:weightKg] == null || _profile[:heightCm] == null ||
+            _profile[:sex] == null || _profile[:ageBand] == null) {
+            return null;
+        }
+
+        if ((weightIsGarmin && heightIsGarmin && sexIsGarmin && ageBandIsGarmin) ||
+            (weightIsManual && heightIsManual && sexIsManual && ageBandIsManual)) {
+            return calculateBmrReference(_profile, draft[:weightKg]).toFloat();
+        }
+
+        return null;
+    }
+
+    function fmt1(v as Float) as String {
+        var scaled = Math.round(v * 10.0).toNumber();
+        var whole = scaled / 10;
+        var frac = scaled - whole * 10;
+        if (frac < 0) { frac = -frac; }
+        return whole.toString() + "." + frac.toString();
+    }
+
+    function fmt2d(v as Float) as String {
+        var scaled = Math.round(v * 100.0).toNumber();
+        var whole = scaled / 100;
+        var frac = scaled - whole * 100;
+        if (frac < 0) { frac = -frac; }
+        if (frac < 10) {
+            return whole.toString() + ".0" + frac.toString();
+        }
+        return whole.toString() + "." + frac.toString();
     }
 
     function loadProfile() as Dictionary {
-        var sex = Storage.getValue(PROFILE_SEX_KEY);
-        var ageBand = Storage.getValue(PROFILE_AGE_BAND_KEY);
-        var bodyProfile = Storage.getValue(PROFILE_BODY_PROFILE_KEY);
-        var heightCm = Storage.getValue(PROFILE_HEIGHT_KEY);
+        var merged = mergedProfileValues();
 
-        if (sex != null && ageBand != null && bodyProfile != null && heightCm != null) {
-            _hasStoredProfile = true;
-            return sanitizeProfile({
-                :sex => sex,
-                :ageBand => ageBand,
-                :bodyProfile => bodyProfile,
-                :heightCm => heightCm
-            });
-        }
-        return defaultProfile();
+        // The body profile is manual-only, just like body composition values.
+        // Garmin can prefill sex, age band and height, but never this field.
+        _hasStoredProfile = Storage.getValue(PROFILE_BODY_PROFILE_KEY) != null;
+
+        return sanitizeProfile(merged);
     }
 
     function sanitizeProfile(profile as Dictionary) as Dictionary {
         var defaults = defaultProfile();
         return {
-            :sex => profile.hasKey(:sex) ? profile[:sex] : defaults[:sex],
-            :ageBand => profile.hasKey(:ageBand) ? profile[:ageBand] : defaults[:ageBand],
-            :bodyProfile => profile.hasKey(:bodyProfile) ? profile[:bodyProfile] : defaults[:bodyProfile],
-            :heightCm => profile.hasKey(:heightCm) ? profile[:heightCm] : defaults[:heightCm]
+            :sex => (profile.hasKey(:sex) && profile[:sex] != null) ? profile[:sex] : defaults[:sex],
+            :ageBand => (profile.hasKey(:ageBand) && profile[:ageBand] != null) ? profile[:ageBand] : defaults[:ageBand],
+            :bodyProfile => (profile.hasKey(:bodyProfile) && profile[:bodyProfile] != null) ? profile[:bodyProfile] : defaults[:bodyProfile],
+            :heightCm => (profile.hasKey(:heightCm) && profile[:heightCm] != null) ? profile[:heightCm] : defaults[:heightCm]
         };
     }
 
     function currentProfile() as Dictionary {
-        return sanitizeProfile(_profile);
+        var current = sanitizeProfile(_profile);
+        if (Storage.getValue(PROFILE_BODY_PROFILE_KEY) == null) {
+            current[:bodyProfile] = null;
+        }
+        return current;
     }
 
     function hasConfiguredProfile() as Boolean {
@@ -101,20 +244,27 @@ class BodyMetricsDomain {
     }
 
     function profileFields() as Array {
+        var garmin = _garminProfile.readProfile();
         return [
             {
                 :key => :sex,
                 :label => _locale.text("field.sex"),
                 :type => "option",
                 :values => ["male", "female"],
-                :labels => [_locale.text("option.sex.male"), _locale.text("option.sex.female")]
+                :labels => [_locale.text("option.sex.male"), _locale.text("option.sex.female")],
+                :readOnly => garmin[:sex] != null,
+                :readOnlyText => _locale.text("data.from_garmin"),
+                :badgeText => _locale.text("data.badge_garmin")
             },
             {
                 :key => :ageBand,
                 :label => _locale.text("field.age_band"),
                 :type => "option",
                 :values => ["18_39", "40_59", "60_plus"],
-                :labels => ["18-39", "40-59", "60+"]
+                :labels => ["18-39", "40-59", "60+"],
+                :readOnly => garmin[:ageBand] != null,
+                :readOnlyText => _locale.text("data.from_garmin"),
+                :badgeText => _locale.text("data.badge_garmin")
             },
             {
                 :key => :heightCm,
@@ -122,7 +272,10 @@ class BodyMetricsDomain {
                 :type => "number",
                 :min => 150,
                 :max => 210,
-                :step => 1
+                :step => 1,
+                :readOnly => garmin[:heightCm] != null,
+                :readOnlyText => _locale.text("data.from_garmin"),
+                :badgeText => _locale.text("data.badge_garmin")
             },
             {
                 :key => :bodyProfile,
@@ -145,7 +298,14 @@ class BodyMetricsDomain {
     function cycleProfileField(profile as Dictionary, index as Number, delta as Number) as Dictionary {
         var nextProfile = sanitizeProfile(profile);
         var field = profileFieldDefinition(index);
+        if (field.hasKey(:readOnly) && field[:readOnly]) {
+            return nextProfile;
+        }
         var key = field[:key];
+
+        if (key == :bodyProfile && (!profile.hasKey(:bodyProfile) || profile[:bodyProfile] == null)) {
+            nextProfile[:bodyProfile] = null;
+        }
 
         if (field[:type].equals("number")) {
             var nextValue = nextProfile[:heightCm].toNumber() + (delta * field[:step].toNumber());
@@ -159,9 +319,9 @@ class BodyMetricsDomain {
         }
 
         var values = field[:values] as Array;
-        var currentIndex = 0;
+        var currentIndex = (key == :bodyProfile && nextProfile[key] == null) ? -1 : 0;
         for (var i = 0; i < values.size(); i += 1) {
-            if (values[i].equals(nextProfile[key])) {
+            if (nextProfile[key] != null && values[i].equals(nextProfile[key])) {
                 currentIndex = i;
                 break;
             }
@@ -182,6 +342,10 @@ class BodyMetricsDomain {
         var safeProfile = sanitizeProfile(profile);
         var field = profileFieldDefinition(index);
         var key = field[:key];
+
+        if (key == :bodyProfile && (!profile.hasKey(:bodyProfile) || profile[:bodyProfile] == null)) {
+            return "N/A";
+        }
 
         if (field[:type].equals("number")) {
             return safeProfile[key].toString() + " cm";
@@ -212,63 +376,209 @@ class BodyMetricsDomain {
         var boneBand = boneKgRange(profile);
         var weightRange = weightTargetRange(profile, bmiRange);
 
-        metrics.add(buildTargetMetric(
-            "bmi", "BMI", "kg/m2", calculateBmi(measurements[:weightKg], profile[:heightCm]),
-            bmiRange[:greenMin], bmiRange[:greenMax],
-            bmiRange[:yellowLowMin], bmiRange[:yellowLowMax],
-            bmiRange[:yellowHighMin], bmiRange[:yellowHighMax],
-            bmiRange[:orangeLowMin], bmiRange[:orangeLowMax],
-            bmiRange[:orangeHighMin], bmiRange[:orangeHighMax]
-        ));
+        var weightSrc = measurements[:weightSource];
+        var bodySrc = measurements[:bodyCompSource];
 
-        metrics.add(buildTargetMetric(
-            "fat_pct", "Grasso %", "%", measurements[:fatPct],
-            fatRange[:greenMin], fatRange[:greenMax],
-            fatRange[:yellowLowMin], fatRange[:yellowLowMax],
-            fatRange[:yellowHighMin], fatRange[:yellowHighMax],
-            fatRange[:orangeLowMin], fatRange[:orangeLowMax],
-            fatRange[:orangeHighMin], fatRange[:orangeHighMax]
-        ));
+        // Source classification helpers
+        var garminData    = _garminProfile.readProfile();
+        var weightIsGarmin  = weightSrc != null && weightSrc.equals(SOURCE_GARMIN);
+        var weightIsManual  = weightSrc != null && weightSrc.equals(SOURCE_MANUAL);
+        var heightIsGarmin  = garminData[:heightCm] != null;
+        var heightIsManual  = !heightIsGarmin && profile[:heightCm] != null;
+        var sexIsGarmin     = garminData[:sex] != null;
+        var sexIsManual     = !sexIsGarmin && profile[:sex] != null;
+        var ageBandIsGarmin = garminData[:ageBand] != null;
+        var ageBandIsManual = !ageBandIsGarmin && profile[:ageBand] != null;
 
-        metrics.add(buildLowOnlyMetric(
-            "muscle_kg", "Massa muscolare", "kg", muscleKgFromMeasurements(measurements),
-            muscleKgBand[:greenMin], muscleKgBand[:greenMax],
-            muscleKgBand[:yellowMin], muscleKgBand[:orangeMin]
-        ));
+        // BMI - requires weight + height from the SAME source (CG or CM); mixed → N/A
+        if (measurements[:weightKg] != null && profile[:heightCm] != null) {
+            var bmiSrc = null;
+            if (weightIsGarmin && heightIsGarmin)   { bmiSrc = SOURCE_CALC_GARMIN; }
+            else if (weightIsManual && heightIsManual) { bmiSrc = SOURCE_CALC_MANUAL; }
+            if (bmiSrc != null) {
+                var m = buildTargetMetric(
+                    "bmi", "BMI", "kg/m2", calculateBmi(measurements[:weightKg], profile[:heightCm]),
+                    bmiRange[:greenMin], bmiRange[:greenMax],
+                    bmiRange[:yellowLowMin], bmiRange[:yellowLowMax],
+                    bmiRange[:yellowHighMin], bmiRange[:yellowHighMax],
+                    bmiRange[:orangeLowMin], bmiRange[:orangeLowMax],
+                    bmiRange[:orangeHighMin], bmiRange[:orangeHighMax]
+                );
+                m[:available] = true;
+                m[:source] = bmiSrc;
+                metrics.add(m);
+            } else {
+                metrics.add(unavailableMetric("bmi", "BMI", "kg/m2"));
+            }
+        } else {
+            metrics.add(unavailableMetric("bmi", "BMI", "kg/m2"));
+        }
 
-        metrics.add(buildLowOnlyMetric(
-            "muscle_pct", "Muscoli %", "%", measurements[:musclePct],
-            musclePctBand[:greenMin], musclePctBand[:greenMax],
-            musclePctBand[:yellowMin], musclePctBand[:orangeMin]
-        ));
+        // Fat% - requires fatPct
+        if (measurements[:fatPct] != null) {
+            var m = buildTargetMetric(
+                "fat_pct", "Grasso %", "%", measurements[:fatPct],
+                fatRange[:greenMin], fatRange[:greenMax],
+                fatRange[:yellowLowMin], fatRange[:yellowLowMax],
+                fatRange[:yellowHighMin], fatRange[:yellowHighMax],
+                fatRange[:orangeLowMin], fatRange[:orangeLowMax],
+                fatRange[:orangeHighMin], fatRange[:orangeHighMax]
+            );
+            m[:available] = true;
+            m[:source] = bodySrc;
+            metrics.add(m);
+        } else {
+            metrics.add(unavailableMetric("fat_pct", "Grasso %", "%"));
+        }
 
-        metrics.add(buildLowOnlyMetric(
-            "water_pct", "Idratazione", "%", measurements[:waterPct],
-            waterBand[:greenMin], waterBand[:greenMax],
-            waterBand[:yellowMin], waterBand[:orangeMin]
-        ));
+        // Muscle kg - requires weight AND musclePct
+        if (measurements[:weightKg] != null && measurements[:musclePct] != null) {
+            var m = buildLowOnlyMetric(
+                "muscle_kg", "Massa muscolare", "kg", muscleKgFromMeasurements(measurements),
+                muscleKgBand[:greenMin], muscleKgBand[:greenMax],
+                muscleKgBand[:yellowMin], muscleKgBand[:orangeMin]
+            );
+            m[:available] = true;
+            m[:source] = bodySrc;
+            metrics.add(m);
+        } else {
+            metrics.add(unavailableMetric("muscle_kg", "Massa muscolare", "kg"));
+        }
 
-        metrics.add(buildLowOnlyMetric(
-            "bone_kg", "Massa ossea", "kg", measurements[:boneKg],
-            boneBand[:greenMin], boneBand[:greenMax],
-            boneBand[:yellowMin], boneBand[:orangeMin]
-        ));
+        // Muscle% - requires musclePct
+        if (measurements[:musclePct] != null) {
+            var m = buildLowOnlyMetric(
+                "muscle_pct", "Muscoli %", "%", measurements[:musclePct],
+                musclePctBand[:greenMin], musclePctBand[:greenMax],
+                musclePctBand[:yellowMin], musclePctBand[:orangeMin]
+            );
+            m[:available] = true;
+            m[:source] = bodySrc;
+            metrics.add(m);
+        } else {
+            metrics.add(unavailableMetric("muscle_pct", "Muscoli %", "%"));
+        }
 
-        metrics.add(buildTargetMetric(
-            "weight", "Peso", "kg", measurements[:weightKg],
-            weightRange[:greenMin], weightRange[:greenMax],
-            weightRange[:yellowLowMin], weightRange[:yellowLowMax],
-            weightRange[:yellowHighMin], weightRange[:yellowHighMax],
-            weightRange[:orangeLowMin], weightRange[:orangeLowMax],
-            weightRange[:orangeHighMin], weightRange[:orangeHighMax]
-        ));
+        // Water% - requires waterPct
+        if (measurements[:waterPct] != null) {
+            var m = buildLowOnlyMetric(
+                "water_pct", "Idratazione", "%", measurements[:waterPct],
+                waterBand[:greenMin], waterBand[:greenMax],
+                waterBand[:yellowMin], waterBand[:orangeMin]
+            );
+            m[:available] = true;
+            m[:source] = bodySrc;
+            metrics.add(m);
+        } else {
+            metrics.add(unavailableMetric("water_pct", "Idratazione", "%"));
+        }
 
-        metrics.add(buildReferenceMetric(
-            "bmr", "BMR", "kcal", measurements[:bmr],
-            calculateBmrReference(profile, measurements[:weightKg]), 5.0, 10.0
-        ));
+        // Bone kg - requires boneKg
+        if (measurements[:boneKg] != null) {
+            var m = buildLowOnlyMetric(
+                "bone_kg", "Massa ossea", "kg", measurements[:boneKg],
+                boneBand[:greenMin], boneBand[:greenMax],
+                boneBand[:yellowMin], boneBand[:orangeMin]
+            );
+            m[:available] = true;
+            m[:source] = bodySrc;
+            metrics.add(m);
+        } else {
+            metrics.add(unavailableMetric("bone_kg", "Massa ossea", "kg"));
+        }
+
+        // Weight - requires weightKg
+        if (measurements[:weightKg] != null) {
+            var m = buildTargetMetric(
+                "weight", "Peso", "kg", measurements[:weightKg],
+                weightRange[:greenMin], weightRange[:greenMax],
+                weightRange[:yellowLowMin], weightRange[:yellowLowMax],
+                weightRange[:yellowHighMin], weightRange[:yellowHighMax],
+                weightRange[:orangeLowMin], weightRange[:orangeLowMax],
+                weightRange[:orangeHighMin], weightRange[:orangeHighMax]
+            );
+            m[:available] = true;
+            m[:source] = weightSrc;
+            metrics.add(m);
+        } else {
+            metrics.add(unavailableMetric("weight", "Peso", "kg"));
+        }
+
+        // BMR - Mifflin-St Jeor: requires weight + height + sex + ageBand.
+        // CG if ALL four inputs from Garmin; CM if ALL four from manual; N/A if mixed.
+        if (measurements[:weightKg] != null && profile[:heightCm] != null &&
+            profile[:sex] != null && profile[:ageBand] != null) {
+            var bmrSrc = null;
+            if (weightIsGarmin && heightIsGarmin && sexIsGarmin && ageBandIsGarmin) {
+                bmrSrc = SOURCE_CALC_GARMIN;
+            } else if (weightIsManual && heightIsManual && sexIsManual && ageBandIsManual) {
+                bmrSrc = SOURCE_CALC_MANUAL;
+            }
+            if (bmrSrc != null) {
+                var calculatedBmr = calculateBmrReference(profile, measurements[:weightKg]).toFloat();
+                var m = buildReferenceMetric(
+                    "bmr", "BMR", "kcal", calculatedBmr,
+                    calculatedBmr, 5.0, 10.0
+                );
+                m[:available] = true;
+                m[:source] = bmrSrc;
+                metrics.add(m);
+            } else {
+                metrics.add(unavailableMetric("bmr", "BMR", "kcal"));
+            }
+        } else {
+            metrics.add(unavailableMetric("bmr", "BMR", "kcal"));
+        }
 
         return metrics;
+    }
+
+    function unavailableMetric(id as String, label as String, unit as String) as Dictionary {
+        return {
+            :id => id,
+            :label => label,
+            :unit => unit,
+            :available => false,
+            :value => 0,
+            :source => null,
+            :policy => POLICY_TARGET_RANGE,
+            :greenMin => 0,
+            :greenMax => 0
+        };
+    }
+
+    function metricSourceLabel(index as Number) as String {
+        var metric = metricAt(index);
+        if (!metric[:available] || metric[:source] == null) {
+            return "";
+        }
+        if (metric[:source].toString().equals(SOURCE_GARMIN)) {
+            return " (G)";
+        }
+        if (metric[:source].toString().equals(SOURCE_CALC_GARMIN)) {
+            return " (CG)";
+        }
+        if (metric[:source].toString().equals(SOURCE_CALC_MANUAL)) {
+            return " (CM)";
+        }
+        return " (M)";
+    }
+
+    function metricSourceBadgeText(index as Number) as String {
+        var metric = metricAt(index);
+        if (!metric[:available] || metric[:source] == null) {
+            return "";
+        }
+        if (metric[:source].toString().equals(SOURCE_GARMIN)) {
+            return "G";
+        }
+        if (metric[:source].toString().equals(SOURCE_CALC_GARMIN)) {
+            return "CG";
+        }
+        if (metric[:source].toString().equals(SOURCE_CALC_MANUAL)) {
+            return "CM";
+        }
+        return "M";
     }
 
     function buildTargetMetric(id as String, label as String, unit as String, value, greenMin, greenMax,
@@ -600,6 +910,9 @@ class BodyMetricsDomain {
     }
 
     function classify(metric as Dictionary) {
+        if (metric.hasKey(:available) && !metric[:available]) {
+            return ZONE_GREEN;
+        }
         var value = metric[:value];
         var policy = classificationPolicy(metric);
 

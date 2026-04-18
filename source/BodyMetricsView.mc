@@ -9,6 +9,7 @@ class BodyMetricsView extends WatchUi.View {
     const MODE_SUMMARY = 0;
     const MODE_DETAIL = 1;
     const MODE_SETUP = 2;
+    const MODE_DATA = 3;
 
     var _mode;
     var _selectedMetric;
@@ -18,6 +19,8 @@ class BodyMetricsView extends WatchUi.View {
     var _setupIndex;
     var _profileDraft;
     var _pendingMenuAction;
+    var _dataIndex;
+    var _dataDraft;
     function initialize() {
         View.initialize();
         _mode = MODE_SUMMARY;
@@ -28,6 +31,8 @@ class BodyMetricsView extends WatchUi.View {
         _setupIndex = 0;
         _profileDraft = _domain.currentProfile();
         _pendingMenuAction = null;
+        _dataIndex = 0;
+        _dataDraft = _domain.currentMeasurements();
 
         if (!_domain.hasConfiguredProfile()) {
             enterSetupMode();
@@ -59,6 +64,8 @@ class BodyMetricsView extends WatchUi.View {
 
         if (_mode == MODE_SETUP) {
             drawSetup(dc);
+        } else if (_mode == MODE_DATA) {
+            drawDataEntry(dc);
         } else if (_mode == MODE_SUMMARY) {
             drawSummary(dc);
         } else {
@@ -88,6 +95,13 @@ class BodyMetricsView extends WatchUi.View {
 
     function openProfileSetup() as Void {
         enterSetupMode();
+        WatchUi.requestUpdate();
+    }
+
+    function openDataEntry() as Void {
+        _dataDraft = _domain.currentMeasurements();
+        _dataIndex = 0;
+        _mode = MODE_DATA;
         WatchUi.requestUpdate();
     }
 
@@ -165,7 +179,12 @@ class BodyMetricsView extends WatchUi.View {
 
     function nextMetric() as Void {
         if (_mode == MODE_SETUP) {
-            _profileDraft = _domain.cycleProfileField(_profileDraft, _setupIndex, 1);
+            _profileDraft = _domain.cycleProfileField(_profileDraft, _setupIndex, -1);
+            WatchUi.requestUpdate();
+            return;
+        }
+        if (_mode == MODE_DATA) {
+            _dataDraft = _domain.cycleMeasurementField(_dataDraft, _dataIndex, -1);
             WatchUi.requestUpdate();
             return;
         }
@@ -176,7 +195,12 @@ class BodyMetricsView extends WatchUi.View {
 
     function previousMetric() as Void {
         if (_mode == MODE_SETUP) {
-            _profileDraft = _domain.cycleProfileField(_profileDraft, _setupIndex, -1);
+            _profileDraft = _domain.cycleProfileField(_profileDraft, _setupIndex, 1);
+            WatchUi.requestUpdate();
+            return;
+        }
+        if (_mode == MODE_DATA) {
+            _dataDraft = _domain.cycleMeasurementField(_dataDraft, _dataIndex, 1);
             WatchUi.requestUpdate();
             return;
         }
@@ -198,6 +222,18 @@ class BodyMetricsView extends WatchUi.View {
             return;
         }
 
+        if (_mode == MODE_DATA) {
+            if (_dataIndex < _domain.measurementFieldCount() - 1) {
+                _dataIndex += 1;
+            } else {
+                _domain.saveMeasurements(_dataDraft);
+                _mode = MODE_SUMMARY;
+                _selectedMetric = 0;
+            }
+            WatchUi.requestUpdate();
+            return;
+        }
+
         if (_mode == MODE_SUMMARY) {
             _mode = MODE_DETAIL;
         } else {
@@ -211,6 +247,16 @@ class BodyMetricsView extends WatchUi.View {
             if (_setupIndex > 0) {
                 _setupIndex -= 1;
             } else if (_domain.hasConfiguredProfile()) {
+                _mode = MODE_SUMMARY;
+            }
+            WatchUi.requestUpdate();
+            return true;
+        }
+
+        if (_mode == MODE_DATA) {
+            if (_dataIndex > 0) {
+                _dataIndex -= 1;
+            } else {
                 _mode = MODE_SUMMARY;
             }
             WatchUi.requestUpdate();
@@ -240,19 +286,27 @@ class BodyMetricsView extends WatchUi.View {
         var hMedium = dc.getFontHeight(Graphics.FONT_MEDIUM);
         var gap = pct(h, 2);
 
-        // --- Central content block: label + value, centered vertically ---
-        var centralH = hTiny + gap + hMedium;
+        var isReadOnly = field.hasKey(:readOnly) && field[:readOnly];
+        var badgeSpace = isReadOnly ? (hXtiny + gap) : 0;
+
+        // --- Central content block: label + optional badge + value, centered vertically ---
+        var centralH = hTiny + gap + badgeSpace + hMedium;
         var labelY = cy - centralH / 2;
-        var valueY = labelY + hTiny + gap;
+        var badgeY = labelY + hTiny + 2;
+        var valueY = labelY + hTiny + gap + badgeSpace;
 
         // Field label
-        dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
+        dc.setColor(isReadOnly ? 0x66CCFF : Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
         dc.drawText(cx, labelY, Graphics.FONT_TINY,
             field[:label].toString(),
             Graphics.TEXT_JUSTIFY_CENTER);
 
-        // Field value (large, white, prominent)
-        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+        if (isReadOnly && field.hasKey(:badgeText)) {
+            drawReadOnlyBadge(dc, cx, badgeY, field[:badgeText].toString());
+        }
+
+        // Field value
+        dc.setColor(isReadOnly ? 0x66CCFF : Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
         var valueText = _domain.profileFieldValueLabel(_profileDraft, _setupIndex);
         var valueFont = Graphics.FONT_MEDIUM;
         var safeW = pct(w, 65);
@@ -294,20 +348,179 @@ class BodyMetricsView extends WatchUi.View {
             Graphics.TEXT_JUSTIFY_CENTER);
 
         // --- Arrows hint (up/down triangles flanking the value) ---
-        var arrowY = valueY + dc.getFontHeight(valueFont) / 2;
-        var arrowX = pct(w, 12);
-        dc.setColor(0x66CCFF, Graphics.COLOR_TRANSPARENT);
-        // Up arrow (left side)
-        drawTriangle(dc, arrowX, arrowY, pct(w, 2), true);
-        // Down arrow (right side)
-        drawTriangle(dc, w - arrowX, arrowY, pct(w, 2), false);
+        if (!isReadOnly) {
+            var arrowY = valueY + dc.getFontHeight(valueFont) / 2;
+            var arrowX = pct(w, 12);
+            dc.setColor(0x66CCFF, Graphics.COLOR_TRANSPARENT);
+            drawTriangle(dc, arrowX, arrowY, pct(w, 2), true);
+            drawTriangle(dc, w - arrowX, arrowY, pct(w, 2), false);
+        }
 
         // --- Bottom: action hint ---
         var footerY = h - pct(h, 16) - hXtiny;
         dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
         dc.drawText(cx, footerY, Graphics.FONT_XTINY,
-            _setupIndex == totalSteps - 1 ? text("setup.select_save") : text("setup.select_next"),
+            isReadOnly ? field[:readOnlyText].toString() : (_setupIndex == totalSteps - 1 ? text("setup.select_save") : text("setup.select_next")),
             Graphics.TEXT_JUSTIFY_CENTER);
+    }
+
+    function drawDataEntry(dc as Dc) as Void {
+        var w = dc.getWidth();
+        var h = dc.getHeight();
+        var cx = w / 2;
+        var cy = h / 2;
+        var field = _domain.measurementFieldDefinition(_dataIndex) as Dictionary;
+        var totalSteps = _domain.measurementFieldCount();
+
+        var hXtiny = dc.getFontHeight(Graphics.FONT_XTINY);
+        var hTiny = dc.getFontHeight(Graphics.FONT_TINY);
+        var hMedium = dc.getFontHeight(Graphics.FONT_MEDIUM);
+        var gap = pct(h, 2);
+
+        var isReadOnly = field.hasKey(:readOnly) && field[:readOnly];
+        var badgeSpace = isReadOnly ? (hXtiny + gap) : 0;
+
+        // Central content: label + optional badge + value
+        var centralH = hTiny + gap + badgeSpace + hMedium;
+        var labelY = cy - centralH / 2;
+        var badgeY = labelY + hTiny + 2;
+        var valueY = labelY + hTiny + gap + badgeSpace;
+
+        // Field label
+        dc.setColor(isReadOnly ? 0x66CCFF : Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(cx, labelY, Graphics.FONT_TINY,
+            field[:label].toString(),
+            Graphics.TEXT_JUSTIFY_CENTER);
+
+        if (isReadOnly && field.hasKey(:badgeText)) {
+            drawReadOnlyBadge(dc, cx, badgeY, field[:badgeText].toString());
+        }
+
+        // Field value
+        dc.setColor(isReadOnly ? 0x66CCFF : Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+        var valueText = _domain.measurementFieldValueLabel(_dataDraft, _dataIndex);
+        var valueFont = Graphics.FONT_MEDIUM;
+        var safeW = pct(w, 65);
+        if (dc.getTextWidthInPixels(valueText, valueFont) > safeW) {
+            valueFont = Graphics.FONT_SMALL;
+        }
+        dc.drawText(cx, valueY, valueFont, valueText,
+            Graphics.TEXT_JUSTIFY_CENTER);
+
+        // Progress dots
+        var dotsY = pct(h, 16);
+        var dotSpacing = pct(w, 5);
+        if (dotSpacing < 14) { dotSpacing = 14; }
+        var activeR = pct(w, 1);
+        if (activeR < 4) { activeR = 4; }
+        var inactiveR = activeR - 1;
+        if (inactiveR < 2) { inactiveR = 2; }
+        var dotsStartX = cx - ((totalSteps - 1) * dotSpacing) / 2;
+
+        for (var i = 0; i < totalSteps; i++) {
+            var dotX = dotsStartX + i * dotSpacing;
+            if (i < _dataIndex) {
+                dc.setColor(0x66CCFF, Graphics.COLOR_TRANSPARENT);
+                dc.fillCircle(dotX, dotsY, activeR);
+            } else if (i == _dataIndex) {
+                dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+                dc.fillCircle(dotX, dotsY, activeR);
+            } else {
+                dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
+                dc.fillCircle(dotX, dotsY, inactiveR);
+            }
+        }
+
+        // Title below dots
+        var titleY = dotsY + activeR + gap + 2;
+        dc.setColor(0x66CCFF, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(cx, titleY, Graphics.FONT_XTINY,
+            text("data.title"),
+            Graphics.TEXT_JUSTIFY_CENTER);
+
+        // Arrows for editable fields only
+        if (!isReadOnly) {
+            var arrowY = valueY + dc.getFontHeight(valueFont) / 2;
+            var arrowX = pct(w, 12);
+            dc.setColor(0x66CCFF, Graphics.COLOR_TRANSPARENT);
+            drawTriangle(dc, arrowX, arrowY, pct(w, 2), true);
+            drawTriangle(dc, w - arrowX, arrowY, pct(w, 2), false);
+        }
+
+        // Footer hint
+        var footerY = h - pct(h, 16) - hXtiny;
+        dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(cx, footerY, Graphics.FONT_XTINY,
+            isReadOnly ? field[:readOnlyText].toString() : (_dataIndex == totalSteps - 1 ? text("data.select_save") : text("data.select_next")),
+            Graphics.TEXT_JUSTIFY_CENTER);
+    }
+
+    function manualDateText(metric as Dictionary) as String {
+        if (!metric[:available] || metric[:source] == null) {
+            return "";
+        }
+        if (metric[:source].toString().equals(SOURCE_MANUAL)) {
+            return _domain.lastUpdateDateLabel();
+        }
+        return "";
+    }
+
+    //! Draws source badge (and optional date for manual) centered at cx, y.
+    //! Returns the total height consumed by the subtitle row.
+    function drawSourceSubtitle(dc as Dc, cx as Number, y as Number, badgeText as String, dateText as String) as Number {
+        var font = Graphics.FONT_XTINY;
+        var padX = 4;
+        var padY = 1;
+        var badgeTextW = dc.getTextWidthInPixels(badgeText, font);
+        var badgeW = badgeTextW + (padX * 2);
+        var badgeH = dc.getFontHeight(font) + (padY * 2);
+
+        if (dateText.equals("")) {
+            // Badge only, centered
+            var bx = cx - (badgeW / 2);
+            dc.setColor(0x335C99, Graphics.COLOR_TRANSPARENT);
+            dc.fillRectangle(bx, y, badgeW, badgeH);
+            dc.setColor(0x66CCFF, Graphics.COLOR_TRANSPARENT);
+            dc.drawRectangle(bx, y, badgeW, badgeH);
+            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(cx, y + padY, font, badgeText, Graphics.TEXT_JUSTIFY_CENTER);
+        } else {
+            // Badge + date, centered together
+            var gap = 4;
+            var dateW = dc.getTextWidthInPixels(dateText, font);
+            var totalW = badgeW + gap + dateW;
+            var startX = cx - (totalW / 2);
+
+            // Badge
+            dc.setColor(0x335C99, Graphics.COLOR_TRANSPARENT);
+            dc.fillRectangle(startX, y, badgeW, badgeH);
+            dc.setColor(0x66CCFF, Graphics.COLOR_TRANSPARENT);
+            dc.drawRectangle(startX, y, badgeW, badgeH);
+            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(startX + badgeW / 2, y + padY, font, badgeText, Graphics.TEXT_JUSTIFY_CENTER);
+
+            // Date text
+            dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(startX + badgeW + gap, y + padY, font, dateText, Graphics.TEXT_JUSTIFY_LEFT);
+        }
+        return badgeH;
+    }
+
+    function drawReadOnlyBadge(dc as Dc, cx as Number, y as Number, textValue as String) as Void {
+        var font = Graphics.FONT_XTINY;
+        var textW = dc.getTextWidthInPixels(textValue, font);
+        var padX = 6;
+        var padY = 1;
+        var badgeW = textW + (padX * 2);
+        var badgeH = dc.getFontHeight(font) + (padY * 2);
+        var x = cx - (badgeW / 2);
+
+        dc.setColor(0x335C99, Graphics.COLOR_TRANSPARENT);
+        dc.fillRectangle(x, y, badgeW, badgeH);
+        dc.setColor(0x66CCFF, Graphics.COLOR_TRANSPARENT);
+        dc.drawRectangle(x, y, badgeW, badgeH);
+        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(cx, y + padY, font, textValue, Graphics.TEXT_JUSTIFY_CENTER);
     }
 
     function drawTriangle(dc as Dc, cx as Number, cy as Number, size as Number, pointUp as Boolean) as Void {
@@ -328,61 +541,97 @@ class BodyMetricsView extends WatchUi.View {
         var cx = w / 2;
         var cy = h / 2;
         var metric = _domain.metricAt(_selectedMetric) as Dictionary;
-        var zone = _domain.classify(metric);
+        var available = metric[:available];
+        var zone = available ? _domain.classify(metric) : ZONE_GREEN;
 
         var policy = _domain.classificationPolicy(metric);
 
         // Zone arc at perimeter
-        drawZoneArc(dc, cx, cy, cx - pct(w, 2), metric, zone, policy);
+        if (available) {
+            drawZoneArc(dc, cx, cy, cx - pct(w, 2), metric, zone, policy);
+        }
 
         // Font heights for flow layout
-        var hTiny = dc.getFontHeight(Graphics.FONT_TINY);
         var hNumMild = dc.getFontHeight(Graphics.FONT_NUMBER_MILD);
         var hXtiny = dc.getFontHeight(Graphics.FONT_XTINY);
-        var pad = pct(h, 2);
+        var pad = pct(h, 1);
+        if (pad < 2) { pad = 2; }
 
-        // Metric label (auto-shrink if too wide)
-        var labelY = pct(h, 17);
+        // Safe zones
+        var topSafe = pct(h, 15);
+        var bottomSafe = h - pct(h, 8);
+
+        // Source badge subtitle info
+        var badgeText = _domain.metricSourceBadgeText(_selectedMetric);
+        var dateText = manualDateText(metric);
+        var hasSubtitle = !badgeText.equals("");
+
+        // Metric label font (auto-shrink if too wide)
         var labelText = _domain.metricLabel(_selectedMetric);
         var labelFont = Graphics.FONT_TINY;
         var safeW = pct(w, 80);
         if (dc.getTextWidthInPixels(labelText, labelFont) > safeW) {
             labelFont = Graphics.FONT_XTINY;
         }
-        dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
+        var hLabelFont = dc.getFontHeight(labelFont);
+
+        // Calculate total content height to center vertically
+        var subtitleH = hasSubtitle ? (hXtiny + 1) : 0;
+        var dotsH = pct(h, 4);
+        var summaryH = hXtiny;
+        // label + subtitle + value + unit + hint + dots + summary
+        var totalH = hLabelFont + subtitleH + pad + hNumMild + pad + hXtiny + pad + hXtiny + dotsH + summaryH;
+        var labelY = cy - totalH / 2;
+        if (labelY < topSafe) { labelY = topSafe; }
+
+        // Metric label
+        dc.setColor(available ? _domain.zoneColor(metric, zone) : Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
         dc.drawText(cx, labelY, labelFont, labelText,
             Graphics.TEXT_JUSTIFY_CENTER);
 
+        // Source badge subtitle (under title, for all available metrics)
+        if (hasSubtitle) {
+            drawSourceSubtitle(dc, cx, labelY + hLabelFont + 1, badgeText, dateText);
+        }
+
         // Hero value
-        var valueY = labelY + hTiny + pad;
+        var valueY = labelY + hLabelFont + subtitleH + pad;
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
         dc.drawText(cx, valueY, Graphics.FONT_NUMBER_MILD,
             formatValue(metric),
             Graphics.TEXT_JUSTIFY_CENTER);
 
-        // Unit
+        // Unit (XTINY for compact layout)
         var unitY = valueY + hNumMild + pad;
         dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, unitY, Graphics.FONT_TINY,
+        dc.drawText(cx, unitY, Graphics.FONT_XTINY,
             metric[:unit].toString(),
             Graphics.TEXT_JUSTIFY_CENTER);
 
         // Semantic zone hint (colored)
-        var hintY = unitY + hTiny + pct(h, 3);
+        var hintY = unitY + hXtiny + pad;
         var dotsY = hintY + hXtiny + pct(h, 2);
-        var summaryY = dotsY + pct(h, 5);
-        var summarySafeBottom = h - pct(h, 9);
-        var summaryOverflow = (summaryY + hXtiny) - summarySafeBottom;
-        if (summaryOverflow > 0) {
-            hintY -= summaryOverflow;
-            dotsY -= summaryOverflow;
-            summaryY -= summaryOverflow;
+        var summaryY = dotsY + pct(h, 4);
+
+        // Overflow check: ensure bottom content fits in safe zone
+        var overflow = (summaryY + hXtiny) - bottomSafe;
+        if (overflow > 0) {
+            hintY -= overflow;
+            dotsY -= overflow;
+            summaryY -= overflow;
         }
 
-        dc.setColor(_domain.zoneColor(metric, zone), Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, hintY, Graphics.FONT_XTINY,
-            _domain.semanticZoneHint(metric),
-            Graphics.TEXT_JUSTIFY_CENTER);
+        if (available) {
+            dc.setColor(_domain.zoneColor(metric, zone), Graphics.COLOR_TRANSPARENT);
+            dc.drawText(cx, hintY, Graphics.FONT_XTINY,
+                _domain.semanticZoneHint(metric),
+                Graphics.TEXT_JUSTIFY_CENTER);
+        } else {
+            dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(cx, hintY, Graphics.FONT_XTINY,
+                text("hint.unavailable"),
+                Graphics.TEXT_JUSTIFY_CENTER);
+        }
 
         // Page dots
         drawPageDots(dc, cx, dotsY, w);
@@ -397,73 +646,109 @@ class BodyMetricsView extends WatchUi.View {
         var w = dc.getWidth();
         var h = dc.getHeight();
         var cx = w / 2;
+        var cy = h / 2;
         var metric = _domain.metricAt(_selectedMetric) as Dictionary;
-        var zone = _domain.classify(metric);
+        var available = metric[:available];
+        var zone = available ? _domain.classify(metric) : ZONE_GREEN;
         var policy = _domain.classificationPolicy(metric);
-        var showIdealRange = zone != ZONE_GREEN;
+        var showIdealRange = available && zone != ZONE_GREEN;
 
         var hLarge = dc.getFontHeight(Graphics.FONT_LARGE);
         var hXtiny = dc.getFontHeight(Graphics.FONT_XTINY);
         var pad = pct(h, 1);
-        if (pad < 4) { pad = 4; }
+        if (pad < 3) { pad = 3; }
         var barH = pct(h, 4);
-        if (barH < 18) { barH = 18; }
+        if (barH < 16) { barH = 16; }
+
+        // Safe zones
+        var topSafe = pct(h, 11);
+        var bottomSafe = h - pct(h, 9);
+
+        // Source badge subtitle info
+        var badgeText = _domain.metricSourceBadgeText(_selectedMetric);
+        var dateText = manualDateText(metric);
+        var hasSubtitle = !badgeText.equals("");
 
         // Metric label in zone color (auto-shrink if too wide)
-        var labelY = pct(h, 12);
-        var labelText = _domain.metricLabel(_selectedMetric);
         var labelFont = Graphics.FONT_SMALL;
+        var labelText = _domain.metricLabel(_selectedMetric);
         var safeW = pct(w, 80);
         if (dc.getTextWidthInPixels(labelText, labelFont) > safeW) {
             labelFont = Graphics.FONT_TINY;
         }
         var hLabel = dc.getFontHeight(labelFont);
-        dc.setColor(_domain.zoneColor(metric, zone), Graphics.COLOR_TRANSPARENT);
+
+        // Calculate total content height to center vertically
+        var subtitleH = hasSubtitle ? (hXtiny + 1) : 0;
+        var totalH = hLabel + subtitleH + pad + hLarge + pad + barH + pad + hXtiny + 2 + hXtiny;
+        if (showIdealRange) {
+            totalH = totalH + 2 + hXtiny;
+        }
+        var labelY = cy - totalH / 2;
+        if (labelY < topSafe) { labelY = topSafe; }
+
+        dc.setColor(available ? _domain.zoneColor(metric, zone) : Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
         dc.drawText(cx, labelY, labelFont, labelText,
             Graphics.TEXT_JUSTIFY_CENTER);
 
+        // Source badge subtitle
+        if (hasSubtitle) {
+            drawSourceSubtitle(dc, cx, labelY + hLabel + 1, badgeText, dateText);
+        }
+
         // Value + unit
-        var valueY = labelY + hLabel + pad;
+        var valueY = labelY + hLabel + subtitleH + pad;
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
         dc.drawText(cx, valueY, Graphics.FONT_LARGE,
             formatValue(metric) + " " + metric[:unit].toString(),
             Graphics.TEXT_JUSTIFY_CENTER);
 
         // Zone bar
-        var barY = valueY + hLarge + pad + pct(h, 1);
+        var barY = valueY + hLarge + pad;
         var barX = pct(w, 14);
         var barW = pct(w, 72);
 
-        // Zone hint and lower safe area
-        var hintY = barY + barH + pad + 2;
+        // Zone hint and lower content
+        var hintY = barY + barH + pad;
         var rangeY = hintY + hXtiny + 2;
         var idealY = rangeY + hXtiny + 2;
-        var bottomSafe = h - pct(h, 10);
+
+        // Overflow check: push everything up if bottom content exceeds safe zone
         var contentBottom = showIdealRange ? (idealY + hXtiny) : (rangeY + hXtiny);
         var overflow = contentBottom - bottomSafe;
         if (overflow > 0) {
-            barY -= overflow;
-            hintY -= overflow;
-            rangeY -= overflow;
-            idealY -= overflow;
+            labelY -= overflow;
+            if (labelY < topSafe) { labelY = topSafe; }
+            valueY = labelY + hLabel + subtitleH + pad;
+            barY = valueY + hLarge + pad;
+            hintY = barY + barH + pad;
+            rangeY = hintY + hXtiny + 2;
+            idealY = rangeY + hXtiny + 2;
         }
 
-        drawDetailZoneBar(dc, barX, barY, barW, barH, metric, zone, policy);
+        if (available) {
+            drawDetailZoneBar(dc, barX, barY, barW, barH, metric, zone, policy);
 
-        dc.setColor(_domain.zoneColor(metric, zone), Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, hintY, Graphics.FONT_XTINY,
-            _domain.semanticZoneHint(metric),
-            Graphics.TEXT_JUSTIFY_CENTER);
+            dc.setColor(_domain.zoneColor(metric, zone), Graphics.COLOR_TRANSPARENT);
+            dc.drawText(cx, hintY, Graphics.FONT_XTINY,
+                _domain.semanticZoneHint(metric),
+                Graphics.TEXT_JUSTIFY_CENTER);
 
-        var rangeText = _domain.zoneRangeText(metric);
-        dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, rangeY, Graphics.FONT_XTINY,
-            rangeText, Graphics.TEXT_JUSTIFY_CENTER);
+            var rangeText = _domain.zoneRangeText(metric);
+            dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(cx, rangeY, Graphics.FONT_XTINY,
+                rangeText, Graphics.TEXT_JUSTIFY_CENTER);
 
-        if (showIdealRange) {
-            dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(cx, idealY, Graphics.FONT_XTINY,
-                text("detail.ideal") + _domain.idealRangeText(metric),
+            if (showIdealRange) {
+                dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
+                dc.drawText(cx, idealY, Graphics.FONT_XTINY,
+                    text("detail.ideal") + _domain.idealRangeText(metric),
+                    Graphics.TEXT_JUSTIFY_CENTER);
+            }
+        } else {
+            dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(cx, barY, Graphics.FONT_XTINY,
+                text("hint.unavailable"),
                 Graphics.TEXT_JUSTIFY_CENTER);
         }
     }
@@ -644,6 +929,9 @@ class BodyMetricsView extends WatchUi.View {
     // --- Formatting (2 decimal places) ---
 
     function formatValue(metric as Dictionary) as String {
+        if (!metric[:available]) {
+            return "--";
+        }
         var rawValue = metric[:value];
         if (metric[:unit].toString().equals("kcal")) {
             return rawValue.toNumber().toString();
@@ -672,7 +960,8 @@ class BodyMetricsView extends WatchUi.View {
     function countByZone(zone as Number) as Number {
         var count = 0;
         for (var i = 0; i < _domain.metricsCount(); i += 1) {
-            if (_domain.classify(_domain.metricAt(i)) == zone) {
+            var m = _domain.metricAt(i) as Dictionary;
+            if (m[:available] && _domain.classify(m) == zone) {
                 count += 1;
             }
         }
