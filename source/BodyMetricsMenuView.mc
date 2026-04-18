@@ -135,9 +135,6 @@ class BodyMetricsMenuView extends WatchUi.View {
         dc.setPenWidth(1);
     }
 
-    function pct(total as Number, percent as Number) as Number {
-        return total * percent / 100;
-    }
 }
 
 //! Delegate for the main settings menu

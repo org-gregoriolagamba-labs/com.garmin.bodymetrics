@@ -5,10 +5,18 @@ const LANGUAGE_KEY = "bodyMetrics.language";
 
 class BodyMetricsLocale {
 
+    var _cachedLanguage as String;
+
     function initialize() {
+        _cachedLanguage = _resolveLanguage();
     }
 
     function currentLanguage() as String {
+        return _cachedLanguage;
+    }
+
+    //! Resolves language from Storage, falling back to Italian.
+    hidden function _resolveLanguage() as String {
         var language = Storage.getValue(LANGUAGE_KEY);
         if (language != null) {
             var code = language.toString();
@@ -22,6 +30,7 @@ class BodyMetricsLocale {
     function setLanguage(language as String) as Void {
         var code = isSupported(language) ? language : "it";
         Storage.setValue(LANGUAGE_KEY, code);
+        _cachedLanguage = code;
     }
 
     function supportedLanguages() as Array {

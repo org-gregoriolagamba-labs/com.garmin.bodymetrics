@@ -30,8 +30,8 @@ class BodyMetricsDomain {
 
     function initialize() {
         _locale = new BodyMetricsLocale();
-        _dataProvider = new BodyMetricsDataProvider();
         _garminProfile = new BodyMetricsGarminProfile();
+        _dataProvider = new BodyMetricsDataProvider(_garminProfile);
         _hasStoredProfile = false;
         _profile = loadProfile();
         _measurements = _dataProvider.loadMeasurements();
@@ -142,7 +142,7 @@ class BodyMetricsDomain {
         } else if (decimals == 1) {
             text = fmt1(value);
         } else {
-            text = fmt2d(value);
+            text = fmtD2(value);
         }
         return text + " " + field[:unit].toString();
     }
@@ -187,17 +187,6 @@ class BodyMetricsDomain {
         var whole = scaled / 10;
         var frac = scaled - whole * 10;
         if (frac < 0) { frac = -frac; }
-        return whole.toString() + "." + frac.toString();
-    }
-
-    function fmt2d(v as Float) as String {
-        var scaled = Math.round(v * 100.0).toNumber();
-        var whole = scaled / 100;
-        var frac = scaled - whole * 100;
-        if (frac < 0) { frac = -frac; }
-        if (frac < 10) {
-            return whole.toString() + ".0" + frac.toString();
-        }
         return whole.toString() + "." + frac.toString();
     }
 
@@ -545,23 +534,6 @@ class BodyMetricsDomain {
             :greenMin => 0,
             :greenMax => 0
         };
-    }
-
-    function metricSourceLabel(index as Number) as String {
-        var metric = metricAt(index);
-        if (!metric[:available] || metric[:source] == null) {
-            return "";
-        }
-        if (metric[:source].toString().equals(SOURCE_GARMIN)) {
-            return " (G)";
-        }
-        if (metric[:source].toString().equals(SOURCE_CALC_GARMIN)) {
-            return " (CG)";
-        }
-        if (metric[:source].toString().equals(SOURCE_CALC_MANUAL)) {
-            return " (CM)";
-        }
-        return " (M)";
     }
 
     function metricSourceBadgeText(index as Number) as String {
@@ -1153,17 +1125,7 @@ class BodyMetricsDomain {
         if (value == null) {
             return "--";
         }
-
-        var f = value.toFloat();
-        var scaled = Math.round(f * 100.0).toNumber();
-        var whole = scaled / 100;
-        var decimals = scaled - (whole * 100);
-
-        if (decimals < 10) {
-            return whole.toString() + ".0" + decimals.toString();
-        }
-
-        return whole.toString() + "." + decimals.toString();
+        return fmtD2(value.toFloat());
     }
 
     function semanticZoneLabel(metric as Dictionary) as String {
@@ -1314,4 +1276,17 @@ class BodyMetricsDomain {
 
         return Graphics.COLOR_RED;
     }
+}
+
+//! Format float to 2 decimal places. Handles negative values.
+function fmtD2(v as Float) as String {
+    var sign = "";
+    if (v < 0) { sign = "-"; v = -v; }
+    var hundredths = Math.round(v * 100.0).toNumber();
+    var integer = hundredths / 100;
+    var frac = hundredths - integer * 100;
+    if (frac < 10) {
+        return sign + integer.toString() + ".0" + frac.toString();
+    }
+    return sign + integer.toString() + "." + frac.toString();
 }

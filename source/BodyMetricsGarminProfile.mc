@@ -75,9 +75,6 @@ class BodyMetricsGarminProfile {
         var now = Gregorian.info(Time.now(), Time.FORMAT_SHORT);
         var currentYear = now.year.toNumber();
         var age = currentYear - profile.birthYear.toNumber();
-        if (age < 18) {
-            return "18_39";
-        }
         if (age < 40) {
             return "18_39";
         }

@@ -22,8 +22,9 @@ class BodyMetricsDataProvider {
 
     var _garminProfile;
 
-    function initialize() {
-        _garminProfile = new BodyMetricsGarminProfile();
+    //! @param garminProfile shared BodyMetricsGarminProfile instance
+    function initialize(garminProfile) {
+        _garminProfile = garminProfile;
     }
 
     //! Load measurements: Garmin weight has priority, body comp from Storage only.
@@ -129,12 +130,5 @@ class BodyMetricsDataProvider {
             return "0" + n.toString();
         }
         return n.toString();
-    }
-
-    function safeFloat(value, fallback as Float) as Float {
-        if (value == null) {
-            return fallback;
-        }
-        return value.toFloat();
     }
 }

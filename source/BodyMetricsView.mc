@@ -273,104 +273,30 @@ class BodyMetricsView extends WatchUi.View {
     }
 
     function drawSetup(dc as Dc) as Void {
-        var w = dc.getWidth();
-        var h = dc.getHeight();
-        var cx = w / 2;
-        var cy = h / 2;
         var field = _domain.profileFieldDefinition(_setupIndex) as Dictionary;
-        var totalSteps = _domain.profileFieldCount();
-
-        // Measure fonts for dynamic layout
-        var hXtiny = dc.getFontHeight(Graphics.FONT_XTINY);
-        var hTiny = dc.getFontHeight(Graphics.FONT_TINY);
-        var hMedium = dc.getFontHeight(Graphics.FONT_MEDIUM);
-        var gap = pct(h, 2);
-
-        var isReadOnly = field.hasKey(:readOnly) && field[:readOnly];
-        var badgeSpace = isReadOnly ? (hXtiny + gap) : 0;
-
-        // --- Central content block: label + optional badge + value, centered vertically ---
-        var centralH = hTiny + gap + badgeSpace + hMedium;
-        var labelY = cy - centralH / 2;
-        var badgeY = labelY + hTiny + 2;
-        var valueY = labelY + hTiny + gap + badgeSpace;
-
-        // Field label
-        dc.setColor(isReadOnly ? 0x66CCFF : Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, labelY, Graphics.FONT_TINY,
-            field[:label].toString(),
-            Graphics.TEXT_JUSTIFY_CENTER);
-
-        if (isReadOnly && field.hasKey(:badgeText)) {
-            drawReadOnlyBadge(dc, cx, badgeY, field[:badgeText].toString());
-        }
-
-        // Field value
-        dc.setColor(isReadOnly ? 0x66CCFF : Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        var valueText = _domain.profileFieldValueLabel(_profileDraft, _setupIndex);
-        var valueFont = Graphics.FONT_MEDIUM;
-        var safeW = pct(w, 65);
-        if (dc.getTextWidthInPixels(valueText, valueFont) > safeW) {
-            valueFont = Graphics.FONT_SMALL;
-        }
-        dc.drawText(cx, valueY, valueFont, valueText,
-            Graphics.TEXT_JUSTIFY_CENTER);
-
-        // --- Top: progress dots ---
-        var dotsY = pct(h, 16);
-        var dotSpacing = pct(w, 5);
-        if (dotSpacing < 14) { dotSpacing = 14; }
-        var activeR = pct(w, 1);
-        if (activeR < 4) { activeR = 4; }
-        var inactiveR = activeR - 1;
-        if (inactiveR < 2) { inactiveR = 2; }
-        var dotsStartX = cx - ((totalSteps - 1) * dotSpacing) / 2;
-
-        for (var i = 0; i < totalSteps; i++) {
-            var dotX = dotsStartX + i * dotSpacing;
-            if (i < _setupIndex) {
-                dc.setColor(0x66CCFF, Graphics.COLOR_TRANSPARENT);
-                dc.fillCircle(dotX, dotsY, activeR);
-            } else if (i == _setupIndex) {
-                dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-                dc.fillCircle(dotX, dotsY, activeR);
-            } else {
-                dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
-                dc.fillCircle(dotX, dotsY, inactiveR);
-            }
-        }
-
-        // --- Title below dots ---
-        var titleY = dotsY + activeR + gap + 2;
-        dc.setColor(0x66CCFF, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, titleY, Graphics.FONT_XTINY,
+        drawWizardScreen(dc, _setupIndex, _domain.profileFieldCount(), field,
+            _domain.profileFieldValueLabel(_profileDraft, _setupIndex),
             _domain.hasConfiguredProfile() ? text("setup.edit_profile") : text("setup.configure_profile"),
-            Graphics.TEXT_JUSTIFY_CENTER);
-
-        // --- Arrows hint (up/down triangles flanking the value) ---
-        if (!isReadOnly) {
-            var arrowY = valueY + dc.getFontHeight(valueFont) / 2;
-            var arrowX = pct(w, 12);
-            dc.setColor(0x66CCFF, Graphics.COLOR_TRANSPARENT);
-            drawTriangle(dc, arrowX, arrowY, pct(w, 2), true);
-            drawTriangle(dc, w - arrowX, arrowY, pct(w, 2), false);
-        }
-
-        // --- Bottom: action hint ---
-        var footerY = h - pct(h, 16) - hXtiny;
-        dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, footerY, Graphics.FONT_XTINY,
-            isReadOnly ? field[:readOnlyText].toString() : (_setupIndex == totalSteps - 1 ? text("setup.select_save") : text("setup.select_next")),
-            Graphics.TEXT_JUSTIFY_CENTER);
+            text("setup.select_save"), text("setup.select_next"));
     }
 
     function drawDataEntry(dc as Dc) as Void {
+        var field = _domain.measurementFieldDefinition(_dataIndex) as Dictionary;
+        drawWizardScreen(dc, _dataIndex, _domain.measurementFieldCount(), field,
+            _domain.measurementFieldValueLabel(_dataDraft, _dataIndex),
+            text("data.title"),
+            text("data.select_save"), text("data.select_next"));
+    }
+
+    //! Shared wizard screen for both profile setup and data entry modes.
+    //! Draws progress dots, field label/badge, value with arrows, and footer hint.
+    function drawWizardScreen(dc as Dc, stepIndex as Number, totalSteps as Number,
+        field as Dictionary, valueText as String, titleText as String,
+        saveHint as String, nextHint as String) as Void {
         var w = dc.getWidth();
         var h = dc.getHeight();
         var cx = w / 2;
         var cy = h / 2;
-        var field = _domain.measurementFieldDefinition(_dataIndex) as Dictionary;
-        var totalSteps = _domain.measurementFieldCount();
 
         var hXtiny = dc.getFontHeight(Graphics.FONT_XTINY);
         var hTiny = dc.getFontHeight(Graphics.FONT_TINY);
@@ -380,7 +306,7 @@ class BodyMetricsView extends WatchUi.View {
         var isReadOnly = field.hasKey(:readOnly) && field[:readOnly];
         var badgeSpace = isReadOnly ? (hXtiny + gap) : 0;
 
-        // Central content: label + optional badge + value
+        // Central content: label + optional badge + value, centered vertically
         var centralH = hTiny + gap + badgeSpace + hMedium;
         var labelY = cy - centralH / 2;
         var badgeY = labelY + hTiny + 2;
@@ -396,9 +322,8 @@ class BodyMetricsView extends WatchUi.View {
             drawReadOnlyBadge(dc, cx, badgeY, field[:badgeText].toString());
         }
 
-        // Field value
+        // Field value (auto-shrink if too wide)
         dc.setColor(isReadOnly ? 0x66CCFF : Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        var valueText = _domain.measurementFieldValueLabel(_dataDraft, _dataIndex);
         var valueFont = Graphics.FONT_MEDIUM;
         var safeW = pct(w, 65);
         if (dc.getTextWidthInPixels(valueText, valueFont) > safeW) {
@@ -419,10 +344,10 @@ class BodyMetricsView extends WatchUi.View {
 
         for (var i = 0; i < totalSteps; i++) {
             var dotX = dotsStartX + i * dotSpacing;
-            if (i < _dataIndex) {
+            if (i < stepIndex) {
                 dc.setColor(0x66CCFF, Graphics.COLOR_TRANSPARENT);
                 dc.fillCircle(dotX, dotsY, activeR);
-            } else if (i == _dataIndex) {
+            } else if (i == stepIndex) {
                 dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
                 dc.fillCircle(dotX, dotsY, activeR);
             } else {
@@ -435,10 +360,10 @@ class BodyMetricsView extends WatchUi.View {
         var titleY = dotsY + activeR + gap + 2;
         dc.setColor(0x66CCFF, Graphics.COLOR_TRANSPARENT);
         dc.drawText(cx, titleY, Graphics.FONT_XTINY,
-            text("data.title"),
+            titleText,
             Graphics.TEXT_JUSTIFY_CENTER);
 
-        // Arrows for editable fields only
+        // Arrows for editable fields
         if (!isReadOnly) {
             var arrowY = valueY + dc.getFontHeight(valueFont) / 2;
             var arrowX = pct(w, 12);
@@ -447,11 +372,11 @@ class BodyMetricsView extends WatchUi.View {
             drawTriangle(dc, w - arrowX, arrowY, pct(w, 2), false);
         }
 
-        // Footer hint
+        // Footer action hint
         var footerY = h - pct(h, 16) - hXtiny;
         dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
         dc.drawText(cx, footerY, Graphics.FONT_XTINY,
-            isReadOnly ? field[:readOnlyText].toString() : (_dataIndex == totalSteps - 1 ? text("data.select_save") : text("data.select_next")),
+            isReadOnly ? field[:readOnlyText].toString() : (stepIndex == totalSteps - 1 ? saveHint : nextHint),
             Graphics.TEXT_JUSTIFY_CENTER);
     }
 
@@ -755,10 +680,6 @@ class BodyMetricsView extends WatchUi.View {
 
     // --- Drawing Helpers ---
 
-    function pct(total as Number, percent as Number) as Number {
-        return total * percent / 100;
-    }
-
     function targetRangeDisplayIndex(metric as Dictionary, zone as Number) as Number {
         if (zone == ZONE_GREEN) {
             return 3;
@@ -926,7 +847,7 @@ class BodyMetricsView extends WatchUi.View {
         dc.fillCircle(markerX, markerY, 2);
     }
 
-    // --- Formatting (2 decimal places) ---
+    // --- Formatting ---
 
     function formatValue(metric as Dictionary) as String {
         if (!metric[:available]) {
@@ -936,25 +857,7 @@ class BodyMetricsView extends WatchUi.View {
         if (metric[:unit].toString().equals("kcal")) {
             return rawValue.toNumber().toString();
         }
-        return fmt2(rawValue.toFloat());
-    }
-
-    function fmt2(v as Float) as String {
-        var sign = "";
-        if (v < 0) {
-            sign = "-";
-            v = -v;
-        }
-        var hundredths = Math.round(v * 100.0).toNumber();
-        var integer = hundredths / 100;
-        var frac = hundredths - integer * 100;
-        var fracStr;
-        if (frac < 10) {
-            fracStr = "0" + frac.toString();
-        } else {
-            fracStr = frac.toString();
-        }
-        return sign + integer.toString() + "." + fracStr;
+        return fmtD2(rawValue.toFloat());
     }
 
     function countByZone(zone as Number) as Number {
@@ -970,3 +873,7 @@ class BodyMetricsView extends WatchUi.View {
 
 }
 
+//! Percentage of a total value.
+function pct(total as Number, percent as Number) as Number {
+    return total * percent / 100;
+}
