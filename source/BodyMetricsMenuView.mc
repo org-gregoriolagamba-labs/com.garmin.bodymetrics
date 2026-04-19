@@ -179,30 +179,129 @@ class BodyMetricsCustomMenuDelegate extends BodyMetricsBaseMenuDelegate {
 
     function onSelect() as Boolean {
         var id = _menuView.selectedId();
+        
+        if (id == :data_management) {
+            _openDataSubmenu();
+        } else if (id == :options) {
+            _openOptionsSubmenu();
+        } else if (id == :information) {
+            _openInfoSubmenu();
+        } else if (id == :debug) {
+            _openDebugSubmenu();
+        }
+        return true;
+    }
+    
+    function _openDataSubmenu() as Void {
+        var items = [] as Array;
+        items.add({:label => _view.text("menu.profile"), :id => :profile});
+        items.add({:label => _view.text("menu.data"), :id => :data});
+        var subView = new BodyMetricsMenuView(_view.text("menu.cat.data"), items);
+        // 2 pops: main menu + data submenu
+        WatchUi.pushView(subView, new BodyMetricsDataMenuDelegate(subView, _view, 2), WatchUi.SLIDE_UP);
+    }
+    
+    function _openOptionsSubmenu() as Void {
+        var items = [] as Array;
+        items.add({:label => _view.text("menu.language"), :id => :language});
+        var subView = new BodyMetricsMenuView(_view.text("menu.cat.options"), items);
+        WatchUi.pushView(subView, new BodyMetricsOptionsMenuDelegate(subView, _view), WatchUi.SLIDE_UP);
+    }
+    
+    function _openInfoSubmenu() as Void {
+        var items = [] as Array;
+        items.add({:label => _view.text("menu.badge_info"), :id => :badge_info});
+        items.add({:label => _view.text("menu.system_info"), :id => :system_info});
+        var subView = new BodyMetricsMenuView(_view.text("menu.cat.info"), items);
+        WatchUi.pushView(subView, new BodyMetricsInfoMenuDelegate(subView, _view), WatchUi.SLIDE_UP);
+    }
+    
+    function _openDebugSubmenu() as Void {
+        var debugItems = [] as Array;
+        if (_view.isDebugEnabled()) {
+            debugItems.add({:label => _view.text("debug.menu.populate_history"), :id => :debug_populate_history});
+            debugItems.add({:label => _view.text("debug.menu.clear_history"), :id => :debug_clear_history});
+            debugItems.add({:label => _view.text("debug.menu.disable"), :id => :debug_disable});
+        } else {
+            debugItems.add({:label => _view.text("debug.menu.enable"), :id => :debug_enable});
+        }
+        var debugMenuView = new BodyMetricsMenuView(_view.text("debug.menu.title"), debugItems);
+        WatchUi.pushView(debugMenuView, new BodyMetricsCustomDebugMenuDelegate(debugMenuView, _view), WatchUi.SLIDE_UP);
+    }
+}
+
+//! Delegate per il sotto-menu dati (Profilo, Inserisci dati).
+//! popCount: numero di view da rimuovere prima di tornare al main view.
+//!   2 = aperto dal main menu (main menu + data submenu)
+//!   1 = aperto direttamente (solo data submenu)
+class BodyMetricsDataMenuDelegate extends BodyMetricsBaseMenuDelegate {
+
+    var _popCount as Number;
+
+    function initialize(menuView as BodyMetricsMenuView, view as BodyMetricsView, popCount as Number) {
+        BodyMetricsBaseMenuDelegate.initialize(menuView, view);
+        _popCount = popCount;
+    }
+
+    function onSelect() as Boolean {
+        var id = _menuView.selectedId();
         if (id == :profile) {
-            WatchUi.popView(WatchUi.SLIDE_DOWN);
+            for (var i = 0; i < _popCount; i++) {
+                WatchUi.popView(WatchUi.SLIDE_DOWN);
+            }
+            _view.requestDataMenuOnExit();
             _view.openProfileSetup();
         } else if (id == :data) {
-            WatchUi.popView(WatchUi.SLIDE_DOWN);
-            _view.openDataEntry();
-        } else if (id == :badge_info) {
-            WatchUi.popView(WatchUi.SLIDE_DOWN);
-            _view.openBadgeInfo();
-        } else if (id == :language) {
-            WatchUi.popView(WatchUi.SLIDE_DOWN);
-            _view.queueLanguageMenuOpen();
-        } else if (id == :debug) {
-            var debugItems = [] as Array;
-            if (_view.isDebugEnabled()) {
-                debugItems.add({:label => _view.text("debug.menu.populate_history"), :id => :debug_populate_history});
-                debugItems.add({:label => _view.text("debug.menu.clear_history"), :id => :debug_clear_history});
-                debugItems.add({:label => _view.text("debug.menu.disable"), :id => :debug_disable});
-            } else {
-                debugItems.add({:label => _view.text("debug.menu.enable"), :id => :debug_enable});
+            for (var i = 0; i < _popCount; i++) {
+                WatchUi.popView(WatchUi.SLIDE_DOWN);
             }
+            _view.requestDataMenuOnExit();
+            _view.openDataEntry();
+        }
+        return true;
+    }
+}
 
-            var debugMenuView = new BodyMetricsMenuView(_view.text("debug.menu.title"), debugItems);
-            WatchUi.pushView(debugMenuView, new BodyMetricsCustomDebugMenuDelegate(debugMenuView, _view), WatchUi.SLIDE_UP);
+//! Delegate per il sotto-menu opzioni (Lingua).
+class BodyMetricsOptionsMenuDelegate extends BodyMetricsBaseMenuDelegate {
+
+    function initialize(menuView as BodyMetricsMenuView, view as BodyMetricsView) {
+        BodyMetricsBaseMenuDelegate.initialize(menuView, view);
+    }
+
+    function onSelect() as Boolean {
+        var id = _menuView.selectedId();
+        if (id == :language) {
+            _openLanguageSubmenu();
+        }
+        return true;
+    }
+    
+    function _openLanguageSubmenu() as Void {
+        var langItems = [] as Array;
+        var codes = _view.supportedLanguages();
+        for (var i = 0; i < codes.size(); i += 1) {
+            var language = codes[i].toString();
+            langItems.add({:label => _view.languageOptionLabel(language), :id => _view.languageSymbol(language)});
+        }
+        var langMenuView = new BodyMetricsMenuView(_view.text("menu.language"), langItems);
+        WatchUi.pushView(langMenuView, new BodyMetricsCustomLanguageMenuDelegate(langMenuView, _view), WatchUi.SLIDE_UP);
+    }
+}
+
+//! Delegate per il sotto-menu informazioni (Badge info, Info sistema).
+class BodyMetricsInfoMenuDelegate extends BodyMetricsBaseMenuDelegate {
+
+    function initialize(menuView as BodyMetricsMenuView, view as BodyMetricsView) {
+        BodyMetricsBaseMenuDelegate.initialize(menuView, view);
+    }
+
+    function onSelect() as Boolean {
+        var id = _menuView.selectedId();
+        if (id == :badge_info) {
+            _view.openBadgeInfo();
+        } else if (id == :system_info) {
+            _view.openSystemInfo();
         }
         return true;
     }
@@ -217,15 +316,40 @@ class BodyMetricsCustomDebugMenuDelegate extends BodyMetricsBaseMenuDelegate {
 
     function onSelect() as Boolean {
         var id = _menuView.selectedId();
-        WatchUi.popView(WatchUi.SLIDE_DOWN);
+        
         if (id == :debug_populate_history) {
             _view.populateHistoryDebug();
+            // Torna al menu parent (main menu)
+            WatchUi.popView(WatchUi.SLIDE_DOWN);
         } else if (id == :debug_clear_history) {
             _view.clearHistoryDebug();
-        } else if (id == :debug_disable || id == :debug_enable) {
+            // Torna al menu parent (main menu)
+            WatchUi.popView(WatchUi.SLIDE_DOWN);
+        } else if (id == :debug_disable) {
             _view.toggleDebugMode();
+            // Dopo disabilitare debug, ritorna al menu principale
+            WatchUi.popView(WatchUi.SLIDE_DOWN);
+        } else if (id == :debug_enable) {
+            _view.toggleDebugMode();
+            // Dopo abilitare debug, rimani nella stessa pagina menu
+            _refreshDebugMenu();
         }
         return true;
+    }
+    
+    function _refreshDebugMenu() as Void {
+        // Aggiorna il menu debug per mostrare le nuove opzioni
+        var debugItems = [] as Array;
+        if (_view.isDebugEnabled()) {
+            debugItems.add({:label => _view.text("debug.menu.populate_history"), :id => :debug_populate_history});
+            debugItems.add({:label => _view.text("debug.menu.clear_history"), :id => :debug_clear_history});
+            debugItems.add({:label => _view.text("debug.menu.disable"), :id => :debug_disable});
+        } else {
+            debugItems.add({:label => _view.text("debug.menu.enable"), :id => :debug_enable});
+        }
+        var newMenuView = new BodyMetricsMenuView(_view.text("debug.menu.title"), debugItems);
+        WatchUi.popView(WatchUi.SLIDE_DOWN);
+        WatchUi.pushView(newMenuView, new BodyMetricsCustomDebugMenuDelegate(newMenuView, _view), WatchUi.SLIDE_UP);
     }
 }
 
@@ -242,6 +366,10 @@ class BodyMetricsCustomLanguageMenuDelegate extends BodyMetricsBaseMenuDelegate 
         if (id == :lang_en) { lang = "en"; }
         else if (id == :lang_fr) { lang = "fr"; }
         else if (id == :lang_es) { lang = "es"; }
+        // Pop tutti i livelli menu (lingua → opzioni → principale) per tornare alla main view.
+        // setLanguage chiama requestUpdate: la main view viene ridisegnata subito con la nuova lingua.
+        WatchUi.popView(WatchUi.SLIDE_DOWN);
+        WatchUi.popView(WatchUi.SLIDE_DOWN);
         WatchUi.popView(WatchUi.SLIDE_DOWN);
         _view.setLanguage(lang);
         return true;

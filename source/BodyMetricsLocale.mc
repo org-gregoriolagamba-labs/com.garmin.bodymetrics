@@ -79,6 +79,15 @@ class BodyMetricsLocale {
         if (key.equals("menu.language")) { return "Lingua"; }
         if (key.equals("menu.data")) { return "Inserisci dati"; }
         if (key.equals("menu.badge_info")) { return "Badge info"; }
+        if (key.equals("menu.system_info")) { return "Info sistema"; }
+        if (key.equals("menu.cat.data")) { return "Dati"; }
+        if (key.equals("menu.cat.options")) { return "Opzioni"; }
+        if (key.equals("menu.cat.info")) { return "Informazioni"; }
+        if (key.equals("sysinfo.title")) { return "Info sistema"; }
+        if (key.equals("sysinfo.app")) { return "App"; }
+        if (key.equals("sysinfo.version")) { return "Versione"; }
+        if (key.equals("sysinfo.release")) { return "Release"; }
+        if (key.equals("sysinfo.author")) { return "Autore"; }
         if (key.equals("debug.menu.title")) { return "Debug"; }
         if (key.equals("debug.menu.populate_history")) { return "Popola storico"; }
         if (key.equals("debug.menu.clear_history")) { return "Cancella storico"; }
@@ -196,6 +205,7 @@ class BodyMetricsLocale {
         if (key.equals("label.target.red_low")) { return "Molto basso"; }
         if (key.equals("label.target.red_high")) { return "Molto alto"; }
         if (key.equals("hint.unavailable")) { return "Non disponibile"; }
+        if (key.equals("trend.title")) { return "Andamento"; }
         if (key.equals("trend.up")) { return "In aumento"; }
         if (key.equals("trend.down")) { return "In calo"; }
         if (key.equals("trend.flat")) { return "Stabile"; }
@@ -213,6 +223,15 @@ class BodyMetricsLocale {
         if (key.equals("menu.language")) { return "Language"; }
         if (key.equals("menu.data")) { return "Enter data"; }
         if (key.equals("menu.badge_info")) { return "Badge info"; }
+        if (key.equals("menu.system_info")) { return "System info"; }
+        if (key.equals("menu.cat.data")) { return "Data"; }
+        if (key.equals("menu.cat.options")) { return "Options"; }
+        if (key.equals("menu.cat.info")) { return "Information"; }
+        if (key.equals("sysinfo.title")) { return "System info"; }
+        if (key.equals("sysinfo.app")) { return "App"; }
+        if (key.equals("sysinfo.version")) { return "Version"; }
+        if (key.equals("sysinfo.release")) { return "Release"; }
+        if (key.equals("sysinfo.author")) { return "Author"; }
         if (key.equals("debug.menu.title")) { return "Debug"; }
         if (key.equals("debug.menu.populate_history")) { return "Populate history"; }
         if (key.equals("debug.menu.clear_history")) { return "Clear history"; }
@@ -330,6 +349,7 @@ class BodyMetricsLocale {
         if (key.equals("label.target.red_low")) { return "Very low"; }
         if (key.equals("label.target.red_high")) { return "Very high"; }
         if (key.equals("hint.unavailable")) { return "Not available"; }
+        if (key.equals("trend.title")) { return "Trend"; }
         if (key.equals("trend.up")) { return "Rising"; }
         if (key.equals("trend.down")) { return "Declining"; }
         if (key.equals("trend.flat")) { return "Stable"; }
@@ -347,6 +367,15 @@ class BodyMetricsLocale {
         if (key.equals("menu.language")) { return "Langue"; }
         if (key.equals("menu.data")) { return "Saisir donnees"; }
         if (key.equals("menu.badge_info")) { return "Badge info"; }
+        if (key.equals("menu.system_info")) { return "Info systeme"; }
+        if (key.equals("menu.cat.data")) { return "Donnees"; }
+        if (key.equals("menu.cat.options")) { return "Options"; }
+        if (key.equals("menu.cat.info")) { return "Informations"; }
+        if (key.equals("sysinfo.title")) { return "Info systeme"; }
+        if (key.equals("sysinfo.app")) { return "App"; }
+        if (key.equals("sysinfo.version")) { return "Version"; }
+        if (key.equals("sysinfo.release")) { return "Release"; }
+        if (key.equals("sysinfo.author")) { return "Auteur"; }
         if (key.equals("debug.menu.title")) { return "Debug"; }
         if (key.equals("debug.menu.populate_history")) { return "Remplir historique"; }
         if (key.equals("debug.menu.clear_history")) { return "Effacer historique"; }
@@ -464,6 +493,7 @@ class BodyMetricsLocale {
         if (key.equals("label.target.red_low")) { return "Tres bas"; }
         if (key.equals("label.target.red_high")) { return "Tres haut"; }
         if (key.equals("hint.unavailable")) { return "Non disponible"; }
+        if (key.equals("trend.title")) { return "Tendance"; }
         if (key.equals("trend.up")) { return "En hausse"; }
         if (key.equals("trend.down")) { return "En baisse"; }
         if (key.equals("trend.flat")) { return "Stable"; }
@@ -481,6 +511,15 @@ class BodyMetricsLocale {
         if (key.equals("menu.language")) { return "Idioma"; }
         if (key.equals("menu.data")) { return "Ingresar datos"; }
         if (key.equals("menu.badge_info")) { return "Badge info"; }
+        if (key.equals("menu.system_info")) { return "Info sistema"; }
+        if (key.equals("menu.cat.data")) { return "Datos"; }
+        if (key.equals("menu.cat.options")) { return "Opciones"; }
+        if (key.equals("menu.cat.info")) { return "Informacion"; }
+        if (key.equals("sysinfo.title")) { return "Info sistema"; }
+        if (key.equals("sysinfo.app")) { return "App"; }
+        if (key.equals("sysinfo.version")) { return "Version"; }
+        if (key.equals("sysinfo.release")) { return "Release"; }
+        if (key.equals("sysinfo.author")) { return "Autor"; }
         if (key.equals("debug.menu.title")) { return "Debug"; }
         if (key.equals("debug.menu.populate_history")) { return "Poblar historial"; }
         if (key.equals("debug.menu.clear_history")) { return "Borrar historial"; }
@@ -598,6 +637,7 @@ class BodyMetricsLocale {
         if (key.equals("label.target.red_low")) { return "Muy bajo"; }
         if (key.equals("label.target.red_high")) { return "Muy alto"; }
         if (key.equals("hint.unavailable")) { return "No disponible"; }
+        if (key.equals("trend.title")) { return "Tendencia"; }
         if (key.equals("trend.up")) { return "En aumento"; }
         if (key.equals("trend.down")) { return "En descenso"; }
         if (key.equals("trend.flat")) { return "Estable"; }

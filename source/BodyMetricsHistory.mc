@@ -22,8 +22,10 @@ class BodyMetricsHistory {
     //! nello stesso ciclo di aggiornamento UI.
     hidden var _cachedEntries = null;
 
-    //! DEBUG: Popola la history con dati realistici per 90 giorni
-    function populateHistoryDebug() as Void {
+    //! DEBUG: Popola la history con dati realistici per 90 giorni.
+    //! @param heightCm  altezza reale del profilo utente (per calcolo BMI coerente)
+    //! @param bmrBase   valore BMR di riferimento sul peso iniziale 78.5 kg
+    function populateHistoryDebug(heightCm as Float, bmrBase as Float) as Void {
         if (!isDebugHistoryActive()) {
             Storage.setValue(HISTORY_DEBUG_BACKUP_KEY, _loadEntries());
         }
@@ -35,9 +37,9 @@ class BodyMetricsHistory {
         var musclePct = 39.0;
         var water = 54.0;
         var bone = 3.3;
-        var bmi = 25.2;
-        var muscleKg = 30.6;
-        var bmr = 1675.0;
+        var bmi = 0.0;
+        var muscleKg = 0.0;
+        var bmr = 0.0;
         var seed = now;
         for (var i = 89; i >= 0; i -= 1) {
             var ts = now - (i * 86400);
@@ -76,11 +78,11 @@ class BodyMetricsHistory {
             seed += 1;
             bone = _driftValue(bone, 0.0002 * effDrift, 0.01, seed);
             seed += 1;
-            bmi = round1Global(weight / (1.75 * 1.75));  // derive from weight for consistency
+            bmi = round1Global(weight / ((heightCm / 100.0) * (heightCm / 100.0)));  // usa altezza reale profilo
             seed += 1;
             muscleKg = round1Global(weight * musclePct / 100.0);  // derive from weight + muscle%
             seed += 1;
-            bmr = _driftValue(bmr, -0.12 * effDrift, 3.0, seed);
+            bmr = _driftValue(bmrBase, -0.12 * effDrift, 3.0, seed);  // parte dal BMR reale del profilo
             seed += 1;
             var entry = [ts, bmi, fat, muscleKg, musclePct, water, bone, weight, bmr];
             entries.add(entry);
@@ -214,6 +216,14 @@ class BodyMetricsHistory {
     function isDebugHistoryActive() as Boolean {
         var active = Storage.getValue(HISTORY_DEBUG_ACTIVE_KEY);
         return active != null && (active as Boolean);
+    }
+
+    //! Returns the most recent raw history entry array, or null if no entries.
+    //! Format: [ts, bmi, fat%, muscleKg, muscle%, water%, boneKg, weightKg, bmr]
+    function lastRawEntry() as Array? {
+        var entries = _loadEntries();
+        if (entries.size() == 0) { return null; }
+        return entries[entries.size() - 1] as Array;
     }
 
     hidden function _buildEntry(ts as Number, metrics as Array) as Array {

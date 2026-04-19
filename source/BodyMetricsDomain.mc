@@ -30,8 +30,34 @@ class BodyMetricsDomain {
 
     //! DEBUG: Popola la history con dati casuali per 90 giorni
     function populateHistoryDebug() as Void {
-        _history.populateHistoryDebug();
-        // Ricarica metriche se necessario
+        // Passa l'altezza reale del profilo e un BMR di riferimento al generatore,
+        // in modo che i valori nel grafico siano coerenti con quelli della view corrente.
+        var heightCm = _profile[:heightCm] != null ? (_profile[:heightCm] as Number).toFloat() : 175.0;
+        // Calcola BMR di riferimento sul peso iniziale del generatore (78.5 kg)
+        var refProfile = {:sex => _profile[:sex], :ageBand => _profile[:ageBand], :heightCm => heightCm.toNumber()};
+        if (refProfile[:sex] == null) { refProfile[:sex] = "male"; }
+        if (refProfile[:ageBand] == null) { refProfile[:ageBand] = "40_59"; }
+        var bmrBase = calculateBmrReference(refProfile, 78.5).toFloat();
+        _history.populateHistoryDebug(heightCm, bmrBase);
+        // Aggiorna le misurazioni correnti con l'ultimo entry dello storico,
+        // marcandole come inserite manualmente alla data odierna.
+        var last = _history.lastRawEntry();
+        if (last != null) {
+            // Format: [ts(0), bmi(1), fat%(2), muscleKg(3), muscle%(4), water%(5), boneKg(6), weightKg(7), bmr(8)]
+            // Costruisce _measurements direttamente dall'entry — senza passare per Storage,
+            // così il peso Garmin non sovrascrive il valore debug (solo in memoria, non persiste).
+            var entry = last as Array;
+            _measurements = {
+                :weightKg     => entry[7] != null ? (entry[7] as Float).toFloat() : null,
+                :fatPct       => entry[2] != null ? (entry[2] as Float).toFloat() : null,
+                :musclePct    => entry[4] != null ? (entry[4] as Float).toFloat() : null,
+                :waterPct     => entry[5] != null ? (entry[5] as Float).toFloat() : null,
+                :boneKg       => entry[6] != null ? (entry[6] as Float).toFloat() : null,
+                :bmr          => null,
+                :weightSource => SOURCE_MANUAL,
+                :bodyCompSource => SOURCE_MANUAL
+            };
+        }
         rebuildMetrics();
     }
 
@@ -192,27 +218,12 @@ class BodyMetricsDomain {
     }
 
     function derivedBmrValueForDraft(draft as Dictionary) {
-        var garmin = _garminProfile.readProfile() as Dictionary;
-        var weightIsGarmin = garmin[:weightKg] != null;
-        var weightIsManual = !weightIsGarmin && draft[:weightKg] != null;
-        var heightIsGarmin = garmin[:heightCm] != null;
-        var heightIsManual = !heightIsGarmin && _profile[:heightCm] != null;
-        var sexIsGarmin = garmin[:sex] != null;
-        var sexIsManual = !sexIsGarmin && _profile[:sex] != null;
-        var ageBandIsGarmin = garmin[:ageBand] != null;
-        var ageBandIsManual = !ageBandIsGarmin && _profile[:ageBand] != null;
-
+        // Nel wizard i dati inseriti sono sempre manuali: calcola BMR se tutti i campi richiesti sono presenti.
         if (draft[:weightKg] == null || _profile[:heightCm] == null ||
             _profile[:sex] == null || _profile[:ageBand] == null) {
             return null;
         }
-
-        if ((weightIsGarmin && heightIsGarmin && sexIsGarmin && ageBandIsGarmin) ||
-            (weightIsManual && heightIsManual && sexIsManual && ageBandIsManual)) {
-            return calculateBmrReference(_profile, draft[:weightKg]).toFloat();
-        }
-
-        return null;
+        return calculateBmrReference(_profile, draft[:weightKg]).toFloat();
     }
 
     function loadProfile() as Dictionary {
@@ -405,11 +416,12 @@ class BodyMetricsDomain {
         var ageBandIsGarmin = garminData[:ageBand] != null;
         var ageBandIsManual = !ageBandIsGarmin && profile[:ageBand] != null;
 
-        // BMI - requires weight + height from the SAME source (CG or CM); mixed → N/A
+        // BMI - preferisce sorgenti omogenee (CG/CM); con sorgenti miste usa SOURCE_CALC_MANUAL
         if (measurements[:weightKg] != null && profile[:heightCm] != null) {
             var bmiSrc = null;
-            if (weightIsGarmin && heightIsGarmin)   { bmiSrc = SOURCE_CALC_GARMIN; }
+            if (weightIsGarmin && heightIsGarmin)      { bmiSrc = SOURCE_CALC_GARMIN; }
             else if (weightIsManual && heightIsManual) { bmiSrc = SOURCE_CALC_MANUAL; }
+            else                                       { bmiSrc = SOURCE_CALC_MANUAL; } // sorgente mista
             if (bmiSrc != null) {
                 var m = buildTargetMetric(
                     "bmi", "BMI", "kg/m2", calculateBmi(measurements[:weightKg], profile[:heightCm]),
@@ -446,15 +458,19 @@ class BodyMetricsDomain {
             metrics.add(unavailableMetric("fat_pct", "Grasso %", "%"));
         }
 
-        // Muscle kg - requires weight AND musclePct
+        // Muscle kg - calcolata da weight * musclePct/100: fonte dipende da entrambe le sorgenti.
+        // CG se weight è Garmin e body comp è Garmin; CM se entrambe manuali o miste.
         if (measurements[:weightKg] != null && measurements[:musclePct] != null) {
+            var muscleKgSrc = (weightIsGarmin && bodySrc != null && bodySrc.equals(SOURCE_MANUAL))
+                ? SOURCE_CALC_MANUAL
+                : (weightIsGarmin ? SOURCE_CALC_GARMIN : SOURCE_CALC_MANUAL);
             var m = buildLowOnlyMetric(
                 "muscle_kg", "Massa muscolare", "kg", muscleKgFromMeasurements(measurements),
                 muscleKgBand[:greenMin], muscleKgBand[:greenMax],
                 muscleKgBand[:yellowMin], muscleKgBand[:orangeMin]
             );
             m[:available] = true;
-            m[:source] = bodySrc;
+            m[:source] = muscleKgSrc;
             metrics.add(m);
         } else {
             metrics.add(unavailableMetric("muscle_kg", "Massa muscolare", "kg"));
@@ -520,7 +536,7 @@ class BodyMetricsDomain {
         }
 
         // BMR - Mifflin-St Jeor: requires weight + height + sex + ageBand.
-        // CG if ALL four inputs from Garmin; CM if ALL four from manual; N/A if mixed.
+        // CG se tutti i valori da Garmin; CM se tutti manuali; CM se sorgenti miste.
         if (measurements[:weightKg] != null && profile[:heightCm] != null &&
             profile[:sex] != null && profile[:ageBand] != null) {
             var bmrSrc = null;
@@ -528,6 +544,8 @@ class BodyMetricsDomain {
                 bmrSrc = SOURCE_CALC_GARMIN;
             } else if (weightIsManual && heightIsManual && sexIsManual && ageBandIsManual) {
                 bmrSrc = SOURCE_CALC_MANUAL;
+            } else {
+                bmrSrc = SOURCE_CALC_MANUAL; // sorgente mista
             }
             if (bmrSrc != null) {
                 var calculatedBmr = calculateBmrReference(profile, measurements[:weightKg]).toFloat();

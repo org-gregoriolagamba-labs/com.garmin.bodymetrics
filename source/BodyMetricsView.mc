@@ -1,6 +1,7 @@
 import Toybox.Graphics;
 import Toybox.Lang;
 import Toybox.Math;
+import Toybox.Time;
 import Toybox.Timer;
 import Toybox.WatchUi;
 
@@ -63,6 +64,7 @@ class BodyMetricsView extends WatchUi.View {
     var _infoIconCy;             // (i) icon center Y for tap detection
     var _infoIconR;              // (i) icon radius for tap detection
     var _debugEnabled = false;  // Debug menu: impostare a true solo durante lo sviluppo
+    var _reopenDataMenuAfterExit = false; // Dopo azione Data submenu, riapri il submenu
     function initialize() {
         View.initialize();
         _mode = MODE_SUMMARY;
@@ -73,6 +75,7 @@ class BodyMetricsView extends WatchUi.View {
         _setupIndex = 0;
         _profileDraft = _domain.currentProfile();
         _pendingMenuAction = null;
+        _reopenDataMenuAfterExit = false;
         _dataIndex = 0;
         _dataDraft = _domain.currentMeasurements();
         _trendWindow = 0;
@@ -176,6 +179,17 @@ class BodyMetricsView extends WatchUi.View {
         WatchUi.pushView(badgeView, new BodyMetricsBadgeInfoDelegate(badgeView), WatchUi.SLIDE_UP);
     }
 
+    function openSystemInfo() as Void {
+        var lines = [
+            {:label => text("sysinfo.app"),     :value => "BodyMetrics"},
+            {:label => text("sysinfo.version"),  :value => "1.0.0"},
+            {:label => text("sysinfo.release"),  :value => "19 apr 2026"},
+            {:label => text("sysinfo.author"),   :value => "BodyMetrics Team"}
+        ] as Array;
+        var systemView = new BodyMetricsBadgeInfoView(text("sysinfo.title"), lines);
+        WatchUi.pushView(systemView, new BodyMetricsBadgeInfoDelegate(systemView), WatchUi.SLIDE_UP);
+    }
+
     function canOpenMenu() as Boolean {
         return true;
     }
@@ -225,6 +239,19 @@ class BodyMetricsView extends WatchUi.View {
 
     function queueLanguageMenuOpen() as Void {
         _pendingMenuAction = :openLanguageMenu;
+    }
+
+    function requestDataMenuOnExit() as Void {
+        _reopenDataMenuAfterExit = true;
+    }
+
+    function openDataMenu() as Void {
+        var items = [] as Array;
+        items.add({:label => text("menu.profile"), :id => :profile});
+        items.add({:label => text("menu.data"), :id => :data});
+        var subView = new BodyMetricsMenuView(text("menu.cat.data"), items);
+        // 1 pop: solo il data submenu (aperto direttamente, senza main menu sotto)
+        WatchUi.pushView(subView, new BodyMetricsDataMenuDelegate(subView, self, 1), WatchUi.SLIDE_UP);
     }
 
     function openLanguageMenu() as Void {
@@ -323,6 +350,12 @@ class BodyMetricsView extends WatchUi.View {
                 _domain.saveProfile(_profileDraft);
                 _mode = MODE_SUMMARY;
                 _selectedMetric = 0;
+                if (_reopenDataMenuAfterExit) {
+                    _reopenDataMenuAfterExit = false;
+                    WatchUi.requestUpdate();
+                    openDataMenu();
+                    return;
+                }
             }
             WatchUi.requestUpdate();
             return;
@@ -335,6 +368,12 @@ class BodyMetricsView extends WatchUi.View {
                 _domain.saveMeasurements(_dataDraft);
                 _mode = MODE_SUMMARY;
                 _selectedMetric = 0;
+                if (_reopenDataMenuAfterExit) {
+                    _reopenDataMenuAfterExit = false;
+                    WatchUi.requestUpdate();
+                    openDataMenu();
+                    return;
+                }
             }
             WatchUi.requestUpdate();
             return;
@@ -363,6 +402,12 @@ class BodyMetricsView extends WatchUi.View {
                 _setupIndex -= 1;
             } else if (_domain.hasConfiguredProfile()) {
                 _mode = MODE_SUMMARY;
+                if (_reopenDataMenuAfterExit) {
+                    _reopenDataMenuAfterExit = false;
+                    WatchUi.requestUpdate();
+                    openDataMenu();
+                    return true;
+                }
             }
             WatchUi.requestUpdate();
             return true;
@@ -373,6 +418,12 @@ class BodyMetricsView extends WatchUi.View {
                 _dataIndex -= 1;
             } else {
                 _mode = MODE_SUMMARY;
+                if (_reopenDataMenuAfterExit) {
+                    _reopenDataMenuAfterExit = false;
+                    WatchUi.requestUpdate();
+                    openDataMenu();
+                    return true;
+                }
             }
             WatchUi.requestUpdate();
             return true;
@@ -1295,9 +1346,9 @@ class BodyMetricsView extends WatchUi.View {
         var pad = pct(h, 2);
         if (pad < 3) { pad = 3; }
 
-        // Metric label at top (round-screen-aware safe width)
-        var topY = pct(h, 12);
-        var labelText = _domain.metricLabel(_selectedMetric);
+        // Combined title: "Andamento BMI" on one row in metric color
+        var topY = pct(h, 10);
+        var labelText = text("trend.title") + " " + _domain.metricLabel(_selectedMetric);
         var labelFont = Graphics.FONT_TINY;
         var labelSafeW = _availableWidthAtY(w, h, topY, dc.getFontHeight(labelFont)) - pct(w, 10);
         if (dc.getTextWidthInPixels(labelText, labelFont) > labelSafeW) {

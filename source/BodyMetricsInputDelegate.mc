@@ -109,14 +109,11 @@ class BodyMetricsInputDelegate extends WatchUi.InputDelegate {
     function _openMenu() as Boolean {
         if (_view.canOpenMenu()) {
             var items = [] as Array;
-            if (_view.canEditProfile()) {
-                items.add({:label => _view.text("menu.profile"), :id => :profile});
-            }
-            items.add({:label => _view.text("menu.data"), :id => :data});
-            items.add({:label => _view.text("menu.badge_info"), :id => :badge_info});
-            items.add({:label => _view.languageMenuLabel(), :id => :language});
+            items.add({:label => _view.text("menu.cat.data"), :id => :data_management});
+            items.add({:label => _view.text("menu.cat.options"), :id => :options});
+            items.add({:label => _view.text("menu.cat.info"), :id => :information});
             if (DEBUG) {
-                items.add({:label => "Debug", :id => :debug});
+                items.add({:label => _view.text("debug.menu.title"), :id => :debug});
             }
             var menuView = new BodyMetricsMenuView(_view.text("menu.title"), items);
             WatchUi.pushView(menuView, new BodyMetricsCustomMenuDelegate(menuView, _view), WatchUi.SLIDE_UP);
@@ -124,5 +121,3 @@ class BodyMetricsInputDelegate extends WatchUi.InputDelegate {
         return true;
     }
 }
-
-// Menu delegates are now in BodyMetricsMenuView.mc
