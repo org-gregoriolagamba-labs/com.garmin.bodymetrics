@@ -8,6 +8,11 @@ const ZONE_YELLOW = 1;
 const ZONE_ORANGE = 2;
 const ZONE_RED = 3;
 
+//! Politiche di classificazione delle metriche:
+//! - targetRange: range bidirezionale (basso/alto) con soglie green/yellow/orange/red
+//! - lowOnly: solo soglie inferiori (es. massa muscolare, idratazione)
+//! - highOnly: solo soglia superiore
+//! - referenceOnly: deviazione percentuale da un valore di riferimento (es. BMR)
 const POLICY_TARGET_RANGE = "targetRange";
 const POLICY_LOW_ONLY = "lowOnly";
 const POLICY_HIGH_ONLY = "highOnly";
@@ -18,6 +23,9 @@ const PROFILE_AGE_BAND_KEY = "bodyMetrics.profile.ageBand";
 const PROFILE_BODY_PROFILE_KEY = "bodyMetrics.profile.bodyProfile";
 const PROFILE_HEIGHT_KEY = "bodyMetrics.profile.heightCm";
 
+//! Cuore della logica applicativa. Coordina profilo utente, misurazioni,
+//! classificazione a zone colorate, soglie cliniche e history.
+//! Non dipende dalla UI: tutta la presentazione è delegata a BodyMetricsView.
 class BodyMetricsDomain {
 
     //! DEBUG: Popola la history con dati casuali per 90 giorni
@@ -164,7 +172,7 @@ class BodyMetricsDomain {
         if (decimals == 0) {
             text = value.toNumber().toString();
         } else if (decimals == 1) {
-            text = fmt1(value);
+            text = fmt1Global(value);
         } else {
             text = fmtD2(value);
         }
@@ -223,11 +231,6 @@ class BodyMetricsDomain {
         }
 
         return null;
-    }
-
-    //! @deprecated Use module-level fmt1() instead.
-    function fmt1(v as Float) as String {
-        return fmt1Global(v);
     }
 
     function loadProfile() as Dictionary {
@@ -1169,68 +1172,7 @@ class BodyMetricsDomain {
         return fmtD2(value.toFloat());
     }
 
-    function semanticZoneLabel(metric as Dictionary) as String {
-        var zone = classify(metric);
-        var policy = classificationPolicy(metric);
-        var value = metric[:value];
-
-        if (policy.equals(POLICY_LOW_ONLY)) {
-            if (zone == ZONE_GREEN) {
-                return _locale.text("label.low_only.green");
-            }
-            if (zone == ZONE_YELLOW) {
-                return _locale.text("label.low_only.yellow");
-            }
-            if (zone == ZONE_ORANGE) {
-                return _locale.text("label.low_only.orange");
-            }
-            return _locale.text("label.low_only.red");
-        }
-
-        if (policy.equals(POLICY_HIGH_ONLY)) {
-            if (zone == ZONE_GREEN) {
-                return _locale.text("label.high_only.green");
-            }
-            if (zone == ZONE_YELLOW) {
-                return _locale.text("label.high_only.yellow");
-            }
-            if (zone == ZONE_ORANGE) {
-                return _locale.text("label.high_only.orange");
-            }
-            return _locale.text("label.high_only.red");
-        }
-
-        if (policy.equals(POLICY_REFERENCE_ONLY)) {
-            if (zone == ZONE_GREEN) {
-                return _locale.text("label.reference.green");
-            }
-            if (value.toFloat() < metric[:referenceValue].toFloat()) {
-                return _locale.text("label.reference.below");
-            }
-            return _locale.text("label.reference.above");
-        }
-
-        if (zone == ZONE_GREEN) {
-            return _locale.text("label.target.green");
-        }
-        if (zone == ZONE_YELLOW) {
-            if (value < metric[:greenMin]) {
-                return _locale.text("label.target.yellow_low");
-            }
-            return _locale.text("label.target.yellow_high");
-        }
-        if (zone == ZONE_ORANGE) {
-            if (value < metric[:greenMin]) {
-                return _locale.text("label.target.orange_low");
-            }
-            return _locale.text("label.target.orange_high");
-        }
-        if (value < metric[:greenMin]) {
-            return _locale.text("label.target.red_low");
-        }
-        return _locale.text("label.target.red_high");
-    }
-
+    //! Hint testuale per la zona semantica corrente (usato nella UI summary/detail).
     function semanticZoneHint(metric as Dictionary) as String {
         var zone = classify(metric);
         var policy = classificationPolicy(metric);

@@ -10,16 +10,33 @@ const SOURCE_CALC_MANUAL = "CM";  // calculated from all-manual inputs
 //! Reads user profile data from the Garmin device (UserProfile API).
 //! Available on-device: weight, height, gender, birthYear.
 //! NOT available: fat%, muscle%, water%, bone mass, BMR.
+//! The raw profile is cached to avoid repeated hardware API calls
+//! within the same app session.
 class BodyMetricsGarminProfile {
+
+    hidden var _cachedRawProfile = null;
 
     function initialize() {
     }
 
+    //! Returns the cached raw UserProfile, fetching once from the API.
+    hidden function _getProfile() as UserProfile.Profile {
+        if (_cachedRawProfile == null) {
+            _cachedRawProfile = UserProfile.getProfile();
+        }
+        return _cachedRawProfile;
+    }
+
+    //! Invalidates the cached profile so the next access re-reads the hardware.
+    function invalidateCache() as Void {
+        _cachedRawProfile = null;
+    }
+
     //! Read the Garmin user profile and return available data.
-    //! Returns a Dictionary with :weight (Float, kg), :heightCm (Number),
+    //! Returns a Dictionary with :weightKg (Float, kg), :heightCm (Number),
     //! :sex (String "male"/"female"), :ageBand (String), or null values.
     function readProfile() as Dictionary {
-        var profile = UserProfile.getProfile();
+        var profile = _getProfile();
         return {
             :weightKg => _weightKg(profile),
             :heightCm => _heightCm(profile),
@@ -30,13 +47,12 @@ class BodyMetricsGarminProfile {
 
     //! Returns true if at least weight is available from Garmin profile.
     function hasWeight() as Boolean {
-        var profile = UserProfile.getProfile();
-        return profile.weight != null;
+        return _getProfile().weight != null;
     }
 
     //! Returns true if enough data for auto-profile (height + gender + birthYear).
     function hasProfileData() as Boolean {
-        var profile = UserProfile.getProfile();
+        var profile = _getProfile();
         return profile.height != null && profile.gender != null && profile.birthYear != null;
     }
 

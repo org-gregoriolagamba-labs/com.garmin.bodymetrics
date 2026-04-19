@@ -17,6 +17,11 @@ const TREND_FLAT = 0;
 const TREND_DOWN = -1;
 
 class BodyMetricsHistory {
+
+    //! Cache degli entries per evitare letture ripetute da Storage
+    //! nello stesso ciclo di aggiornamento UI.
+    hidden var _cachedEntries = null;
+
     //! DEBUG: Popola la history con dati realistici per 90 giorni
     function populateHistoryDebug() as Void {
         if (!isDebugHistoryActive()) {
@@ -82,6 +87,7 @@ class BodyMetricsHistory {
         }
         Storage.setValue(HISTORY_KEY, entries);
         Storage.setValue(HISTORY_DEBUG_ACTIVE_KEY, true);
+        _invalidateCache();
     }
 
     function initialize() {
@@ -118,6 +124,7 @@ class BodyMetricsHistory {
         }
 
         Storage.setValue(HISTORY_KEY, entries);
+        _invalidateCache();
     }
 
     //! Data points for metric index (0-7) within windowDays.
@@ -185,6 +192,7 @@ class BodyMetricsHistory {
         }
 
         Storage.deleteValue(HISTORY_KEY);
+        _invalidateCache();
     }
 
     //! DEBUG: Restore real history if debug data is active.
@@ -200,6 +208,7 @@ class BodyMetricsHistory {
 
         Storage.deleteValue(HISTORY_DEBUG_BACKUP_KEY);
         Storage.deleteValue(HISTORY_DEBUG_ACTIVE_KEY);
+        _invalidateCache();
     }
 
     function isDebugHistoryActive() as Boolean {
@@ -218,14 +227,26 @@ class BodyMetricsHistory {
     }
 
     hidden function _loadEntries() as Array {
+        if (_cachedEntries != null) {
+            return _cachedEntries;
+        }
         var stored = Storage.getValue(HISTORY_KEY);
-        if (stored == null) { return [] as Array; }
+        if (stored == null) {
+            _cachedEntries = [] as Array;
+            return _cachedEntries;
+        }
         var arr = stored as Array;
         var result = [] as Array;
         for (var i = 0; i < arr.size(); i++) {
             result.add(arr[i]);
         }
+        _cachedEntries = result;
         return result;
+    }
+
+    //! Invalida la cache degli entries dopo una scrittura su Storage.
+    hidden function _invalidateCache() as Void {
+        _cachedEntries = null;
     }
 
     hidden function _nextDebugUnit(seed as Number) as Float {

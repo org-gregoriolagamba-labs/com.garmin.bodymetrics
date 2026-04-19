@@ -137,12 +137,13 @@ class BodyMetricsMenuView extends WatchUi.View {
 
 }
 
-//! Delegate for the main settings menu
-
-//! Costante globale per abilitare funzioni di debug
+//! Toggle globale per abilitare funzioni di debug nel menu.
+//! Impostare a false prima della build di release.
 const DEBUG = true;
 
-class BodyMetricsCustomMenuDelegate extends WatchUi.BehaviorDelegate {
+//! Delegate base per tutti i menu. Fornisce navigazione condivisa
+//! (UP/DOWN per scorrere, BACK per chiudere). Ogni menu sovrascrive solo onSelect().
+class BodyMetricsBaseMenuDelegate extends WatchUi.BehaviorDelegate {
 
     var _menuView as BodyMetricsMenuView;
     var _view as BodyMetricsView;
@@ -161,6 +162,19 @@ class BodyMetricsCustomMenuDelegate extends WatchUi.BehaviorDelegate {
     function onPreviousPage() as Boolean {
         _menuView.moveUp();
         return true;
+    }
+
+    function onBack() as Boolean {
+        WatchUi.popView(WatchUi.SLIDE_DOWN);
+        return true;
+    }
+}
+
+//! Delegate per il menu principale impostazioni.
+class BodyMetricsCustomMenuDelegate extends BodyMetricsBaseMenuDelegate {
+
+    function initialize(menuView as BodyMetricsMenuView, view as BodyMetricsView) {
+        BodyMetricsBaseMenuDelegate.initialize(menuView, view);
     }
 
     function onSelect() as Boolean {
@@ -189,32 +203,13 @@ class BodyMetricsCustomMenuDelegate extends WatchUi.BehaviorDelegate {
         }
         return true;
     }
-
-    function onBack() as Boolean {
-        WatchUi.popView(WatchUi.SLIDE_DOWN);
-        return true;
-    }
 }
 
-class BodyMetricsCustomDebugMenuDelegate extends WatchUi.BehaviorDelegate {
-
-    var _menuView as BodyMetricsMenuView;
-    var _view as BodyMetricsView;
+//! Delegate per il sotto-menu debug.
+class BodyMetricsCustomDebugMenuDelegate extends BodyMetricsBaseMenuDelegate {
 
     function initialize(menuView as BodyMetricsMenuView, view as BodyMetricsView) {
-        BehaviorDelegate.initialize();
-        _menuView = menuView;
-        _view = view;
-    }
-
-    function onNextPage() as Boolean {
-        _menuView.moveDown();
-        return true;
-    }
-
-    function onPreviousPage() as Boolean {
-        _menuView.moveUp();
-        return true;
+        BodyMetricsBaseMenuDelegate.initialize(menuView, view);
     }
 
     function onSelect() as Boolean {
@@ -229,33 +224,13 @@ class BodyMetricsCustomDebugMenuDelegate extends WatchUi.BehaviorDelegate {
         }
         return true;
     }
-
-    function onBack() as Boolean {
-        WatchUi.popView(WatchUi.SLIDE_DOWN);
-        return true;
-    }
 }
 
-//! Delegate for the language selection menu
-class BodyMetricsCustomLanguageMenuDelegate extends WatchUi.BehaviorDelegate {
-
-    var _menuView as BodyMetricsMenuView;
-    var _view as BodyMetricsView;
+//! Delegate per la selezione lingua.
+class BodyMetricsCustomLanguageMenuDelegate extends BodyMetricsBaseMenuDelegate {
 
     function initialize(menuView as BodyMetricsMenuView, view as BodyMetricsView) {
-        BehaviorDelegate.initialize();
-        _menuView = menuView;
-        _view = view;
-    }
-
-    function onNextPage() as Boolean {
-        _menuView.moveDown();
-        return true;
-    }
-
-    function onPreviousPage() as Boolean {
-        _menuView.moveUp();
-        return true;
+        BodyMetricsBaseMenuDelegate.initialize(menuView, view);
     }
 
     function onSelect() as Boolean {
@@ -266,11 +241,6 @@ class BodyMetricsCustomLanguageMenuDelegate extends WatchUi.BehaviorDelegate {
         else if (id == :lang_es) { lang = "es"; }
         WatchUi.popView(WatchUi.SLIDE_DOWN);
         _view.setLanguage(lang);
-        return true;
-    }
-
-    function onBack() as Boolean {
-        WatchUi.popView(WatchUi.SLIDE_DOWN);
         return true;
     }
 }

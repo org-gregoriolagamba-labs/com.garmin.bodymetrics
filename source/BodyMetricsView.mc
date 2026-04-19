@@ -56,7 +56,7 @@ class BodyMetricsView extends WatchUi.View {
     var _trendWindow;
     var _trendDirection;
     var _trendValues;
-    var _debugEnabled = true;  // Toggle debug menu items on/off
+    var _debugEnabled = false;  // Debug menu: impostare a true solo durante lo sviluppo
     function initialize() {
         View.initialize();
         _mode = MODE_SUMMARY;
