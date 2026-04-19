@@ -76,9 +76,9 @@ class BodyMetricsHistory {
             seed += 1;
             bone = _driftValue(bone, 0.0002 * effDrift, 0.01, seed);
             seed += 1;
-            bmi = weight / (1.75 * 1.75);  // derive from weight for consistency
+            bmi = round1Global(weight / (1.75 * 1.75));  // derive from weight for consistency
             seed += 1;
-            muscleKg = weight * musclePct / 100.0;  // derive from weight + muscle%
+            muscleKg = round1Global(weight * musclePct / 100.0);  // derive from weight + muscle%
             seed += 1;
             bmr = _driftValue(bmr, -0.12 * effDrift, 3.0, seed);
             seed += 1;
@@ -221,7 +221,7 @@ class BodyMetricsHistory {
         entry[0] = ts;
         for (var i = 0; i < 8 && i < metrics.size(); i++) {
             var m = metrics[i] as Dictionary;
-            entry[i + 1] = m[:available] ? m[:value] : null;
+            entry[i + 1] = m[:available] ? round1Global(m[:value].toFloat()) : null;
         }
         return entry;
     }
@@ -257,6 +257,6 @@ class BodyMetricsHistory {
 
     hidden function _driftValue(current as Float, drift as Float, noiseAmplitude as Float, seed as Number) as Float {
         var noise = (_nextDebugUnit(seed) - 0.5) * noiseAmplitude;
-        return current + drift + noise;
+        return round1Global(current + drift + noise);
     }
 }

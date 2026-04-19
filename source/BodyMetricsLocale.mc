@@ -75,8 +75,15 @@ class BodyMetricsLocale {
     function textIt(key as String) as String {
         if (key.equals("menu.title")) { return "Menu"; }
         if (key.equals("menu.profile")) { return "Profilo"; }
+        if (key.equals("menu.info")) { return "Info metrica"; }
         if (key.equals("menu.language")) { return "Lingua"; }
         if (key.equals("menu.data")) { return "Inserisci dati"; }
+        if (key.equals("menu.badge_info")) { return "Badge info"; }
+        if (key.equals("debug.menu.title")) { return "Debug"; }
+        if (key.equals("debug.menu.populate_history")) { return "Popola storico"; }
+        if (key.equals("debug.menu.clear_history")) { return "Cancella storico"; }
+        if (key.equals("debug.menu.disable")) { return "Disabilita debug"; }
+        if (key.equals("debug.menu.enable")) { return "Abilita debug"; }
         if (key.equals("data.title")) { return "Dati corporei"; }
         if (key.equals("data.select_save")) { return "SELECT  salva"; }
         if (key.equals("data.select_next")) { return "SELECT  avanti"; }
@@ -99,6 +106,42 @@ class BodyMetricsLocale {
         if (key.equals("setup.select_save")) { return "SELECT  salva"; }
         if (key.equals("setup.select_next")) { return "SELECT  avanti"; }
         if (key.equals("detail.ideal")) { return "Ideale: "; }
+        if (key.equals("cta.summary_info")) { return "SELECT  info"; }
+        if (key.equals("cta.info_detail")) { return "SELECT  dettaglio"; }
+        if (key.equals("cta.detail_trend")) { return "SELECT  trend"; }
+        if (key.equals("info.section.metric")) { return "Metrica"; }
+        if (key.equals("info.section.ranges")) { return "Fasce e riferimenti"; }
+        if (key.equals("info.section.badges")) { return "Legenda badge"; }
+        if (key.equals("info.range.ideal_prefix")) { return "Fascia ideale"; }
+        if (key.equals("info.range.profile_prefix")) { return "Profilo attivo"; }
+        if (key.equals("info.range.depends_prefix")) { return "Dipende da"; }
+        if (key.equals("info.range.reference_prefix")) { return "Rif. attivo"; }
+        if (key.equals("info.range.good_prefix")) { return "in linea entro"; }
+        if (key.equals("info.range.mild_prefix")) { return "da monitorare entro"; }
+        if (key.equals("info.range.unavailable")) { return "Servono piu dati per calcolare la fascia attiva o il riferimento."; }
+        if (key.equals("info.badges.current_prefix")) { return "Badge attuale"; }
+        if (key.equals("info.badges.none")) { return "nessuno"; }
+        if (key.equals("info.badges.section_metrics")) { return "Metriche"; }
+        if (key.equals("info.badges.G")) { return "sincronizzato da Garmin"; }
+        if (key.equals("info.badges.M")) { return "inserito manualmente"; }
+        if (key.equals("info.badges.CG")) { return "calcolato da dati Garmin"; }
+        if (key.equals("info.badges.CM")) { return "calcolato da dati manuali"; }
+        if (key.equals("info.badges.section_inputs")) { return "Input"; }
+        if (key.equals("info.badges.input_G")) { return "sincronizzato da Garmin"; }
+        if (key.equals("info.badges.input_C")) { return "calcolato automaticamente"; }
+        if (key.equals("info.factor.sex")) { return "sesso"; }
+        if (key.equals("info.factor.age")) { return "eta"; }
+        if (key.equals("info.factor.training")) { return "profilo allenamento"; }
+        if (key.equals("info.factor.height")) { return "altezza"; }
+        if (key.equals("info.factor.weight")) { return "peso"; }
+        if (key.equals("info.metric.bmi.desc")) { return "Indice peso-altezza usato per stimare l'equilibrio corporeo generale."; }
+        if (key.equals("info.metric.fat_pct.desc")) { return "Quota di massa grassa sul totale corporeo, utile per stimare riserva energetica e composizione."; }
+        if (key.equals("info.metric.muscle_kg.desc")) { return "Massa muscolare stimata in chilogrammi: aiuta a leggere struttura e capacita di carico."; }
+        if (key.equals("info.metric.muscle_pct.desc")) { return "Percentuale di muscolo sul peso totale: evidenzia quanto del corpo e tessuto contrattile."; }
+        if (key.equals("info.metric.water_pct.desc")) { return "Percentuale di acqua corporea: segnala stato di idratazione e qualita della composizione."; }
+        if (key.equals("info.metric.bone_kg.desc")) { return "Stima della massa ossea: va letta come indicazione di struttura, non come dato clinico."; }
+        if (key.equals("info.metric.weight.desc")) { return "Peso totale corrente: va interpretato insieme a BMI e composizione, non da solo."; }
+        if (key.equals("info.metric.bmr.desc")) { return "Dispendio energetico basale stimato a riposo, usato come riferimento metabolico personale."; }
         if (key.equals("field.sex")) { return "Sesso"; }
         if (key.equals("field.age_band")) { return "Fascia eta"; }
         if (key.equals("field.height")) { return "Altezza"; }
@@ -166,8 +209,15 @@ class BodyMetricsLocale {
     function textEn(key as String) as String {
         if (key.equals("menu.title")) { return "Menu"; }
         if (key.equals("menu.profile")) { return "Profile"; }
+        if (key.equals("menu.info")) { return "Metric info"; }
         if (key.equals("menu.language")) { return "Language"; }
         if (key.equals("menu.data")) { return "Enter data"; }
+        if (key.equals("menu.badge_info")) { return "Badge info"; }
+        if (key.equals("debug.menu.title")) { return "Debug"; }
+        if (key.equals("debug.menu.populate_history")) { return "Populate history"; }
+        if (key.equals("debug.menu.clear_history")) { return "Clear history"; }
+        if (key.equals("debug.menu.disable")) { return "Disable debug"; }
+        if (key.equals("debug.menu.enable")) { return "Enable debug"; }
         if (key.equals("data.title")) { return "Body data"; }
         if (key.equals("data.select_save")) { return "SELECT  save"; }
         if (key.equals("data.select_next")) { return "SELECT  next"; }
@@ -190,6 +240,42 @@ class BodyMetricsLocale {
         if (key.equals("setup.select_save")) { return "SELECT  save"; }
         if (key.equals("setup.select_next")) { return "SELECT  next"; }
         if (key.equals("detail.ideal")) { return "Ideal: "; }
+        if (key.equals("cta.summary_info")) { return "SELECT  info"; }
+        if (key.equals("cta.info_detail")) { return "SELECT  detail"; }
+        if (key.equals("cta.detail_trend")) { return "SELECT  trend"; }
+        if (key.equals("info.section.metric")) { return "Metric"; }
+        if (key.equals("info.section.ranges")) { return "Ranges and ref."; }
+        if (key.equals("info.section.badges")) { return "Badge legend"; }
+        if (key.equals("info.range.ideal_prefix")) { return "Ideal range"; }
+        if (key.equals("info.range.profile_prefix")) { return "Active profile"; }
+        if (key.equals("info.range.depends_prefix")) { return "Depends on"; }
+        if (key.equals("info.range.reference_prefix")) { return "Active ref."; }
+        if (key.equals("info.range.good_prefix")) { return "aligned within"; }
+        if (key.equals("info.range.mild_prefix")) { return "monitor within"; }
+        if (key.equals("info.range.unavailable")) { return "More data is required to calculate the active range or reference."; }
+        if (key.equals("info.badges.current_prefix")) { return "Current badge"; }
+        if (key.equals("info.badges.none")) { return "none"; }
+        if (key.equals("info.badges.section_metrics")) { return "Metrics"; }
+        if (key.equals("info.badges.G")) { return "synced from Garmin"; }
+        if (key.equals("info.badges.M")) { return "manually entered"; }
+        if (key.equals("info.badges.CG")) { return "calculated from Garmin data"; }
+        if (key.equals("info.badges.CM")) { return "calculated from manual data"; }
+        if (key.equals("info.badges.section_inputs")) { return "Inputs"; }
+        if (key.equals("info.badges.input_G")) { return "synced from Garmin"; }
+        if (key.equals("info.badges.input_C")) { return "auto-calculated"; }
+        if (key.equals("info.factor.sex")) { return "sex"; }
+        if (key.equals("info.factor.age")) { return "age"; }
+        if (key.equals("info.factor.training")) { return "training profile"; }
+        if (key.equals("info.factor.height")) { return "height"; }
+        if (key.equals("info.factor.weight")) { return "weight"; }
+        if (key.equals("info.metric.bmi.desc")) { return "Weight-to-height index used to estimate overall body balance."; }
+        if (key.equals("info.metric.fat_pct.desc")) { return "Share of body fat on total mass, useful to read energy reserve and body composition."; }
+        if (key.equals("info.metric.muscle_kg.desc")) { return "Estimated muscle mass in kilograms, useful to read structure and load capacity."; }
+        if (key.equals("info.metric.muscle_pct.desc")) { return "Muscle percentage on total weight, showing how much of the body is contractile tissue."; }
+        if (key.equals("info.metric.water_pct.desc")) { return "Body water percentage, useful to read hydration status and composition quality."; }
+        if (key.equals("info.metric.bone_kg.desc")) { return "Estimated bone mass: a structural indicator, not a clinical measurement."; }
+        if (key.equals("info.metric.weight.desc")) { return "Current total weight, best interpreted together with BMI and composition rather than alone."; }
+        if (key.equals("info.metric.bmr.desc")) { return "Estimated basal energy expenditure at rest, used as a personal metabolic reference."; }
         if (key.equals("field.sex")) { return "Sex"; }
         if (key.equals("field.age_band")) { return "Age band"; }
         if (key.equals("field.height")) { return "Height"; }
@@ -257,8 +343,15 @@ class BodyMetricsLocale {
     function textFr(key as String) as String {
         if (key.equals("menu.title")) { return "Menu"; }
         if (key.equals("menu.profile")) { return "Profil"; }
+        if (key.equals("menu.info")) { return "Info metrique"; }
         if (key.equals("menu.language")) { return "Langue"; }
         if (key.equals("menu.data")) { return "Saisir donnees"; }
+        if (key.equals("menu.badge_info")) { return "Badge info"; }
+        if (key.equals("debug.menu.title")) { return "Debug"; }
+        if (key.equals("debug.menu.populate_history")) { return "Remplir historique"; }
+        if (key.equals("debug.menu.clear_history")) { return "Effacer historique"; }
+        if (key.equals("debug.menu.disable")) { return "Desactiver debug"; }
+        if (key.equals("debug.menu.enable")) { return "Activer debug"; }
         if (key.equals("data.title")) { return "Donnees corp."; }
         if (key.equals("data.select_save")) { return "SELECT  sauv."; }
         if (key.equals("data.select_next")) { return "SELECT  suite"; }
@@ -281,6 +374,42 @@ class BodyMetricsLocale {
         if (key.equals("setup.select_save")) { return "SELECT  sauv."; }
         if (key.equals("setup.select_next")) { return "SELECT  suite"; }
         if (key.equals("detail.ideal")) { return "Cible: "; }
+        if (key.equals("cta.summary_info")) { return "SELECT  info"; }
+        if (key.equals("cta.info_detail")) { return "SELECT  detail"; }
+        if (key.equals("cta.detail_trend")) { return "SELECT  tendance"; }
+        if (key.equals("info.section.metric")) { return "Metrique"; }
+        if (key.equals("info.section.ranges")) { return "Plages et ref."; }
+        if (key.equals("info.section.badges")) { return "Legende badges"; }
+        if (key.equals("info.range.ideal_prefix")) { return "Plage ideale"; }
+        if (key.equals("info.range.profile_prefix")) { return "Profil actif"; }
+        if (key.equals("info.range.depends_prefix")) { return "Depend de"; }
+        if (key.equals("info.range.reference_prefix")) { return "Ref. active"; }
+        if (key.equals("info.range.good_prefix")) { return "aligne dans"; }
+        if (key.equals("info.range.mild_prefix")) { return "a suivre dans"; }
+        if (key.equals("info.range.unavailable")) { return "Des donnees supplementaires sont necessaires pour calculer la plage active ou la reference."; }
+        if (key.equals("info.badges.current_prefix")) { return "Badge actuel"; }
+        if (key.equals("info.badges.none")) { return "aucun"; }
+        if (key.equals("info.badges.section_metrics")) { return "Metriques"; }
+        if (key.equals("info.badges.G")) { return "synchronise depuis Garmin"; }
+        if (key.equals("info.badges.M")) { return "entree manuellement"; }
+        if (key.equals("info.badges.CG")) { return "calcule a partir des donnees Garmin"; }
+        if (key.equals("info.badges.CM")) { return "calcule a partir des donnees manuelles"; }
+        if (key.equals("info.badges.section_inputs")) { return "Saisie"; }
+        if (key.equals("info.badges.input_G")) { return "synchronise depuis Garmin"; }
+        if (key.equals("info.badges.input_C")) { return "calcule automatiquement"; }
+        if (key.equals("info.factor.sex")) { return "sexe"; }
+        if (key.equals("info.factor.age")) { return "age"; }
+        if (key.equals("info.factor.training")) { return "profil d'entrainement"; }
+        if (key.equals("info.factor.height")) { return "taille"; }
+        if (key.equals("info.factor.weight")) { return "poids"; }
+        if (key.equals("info.metric.bmi.desc")) { return "Indice poids-taille utilise pour estimer l'equilibre corporel global."; }
+        if (key.equals("info.metric.fat_pct.desc")) { return "Part de graisse sur la masse totale, utile pour lire reserve energetique et composition."; }
+        if (key.equals("info.metric.muscle_kg.desc")) { return "Masse musculaire estimee en kilogrammes, utile pour lire structure et capacite de charge."; }
+        if (key.equals("info.metric.muscle_pct.desc")) { return "Pourcentage de muscle sur le poids total, montrant la part de tissu contractile."; }
+        if (key.equals("info.metric.water_pct.desc")) { return "Pourcentage d'eau corporelle, utile pour lire hydratation et qualite de composition."; }
+        if (key.equals("info.metric.bone_kg.desc")) { return "Estimation de masse osseuse: indicateur structurel, pas une mesure clinique."; }
+        if (key.equals("info.metric.weight.desc")) { return "Poids total actuel, a interpreter avec l'IMC et la composition plutot qu'isole."; }
+        if (key.equals("info.metric.bmr.desc")) { return "Depense energetique basale estimee au repos, utilisee comme reference metabolique personnelle."; }
         if (key.equals("field.sex")) { return "Sexe"; }
         if (key.equals("field.age_band")) { return "Age"; }
         if (key.equals("field.height")) { return "Taille"; }
@@ -348,8 +477,15 @@ class BodyMetricsLocale {
     function textEs(key as String) as String {
         if (key.equals("menu.title")) { return "Menu"; }
         if (key.equals("menu.profile")) { return "Perfil"; }
+        if (key.equals("menu.info")) { return "Info metrica"; }
         if (key.equals("menu.language")) { return "Idioma"; }
         if (key.equals("menu.data")) { return "Ingresar datos"; }
+        if (key.equals("menu.badge_info")) { return "Badge info"; }
+        if (key.equals("debug.menu.title")) { return "Debug"; }
+        if (key.equals("debug.menu.populate_history")) { return "Poblar historial"; }
+        if (key.equals("debug.menu.clear_history")) { return "Borrar historial"; }
+        if (key.equals("debug.menu.disable")) { return "Desactivar debug"; }
+        if (key.equals("debug.menu.enable")) { return "Activar debug"; }
         if (key.equals("data.title")) { return "Datos corporales"; }
         if (key.equals("data.select_save")) { return "SELECT  guardar"; }
         if (key.equals("data.select_next")) { return "SELECT  seguir"; }
@@ -372,6 +508,42 @@ class BodyMetricsLocale {
         if (key.equals("setup.select_save")) { return "SELECT  guardar"; }
         if (key.equals("setup.select_next")) { return "SELECT  seguir"; }
         if (key.equals("detail.ideal")) { return "Ideal: "; }
+        if (key.equals("cta.summary_info")) { return "SELECT  info"; }
+        if (key.equals("cta.info_detail")) { return "SELECT  detalle"; }
+        if (key.equals("cta.detail_trend")) { return "SELECT  tendencia"; }
+        if (key.equals("info.section.metric")) { return "Metrica"; }
+        if (key.equals("info.section.ranges")) { return "Rangos y ref."; }
+        if (key.equals("info.section.badges")) { return "Leyenda badges"; }
+        if (key.equals("info.range.ideal_prefix")) { return "Rango ideal"; }
+        if (key.equals("info.range.profile_prefix")) { return "Perfil activo"; }
+        if (key.equals("info.range.depends_prefix")) { return "Depende de"; }
+        if (key.equals("info.range.reference_prefix")) { return "Ref. activa"; }
+        if (key.equals("info.range.good_prefix")) { return "alineado dentro de"; }
+        if (key.equals("info.range.mild_prefix")) { return "vigilar dentro de"; }
+        if (key.equals("info.range.unavailable")) { return "Se necesitan mas datos para calcular el rango activo o la referencia."; }
+        if (key.equals("info.badges.current_prefix")) { return "Badge actual"; }
+        if (key.equals("info.badges.none")) { return "ninguno"; }
+        if (key.equals("info.badges.section_metrics")) { return "Metricas"; }
+        if (key.equals("info.badges.G")) { return "sincronizado desde Garmin"; }
+        if (key.equals("info.badges.M")) { return "ingresado manualmente"; }
+        if (key.equals("info.badges.CG")) { return "calculado a partir de datos Garmin"; }
+        if (key.equals("info.badges.CM")) { return "calculado a partir de datos manuales"; }
+        if (key.equals("info.badges.section_inputs")) { return "Entrada"; }
+        if (key.equals("info.badges.input_G")) { return "sincronizado desde Garmin"; }
+        if (key.equals("info.badges.input_C")) { return "calculado automaticamente"; }
+        if (key.equals("info.factor.sex")) { return "sexo"; }
+        if (key.equals("info.factor.age")) { return "edad"; }
+        if (key.equals("info.factor.training")) { return "perfil de entrenamiento"; }
+        if (key.equals("info.factor.height")) { return "altura"; }
+        if (key.equals("info.factor.weight")) { return "peso"; }
+        if (key.equals("info.metric.bmi.desc")) { return "Indice peso-altura usado para estimar el equilibrio corporal general."; }
+        if (key.equals("info.metric.fat_pct.desc")) { return "Proporcion de grasa sobre la masa total, util para leer reserva energetica y composicion."; }
+        if (key.equals("info.metric.muscle_kg.desc")) { return "Masa muscular estimada en kilogramos, util para leer estructura y capacidad de carga."; }
+        if (key.equals("info.metric.muscle_pct.desc")) { return "Porcentaje muscular sobre el peso total, mostrando cuanto del cuerpo es tejido contractil."; }
+        if (key.equals("info.metric.water_pct.desc")) { return "Porcentaje de agua corporal, util para leer hidratacion y calidad de composicion."; }
+        if (key.equals("info.metric.bone_kg.desc")) { return "Estimacion de masa osea: indicador estructural, no una medicion clinica."; }
+        if (key.equals("info.metric.weight.desc")) { return "Peso total actual, mejor interpretado junto con IMC y composicion en vez de aislado."; }
+        if (key.equals("info.metric.bmr.desc")) { return "Gasto energetico basal estimado en reposo, usado como referencia metabolica personal."; }
         if (key.equals("field.sex")) { return "Sexo"; }
         if (key.equals("field.age_band")) { return "Edad"; }
         if (key.equals("field.height")) { return "Altura"; }

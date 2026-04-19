@@ -185,20 +185,23 @@ class BodyMetricsCustomMenuDelegate extends BodyMetricsBaseMenuDelegate {
         } else if (id == :data) {
             WatchUi.popView(WatchUi.SLIDE_DOWN);
             _view.openDataEntry();
+        } else if (id == :badge_info) {
+            WatchUi.popView(WatchUi.SLIDE_DOWN);
+            _view.openBadgeInfo();
         } else if (id == :language) {
             WatchUi.popView(WatchUi.SLIDE_DOWN);
             _view.queueLanguageMenuOpen();
         } else if (id == :debug) {
             var debugItems = [] as Array;
             if (_view.isDebugEnabled()) {
-                debugItems.add({:label => "Popola history", :id => :debug_populate_history});
-                debugItems.add({:label => "Cancella history", :id => :debug_clear_history});
-                debugItems.add({:label => "Disabilita debug", :id => :debug_disable});
+                debugItems.add({:label => _view.text("debug.menu.populate_history"), :id => :debug_populate_history});
+                debugItems.add({:label => _view.text("debug.menu.clear_history"), :id => :debug_clear_history});
+                debugItems.add({:label => _view.text("debug.menu.disable"), :id => :debug_disable});
             } else {
-                debugItems.add({:label => "Abilita debug", :id => :debug_enable});
+                debugItems.add({:label => _view.text("debug.menu.enable"), :id => :debug_enable});
             }
 
-            var debugMenuView = new BodyMetricsMenuView("Debug", debugItems);
+            var debugMenuView = new BodyMetricsMenuView(_view.text("debug.menu.title"), debugItems);
             WatchUi.pushView(debugMenuView, new BodyMetricsCustomDebugMenuDelegate(debugMenuView, _view), WatchUi.SLIDE_UP);
         }
         return true;

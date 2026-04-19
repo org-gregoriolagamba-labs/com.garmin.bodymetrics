@@ -147,16 +147,7 @@ class BodyMetricsDomain {
         } else if (next > field[:max].toFloat()) {
             next = field[:min].toFloat();
         }
-        // Round to avoid floating point drift
-        var decimals = field[:decimals].toNumber();
-        if (decimals == 0) {
-            next = Math.round(next).toFloat();
-        } else if (decimals == 1) {
-            next = Math.round(next * 10.0).toFloat() / 10.0;
-        } else {
-            next = Math.round(next * 100.0).toFloat() / 100.0;
-        }
-        draft[key] = next;
+        draft[key] = round1Global(next);
         return refreshDerivedMeasurementFields(draft);
     }
 
@@ -167,16 +158,7 @@ class BodyMetricsDomain {
             return _locale.text("hint.unavailable");
         }
         var value = draft[key].toFloat();
-        var decimals = field[:decimals].toNumber();
-        var text;
-        if (decimals == 0) {
-            text = value.toNumber().toString();
-        } else if (decimals == 1) {
-            text = fmt1Global(value);
-        } else {
-            text = fmtD2(value);
-        }
-        return text + " " + field[:unit].toString();
+        return fmt1Global(value) + " " + field[:unit].toString();
     }
 
     function saveMeasurements(draft as Dictionary) as Void {
@@ -806,31 +788,31 @@ class BodyMetricsDomain {
         var heightSquared = heightM * heightM;
 
         return buildTargetMetricThresholds(
-            roundToOneDecimal(bmiRange[:greenMin].toFloat() * heightSquared),
-            roundToOneDecimal(bmiRange[:greenMax].toFloat() * heightSquared),
-            roundToOneDecimal(bmiRange[:yellowLowMin].toFloat() * heightSquared),
-            roundToOneDecimal(bmiRange[:yellowLowMax].toFloat() * heightSquared),
-            roundToOneDecimal(bmiRange[:yellowHighMin].toFloat() * heightSquared),
-            roundToOneDecimal(bmiRange[:yellowHighMax].toFloat() * heightSquared),
-            roundToOneDecimal(bmiRange[:orangeLowMin].toFloat() * heightSquared),
-            roundToOneDecimal(bmiRange[:orangeLowMax].toFloat() * heightSquared),
-            roundToOneDecimal(bmiRange[:orangeHighMin].toFloat() * heightSquared),
-            roundToOneDecimal(bmiRange[:orangeHighMax].toFloat() * heightSquared)
+            round1Global(bmiRange[:greenMin].toFloat() * heightSquared),
+            round1Global(bmiRange[:greenMax].toFloat() * heightSquared),
+            round1Global(bmiRange[:yellowLowMin].toFloat() * heightSquared),
+            round1Global(bmiRange[:yellowLowMax].toFloat() * heightSquared),
+            round1Global(bmiRange[:yellowHighMin].toFloat() * heightSquared),
+            round1Global(bmiRange[:yellowHighMax].toFloat() * heightSquared),
+            round1Global(bmiRange[:orangeLowMin].toFloat() * heightSquared),
+            round1Global(bmiRange[:orangeLowMax].toFloat() * heightSquared),
+            round1Global(bmiRange[:orangeHighMin].toFloat() * heightSquared),
+            round1Global(bmiRange[:orangeHighMax].toFloat() * heightSquared)
         );
     }
 
     function buildTargetThresholds(greenMin as Float, greenMax as Float, lowStepYellow as Float, lowStepOrange as Float, highStepYellow as Float, highStepOrange as Float) as Dictionary {
         return buildTargetMetricThresholds(
-            roundToOneDecimal(greenMin),
-            roundToOneDecimal(greenMax),
-            roundToOneDecimal(greenMin - lowStepYellow),
-            roundToOneDecimal(greenMin),
-            roundToOneDecimal(greenMax),
-            roundToOneDecimal(greenMax + highStepYellow),
-            roundToOneDecimal(greenMin - lowStepOrange),
-            roundToOneDecimal(greenMin - lowStepYellow),
-            roundToOneDecimal(greenMax + highStepYellow),
-            roundToOneDecimal(greenMax + highStepOrange)
+            round1Global(greenMin),
+            round1Global(greenMax),
+            round1Global(greenMin - lowStepYellow),
+            round1Global(greenMin),
+            round1Global(greenMax),
+            round1Global(greenMax + highStepYellow),
+            round1Global(greenMin - lowStepOrange),
+            round1Global(greenMin - lowStepYellow),
+            round1Global(greenMax + highStepYellow),
+            round1Global(greenMax + highStepOrange)
         );
     }
 
@@ -851,10 +833,10 @@ class BodyMetricsDomain {
 
     function buildLowThresholds(greenMin as Float, greenMax as Float, yellowStep as Float, orangeStep as Float) as Dictionary {
         return {
-            :greenMin => roundToOneDecimal(greenMin),
-            :greenMax => roundToOneDecimal(greenMax),
-            :yellowMin => roundToOneDecimal(greenMin - yellowStep),
-            :orangeMin => roundToOneDecimal(greenMin - orangeStep)
+            :greenMin => round1Global(greenMin),
+            :greenMax => round1Global(greenMax),
+            :yellowMin => round1Global(greenMin - yellowStep),
+            :orangeMin => round1Global(greenMin - orangeStep)
         };
     }
 
@@ -870,25 +852,21 @@ class BodyMetricsDomain {
 
     function calculateBmi(weightKg, heightCm) as Float {
         var heightM = heightCm.toFloat() / 100.0;
-        return roundToOneDecimal(weightKg.toFloat() / (heightM * heightM));
+        return round1Global(weightKg.toFloat() / (heightM * heightM));
     }
 
-    function calculateBmrReference(profile as Dictionary, weightKg) as Number {
+    function calculateBmrReference(profile as Dictionary, weightKg) as Float {
         var age = representativeAge(profile);
         var height = profile[:heightCm].toFloat();
         var base = (10.0 * weightKg.toFloat()) + (6.25 * height) - (5.0 * age.toFloat());
         if (profile[:sex].equals("female")) {
-            return Math.round(base - 161.0).toNumber();
+            return round1Global(base - 161.0);
         }
-        return Math.round(base + 5.0).toNumber();
+        return round1Global(base + 5.0);
     }
 
     function muscleKgFromMeasurements(measurements as Dictionary) as Float {
-        return roundToOneDecimal(measurements[:weightKg].toFloat() * (measurements[:musclePct].toFloat() / 100.0));
-    }
-
-    function roundToOneDecimal(value as Float) as Float {
-        return Math.round(value * 10.0).toFloat() / 10.0;
+        return round1Global(measurements[:weightKg].toFloat() * (measurements[:musclePct].toFloat() / 100.0));
     }
 
     function metricsCount() as Number {
@@ -923,6 +901,170 @@ class BodyMetricsDomain {
 
     function metricLabel(index as Number) as String {
         return _locale.metricLabel(metricAt(index)[:id].toString());
+    }
+
+    function metricInfo(index as Number) as Dictionary {
+        var metric = metricAt(index) as Dictionary;
+        var metricId = metric[:id].toString();
+        return {
+            :description => _locale.text("info.metric." + metricId + ".desc"),
+            :rangeLines => metricInfoRangeLines(metricId, metric[:unit].toString())
+        };
+    }
+
+    //! Returns an array of {:label, :value} pairs for range info
+    function metricInfoRangeLines(metricId as String, unit as String) as Array {
+        var infoMetricValue = infoMetricDefinition(metricId);
+        if (infoMetricValue == null) {
+            return [{:label => "", :value => _locale.text("info.range.unavailable")}];
+        }
+        var infoMetric = infoMetricValue as Dictionary;
+        var lines = [] as Array;
+
+        if ((infoMetric[:policy] as String).equals(POLICY_REFERENCE_ONLY)) {
+            lines.add({:label => _locale.text("info.range.reference_prefix"), :value => fmtThreshold(infoMetric[:referenceValue]) + " " + unit});
+            lines.add({:label => _locale.text("info.range.good_prefix"), :value => "+/-" + fmtThreshold(infoMetric[:toleranceGoodPct]) + "%"});
+            lines.add({:label => _locale.text("info.range.mild_prefix"), :value => "+/-" + fmtThreshold(infoMetric[:toleranceMildPct]) + "%"});
+        } else {
+            lines.add({:label => _locale.text("info.range.ideal_prefix"), :value => idealRangeText(infoMetric) + " " + unit});
+            lines.add({:label => _locale.text("info.range.profile_prefix"), :value => activeProfileSummary()});
+        }
+        lines.add({:label => _locale.text("info.range.depends_prefix"), :value => metricInfoFactorsText(metricId)});
+        return lines;
+    }
+
+    //! Returns an array of {:label, :value} pairs for badge legend
+    function metricInfoBadgeLines(index as Number) as Array {
+        var lines = [] as Array;
+        lines.add({:label => _locale.text("info.badges.section_metrics"), :value => ""});
+        lines.add({:label => "G", :value => _locale.text("info.badges.G")});
+        lines.add({:label => "M", :value => _locale.text("info.badges.M")});
+        lines.add({:label => "CG", :value => _locale.text("info.badges.CG")});
+        lines.add({:label => "CM", :value => _locale.text("info.badges.CM")});
+        lines.add({:label => "", :value => ""});
+        lines.add({:label => _locale.text("info.badges.section_inputs"), :value => ""});
+        lines.add({:label => "G", :value => _locale.text("info.badges.input_G")});
+        lines.add({:label => "C", :value => _locale.text("info.badges.input_C")});
+        return lines;
+    }
+
+    function infoMetricDefinition(metricId as String) {
+        if (metricId.equals("bmi")) {
+            var bmiRange = bmiTargetRange(_profile);
+            return buildTargetMetric(
+                "bmi", "BMI", "kg/m2", 0.0,
+                bmiRange[:greenMin], bmiRange[:greenMax],
+                bmiRange[:yellowLowMin], bmiRange[:yellowLowMax],
+                bmiRange[:yellowHighMin], bmiRange[:yellowHighMax],
+                bmiRange[:orangeLowMin], bmiRange[:orangeLowMax],
+                bmiRange[:orangeHighMin], bmiRange[:orangeHighMax]
+            );
+        }
+
+        if (metricId.equals("fat_pct")) {
+            var fatRange = fatPctRange(_profile);
+            return buildTargetMetric(
+                "fat_pct", "Fat", "%", 0.0,
+                fatRange[:greenMin], fatRange[:greenMax],
+                fatRange[:yellowLowMin], fatRange[:yellowLowMax],
+                fatRange[:yellowHighMin], fatRange[:yellowHighMax],
+                fatRange[:orangeLowMin], fatRange[:orangeLowMax],
+                fatRange[:orangeHighMin], fatRange[:orangeHighMax]
+            );
+        }
+
+        if (metricId.equals("muscle_kg")) {
+            var muscleKgBand = muscleKgRange(_profile);
+            return buildLowOnlyMetric(
+                "muscle_kg", "Muscle Kg", "kg", 0.0,
+                muscleKgBand[:greenMin], muscleKgBand[:greenMax],
+                muscleKgBand[:yellowMin], muscleKgBand[:orangeMin]
+            );
+        }
+
+        if (metricId.equals("muscle_pct")) {
+            var musclePctBand = musclePctRange(_profile);
+            return buildLowOnlyMetric(
+                "muscle_pct", "Muscle %", "%", 0.0,
+                musclePctBand[:greenMin], musclePctBand[:greenMax],
+                musclePctBand[:yellowMin], musclePctBand[:orangeMin]
+            );
+        }
+
+        if (metricId.equals("water_pct")) {
+            var waterBand = waterPctRange(_profile);
+            return buildLowOnlyMetric(
+                "water_pct", "Water %", "%", 0.0,
+                waterBand[:greenMin], waterBand[:greenMax],
+                waterBand[:yellowMin], waterBand[:orangeMin]
+            );
+        }
+
+        if (metricId.equals("bone_kg")) {
+            var boneBand = boneKgRange(_profile);
+            return buildLowOnlyMetric(
+                "bone_kg", "Bone Kg", "kg", 0.0,
+                boneBand[:greenMin], boneBand[:greenMax],
+                boneBand[:yellowMin], boneBand[:orangeMin]
+            );
+        }
+
+        if (metricId.equals("weight")) {
+            var weightRange = weightTargetRange(_profile, bmiTargetRange(_profile));
+            return buildTargetMetric(
+                "weight", "Weight", "kg", 0.0,
+                weightRange[:greenMin], weightRange[:greenMax],
+                weightRange[:yellowLowMin], weightRange[:yellowLowMax],
+                weightRange[:yellowHighMin], weightRange[:yellowHighMax],
+                weightRange[:orangeLowMin], weightRange[:orangeLowMax],
+                weightRange[:orangeHighMin], weightRange[:orangeHighMax]
+            );
+        }
+
+        if (metricId.equals("bmr")) {
+            if (_measurements[:weightKg] == null || _profile[:heightCm] == null ||
+                _profile[:sex] == null || _profile[:ageBand] == null) {
+                return null;
+            }
+            var reference = calculateBmrReference(_profile, _measurements[:weightKg]).toFloat();
+            return buildReferenceMetric("bmr", "BMR", "kcal", reference, reference, 5.0, 10.0);
+        }
+
+        return null;
+    }
+
+    function activeProfileSummary() as String {
+        return profileFieldValueLabel(_profile, 0) + ", " +
+            profileFieldValueLabel(_profile, 1) + ", " +
+            profileFieldValueLabel(_profile, 3);
+    }
+
+    function metricInfoFactorsText(metricId as String) as String {
+        if (metricId.equals("bmi") || metricId.equals("weight")) {
+            return _locale.text("info.factor.sex") + ", " +
+                _locale.text("info.factor.age") + ", " +
+                _locale.text("info.factor.training") + ", " +
+                _locale.text("info.factor.height");
+        }
+
+        if (metricId.equals("fat_pct") || metricId.equals("muscle_kg") || metricId.equals("muscle_pct")) {
+            return _locale.text("info.factor.sex") + ", " +
+                _locale.text("info.factor.age") + ", " +
+                _locale.text("info.factor.training");
+        }
+
+        if (metricId.equals("water_pct") || metricId.equals("bone_kg")) {
+            return _locale.text("info.factor.sex");
+        }
+
+        if (metricId.equals("bmr")) {
+            return _locale.text("info.factor.weight") + ", " +
+                _locale.text("info.factor.height") + ", " +
+                _locale.text("info.factor.sex") + ", " +
+                _locale.text("info.factor.age");
+        }
+
+        return _locale.text("info.factor.training");
     }
 
     function classify(metric as Dictionary) {
@@ -1169,7 +1311,7 @@ class BodyMetricsDomain {
         if (value == null) {
             return "--";
         }
-        return fmtD2(value.toFloat());
+        return fmt1Global(value.toFloat());
     }
 
     //! Hint testuale per la zona semantica corrente (usato nella UI summary/detail).
@@ -1261,24 +1403,16 @@ class BodyMetricsDomain {
     }
 }
 
+//! Round float to 1 decimal place.
+function round1Global(v as Float) as Float {
+    return Math.round(v * 10.0).toFloat() / 10.0;
+}
+
 //! Format float to 1 decimal place.
 function fmt1Global(v as Float) as String {
-    var scaled = Math.round(v * 10.0).toNumber();
+    var scaled = Math.round(round1Global(v) * 10.0).toNumber();
     var whole = scaled / 10;
     var frac = scaled - whole * 10;
     if (frac < 0) { frac = -frac; }
     return whole.toString() + "." + frac.toString();
-}
-
-//! Format float to 2 decimal places. Handles negative values.
-function fmtD2(v as Float) as String {
-    var sign = "";
-    if (v < 0) { sign = "-"; v = -v; }
-    var hundredths = Math.round(v * 100.0).toNumber();
-    var integer = hundredths / 100;
-    var frac = hundredths - integer * 100;
-    if (frac < 10) {
-        return sign + integer.toString() + ".0" + frac.toString();
-    }
-    return sign + integer.toString() + "." + frac.toString();
 }

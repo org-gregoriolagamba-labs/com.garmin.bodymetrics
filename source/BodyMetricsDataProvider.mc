@@ -119,10 +119,10 @@ class BodyMetricsDataProvider {
         return [
             {:key => :weightKg, :label => locale.text("data.weight"), :unit => "kg", :min => 30.0, :max => 250.0, :step => 0.1, :decimals => 1, :readOnly => weightReadOnly, :readOnlyText => locale.text("data.from_garmin"), :badgeText => locale.text("data.badge_garmin")},
             {:key => :fatPct, :label => locale.text("data.fat_pct"), :unit => "%", :min => 3.0, :max => 60.0, :step => 0.1, :decimals => 1},
-            {:key => :musclePct, :label => locale.text("data.muscle_pct"), :unit => "%", :min => 15.0, :max => 70.0, :step => 0.1, :decimals => 2},
+            {:key => :musclePct, :label => locale.text("data.muscle_pct"), :unit => "%", :min => 15.0, :max => 70.0, :step => 0.1, :decimals => 1},
             {:key => :waterPct, :label => locale.text("data.water_pct"), :unit => "%", :min => 25.0, :max => 80.0, :step => 0.1, :decimals => 1},
             {:key => :boneKg, :label => locale.text("data.bone_kg"), :unit => "kg", :min => 1.0, :max => 8.0, :step => 0.1, :decimals => 1},
-            {:key => :bmr, :label => locale.text("data.bmr"), :unit => "kcal", :min => 800.0, :max => 4000.0, :step => 10.0, :decimals => 0, :readOnly => true, :readOnlyText => locale.text("data.read_only"), :badgeText => locale.text("data.badge_auto")}
+            {:key => :bmr, :label => locale.text("data.bmr"), :unit => "kcal", :min => 800.0, :max => 4000.0, :step => 10.0, :decimals => 1, :readOnly => true, :readOnlyText => locale.text("data.read_only"), :badgeText => locale.text("data.badge_auto")}
         ];
     }
 
