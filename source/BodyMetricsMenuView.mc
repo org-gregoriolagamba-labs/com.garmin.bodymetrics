@@ -138,6 +138,10 @@ class BodyMetricsMenuView extends WatchUi.View {
 }
 
 //! Delegate for the main settings menu
+
+//! Costante globale per abilitare funzioni di debug
+const DEBUG = true;
+
 class BodyMetricsCustomMenuDelegate extends WatchUi.BehaviorDelegate {
 
     var _menuView as BodyMetricsMenuView;
@@ -170,6 +174,58 @@ class BodyMetricsCustomMenuDelegate extends WatchUi.BehaviorDelegate {
         } else if (id == :language) {
             WatchUi.popView(WatchUi.SLIDE_DOWN);
             _view.queueLanguageMenuOpen();
+        } else if (id == :debug) {
+            var debugItems = [] as Array;
+            if (_view.isDebugEnabled()) {
+                debugItems.add({:label => "Popola history", :id => :debug_populate_history});
+                debugItems.add({:label => "Cancella history", :id => :debug_clear_history});
+                debugItems.add({:label => "Disabilita debug", :id => :debug_disable});
+            } else {
+                debugItems.add({:label => "Abilita debug", :id => :debug_enable});
+            }
+
+            var debugMenuView = new BodyMetricsMenuView("Debug", debugItems);
+            WatchUi.pushView(debugMenuView, new BodyMetricsCustomDebugMenuDelegate(debugMenuView, _view), WatchUi.SLIDE_UP);
+        }
+        return true;
+    }
+
+    function onBack() as Boolean {
+        WatchUi.popView(WatchUi.SLIDE_DOWN);
+        return true;
+    }
+}
+
+class BodyMetricsCustomDebugMenuDelegate extends WatchUi.BehaviorDelegate {
+
+    var _menuView as BodyMetricsMenuView;
+    var _view as BodyMetricsView;
+
+    function initialize(menuView as BodyMetricsMenuView, view as BodyMetricsView) {
+        BehaviorDelegate.initialize();
+        _menuView = menuView;
+        _view = view;
+    }
+
+    function onNextPage() as Boolean {
+        _menuView.moveDown();
+        return true;
+    }
+
+    function onPreviousPage() as Boolean {
+        _menuView.moveUp();
+        return true;
+    }
+
+    function onSelect() as Boolean {
+        var id = _menuView.selectedId();
+        WatchUi.popView(WatchUi.SLIDE_DOWN);
+        if (id == :debug_populate_history) {
+            _view.populateHistoryDebug();
+        } else if (id == :debug_clear_history) {
+            _view.clearHistoryDebug();
+        } else if (id == :debug_disable || id == :debug_enable) {
+            _view.toggleDebugMode();
         }
         return true;
     }

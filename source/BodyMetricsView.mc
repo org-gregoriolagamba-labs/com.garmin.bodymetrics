@@ -6,10 +6,42 @@ import Toybox.WatchUi;
 
 class BodyMetricsView extends WatchUi.View {
 
+    const TREND_WINDOWS = [7, 30, 90];
+
+    //! DEBUG: Popola la history con dati casuali per test
+    function populateHistoryDebug() as Void {
+        _domain.populateHistoryDebug();
+        _cacheTrendData();
+        WatchUi.requestUpdate();
+    }
+
+    //! DEBUG: Cancella la history
+    function clearHistoryDebug() as Void {
+        _domain.clearHistoryDebug();
+        _cacheTrendData();
+        WatchUi.requestUpdate();
+    }
+
+    //! DEBUG: Toggle debug mode on/off
+    function toggleDebugMode() as Boolean {
+        if (_debugEnabled) {
+            _domain.disableDebugMode();
+            _cacheTrendData();
+            WatchUi.requestUpdate();
+        }
+        _debugEnabled = !_debugEnabled;
+        return _debugEnabled;
+    }
+
+    function isDebugEnabled() as Boolean {
+        return _debugEnabled;
+    }
+
     const MODE_SUMMARY = 0;
     const MODE_DETAIL = 1;
     const MODE_SETUP = 2;
     const MODE_DATA = 3;
+    const MODE_TREND = 4;
 
     var _mode;
     var _selectedMetric;
@@ -21,6 +53,10 @@ class BodyMetricsView extends WatchUi.View {
     var _pendingMenuAction;
     var _dataIndex;
     var _dataDraft;
+    var _trendWindow;
+    var _trendDirection;
+    var _trendValues;
+    var _debugEnabled = true;  // Toggle debug menu items on/off
     function initialize() {
         View.initialize();
         _mode = MODE_SUMMARY;
@@ -33,6 +69,9 @@ class BodyMetricsView extends WatchUi.View {
         _pendingMenuAction = null;
         _dataIndex = 0;
         _dataDraft = _domain.currentMeasurements();
+        _trendWindow = 0;
+        _trendDirection = TREND_FLAT;
+        _trendValues = [];
 
         if (!_domain.hasConfiguredProfile()) {
             enterSetupMode();
@@ -68,6 +107,8 @@ class BodyMetricsView extends WatchUi.View {
             drawDataEntry(dc);
         } else if (_mode == MODE_SUMMARY) {
             drawSummary(dc);
+        } else if (_mode == MODE_TREND) {
+            drawTrend(dc);
         } else {
             drawDetail(dc);
         }
@@ -110,7 +151,8 @@ class BodyMetricsView extends WatchUi.View {
     }
 
     function canEditProfile() as Boolean {
-        return _domain.hasConfiguredProfile() && (_mode == MODE_SUMMARY || _mode == MODE_DETAIL);
+        return _domain.hasConfiguredProfile() &&
+            (_mode == MODE_SUMMARY || _mode == MODE_DETAIL || _mode == MODE_TREND);
     }
 
     function text(key as String) as String {
@@ -189,6 +231,12 @@ class BodyMetricsView extends WatchUi.View {
             return;
         }
 
+        if (_mode == MODE_TREND) {
+            _cycleTrendWindow(1);
+            WatchUi.requestUpdate();
+            return;
+        }
+
         _selectedMetric = (_selectedMetric + 1) % _domain.metricsCount();
         WatchUi.requestUpdate();
     }
@@ -201,6 +249,12 @@ class BodyMetricsView extends WatchUi.View {
         }
         if (_mode == MODE_DATA) {
             _dataDraft = _domain.cycleMeasurementField(_dataDraft, _dataIndex, 1);
+            WatchUi.requestUpdate();
+            return;
+        }
+
+        if (_mode == MODE_TREND) {
+            _cycleTrendWindow(-1);
             WatchUi.requestUpdate();
             return;
         }
@@ -236,6 +290,9 @@ class BodyMetricsView extends WatchUi.View {
 
         if (_mode == MODE_SUMMARY) {
             _mode = MODE_DETAIL;
+        } else if (_mode == MODE_DETAIL) {
+            _mode = MODE_TREND;
+            _cacheTrendData();
         } else {
             _mode = MODE_SUMMARY;
         }
@@ -265,6 +322,12 @@ class BodyMetricsView extends WatchUi.View {
 
         if (_mode == MODE_DETAIL) {
             _mode = MODE_SUMMARY;
+            WatchUi.requestUpdate();
+            return true;
+        }
+
+        if (_mode == MODE_TREND) {
+            _mode = MODE_DETAIL;
             WatchUi.requestUpdate();
             return true;
         }
@@ -869,6 +932,379 @@ class BodyMetricsView extends WatchUi.View {
             }
         }
         return count;
+    }
+
+    // --- Trend Screen ---
+
+    //! Cache trend data for the currently selected metric.
+    function _cacheTrendData() as Void {
+        if (_trendWindow == 0) {
+            _trendWindow = _domain.historyBestWindow(_selectedMetric);
+        }
+
+        if (_trendWindow > 0) {
+            var bestWindow = _domain.historyBestWindow(_selectedMetric);
+            if (bestWindow > 0 && _domain.historyValues(_selectedMetric, _trendWindow).size() < 2) {
+                _trendWindow = bestWindow;
+            }
+        }
+
+        if (_trendWindow > 0) {
+            _trendDirection = _domain.historyTrend(_selectedMetric, _trendWindow);
+            _trendValues = _domain.historyValues(_selectedMetric, _trendWindow);
+        } else {
+            _trendDirection = TREND_FLAT;
+            _trendValues = [];
+        }
+    }
+
+    function _cycleTrendWindow(delta as Number) as Void {
+        var currentIndex = 0;
+        var windows = _availableTrendWindows();
+        if (windows.size() == 0) {
+            _trendWindow = 0;
+            _cacheTrendData();
+            return;
+        }
+
+        for (var i = 0; i < windows.size(); i += 1) {
+            if ((windows[i] as Number) == _trendWindow) {
+                currentIndex = i;
+                break;
+            }
+        }
+
+        currentIndex = (currentIndex + delta + windows.size()) % windows.size();
+        _trendWindow = windows[currentIndex] as Number;
+        _cacheTrendData();
+    }
+
+    function _availableTrendWindows() as Array {
+        var windows = [] as Array;
+        for (var i = 0; i < TREND_WINDOWS.size(); i += 1) {
+            var candidate = TREND_WINDOWS[i] as Number;
+            if (_domain.historyValues(_selectedMetric, candidate).size() >= 2) {
+                windows.add(candidate);
+            }
+        }
+        return windows;
+    }
+
+    //! Draw the trend/history screen with mini chart, trend indicator, and window label.
+    function drawTrend(dc as Dc) as Void {
+        var w = dc.getWidth();
+        var h = dc.getHeight();
+        var cx = w / 2;
+        var metric = _domain.metricAt(_selectedMetric) as Dictionary;
+        var available = metric[:available];
+        var zone = available ? _domain.classify(metric) : ZONE_GREEN;
+
+        var hXtiny = dc.getFontHeight(Graphics.FONT_XTINY);
+        var pad = pct(h, 2);
+        if (pad < 3) { pad = 3; }
+
+        // Metric label at top (round-screen-aware safe width)
+        var topY = pct(h, 12);
+        var labelText = _domain.metricLabel(_selectedMetric);
+        var labelFont = Graphics.FONT_TINY;
+        var labelSafeW = _availableWidthAtY(w, h, topY, dc.getFontHeight(labelFont)) - pct(w, 10);
+        if (dc.getTextWidthInPixels(labelText, labelFont) > labelSafeW) {
+            labelFont = Graphics.FONT_XTINY;
+        }
+        var labelH = dc.getFontHeight(labelFont);
+        dc.setColor(available ? _domain.zoneColor(metric, zone) : Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(cx, topY, labelFont, labelText, Graphics.TEXT_JUSTIFY_CENTER);
+
+        // Current value + unit (round-screen-aware safe width)
+        var valueY = topY + labelH + 2;
+        var valueFont = Graphics.FONT_SMALL;
+        var valueText = formatValue(metric) + " " + metric[:unit].toString();
+        var valueSafeW = _availableWidthAtY(w, h, valueY, dc.getFontHeight(valueFont)) - pct(w, 10);
+        if (dc.getTextWidthInPixels(valueText, valueFont) > valueSafeW) {
+            valueFont = Graphics.FONT_TINY;
+        }
+        var valueH = dc.getFontHeight(valueFont);
+        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(cx, valueY, valueFont,
+            valueText,
+            Graphics.TEXT_JUSTIFY_CENTER);
+
+        if (_trendWindow == 0 || (_trendValues as Array).size() < 2) {
+            // No history data - show message
+            dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(cx, h / 2, Graphics.FONT_XTINY,
+                text("trend.no_data"), Graphics.TEXT_JUSTIFY_CENTER);
+        } else {
+            var compactLayout = (_trendWindow >= 90 || w < 240);
+            var bounds = _trendValueBounds(_trendValues as Array);
+            var axisLabels = _trendAxisLabels(bounds, compactLayout);
+            var axisLabelW = _maxTextWidth(dc, axisLabels, Graphics.FONT_XTINY);
+
+            // Compute bottom positions first for round-screen-aware label width
+            var windowY = h - pct(h, 10);
+            var trendY = windowY - hXtiny - pad;
+            var windowLabelMaxW = _availableWidthAtY(w, h, windowY, hXtiny) - pct(w, 4);
+            var windowLabel = _trendWindowLabel(dc, Graphics.FONT_XTINY, windowLabelMaxW);
+
+            // Mini chart
+            var chartX = pct(w, 11) + axisLabelW;
+            var chartRightPad = pct(w, 8);
+            var chartY = valueY + valueH + pad + 2;
+            var chartH = trendY - chartY - pad;
+            var minChartH = pct(h, 22);
+            if (minChartH < 34) { minChartH = 34; }
+            if (chartH < minChartH) {
+                chartH = minChartH;
+                chartY = trendY - pad - chartH;
+            }
+            var chartW = w - chartX - chartRightPad;
+            var lineColor = available ? _domain.zoneColor(metric, zone) : Graphics.COLOR_DK_GRAY;
+            drawMiniChart(dc, chartX, chartY, chartW, chartH, _trendValues as Array, lineColor,
+                bounds, axisLabels, compactLayout);
+
+            // Trend label + arrow
+            var trendLabel = "";
+            if (_trendDirection == TREND_UP) {
+                trendLabel = text("trend.up");
+            } else if (_trendDirection == TREND_DOWN) {
+                trendLabel = text("trend.down");
+            } else {
+                trendLabel = text("trend.flat");
+            }
+
+            var arrowSize = pct(w, 2);
+            if (arrowSize < 5) { arrowSize = 5; }
+            var labelW = dc.getTextWidthInPixels(trendLabel, Graphics.FONT_XTINY);
+            var arrowX = cx - labelW / 2 - arrowSize - 4;
+            var arrowY = trendY + hXtiny / 2;
+
+            var arrowColor = _trendArrowColor(_selectedMetric, _trendDirection);
+            if (_trendDirection == TREND_UP) {
+                dc.setColor(arrowColor, Graphics.COLOR_TRANSPARENT);
+                drawTriangle(dc, arrowX, arrowY, arrowSize, true);
+            } else if (_trendDirection == TREND_DOWN) {
+                dc.setColor(arrowColor, Graphics.COLOR_TRANSPARENT);
+                drawTriangle(dc, arrowX, arrowY, arrowSize, false);
+            } else {
+                dc.setColor(Graphics.COLOR_YELLOW, Graphics.COLOR_TRANSPARENT);
+                dc.fillRectangle(arrowX - arrowSize / 2, arrowY - 1, arrowSize, 3);
+            }
+
+            dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(cx, trendY, Graphics.FONT_XTINY,
+                trendLabel, Graphics.TEXT_JUSTIFY_CENTER);
+
+            dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(cx, windowY, Graphics.FONT_XTINY,
+                windowLabel,
+                Graphics.TEXT_JUSTIFY_CENTER);
+
+        }
+
+        // Vertical scroll dots (window indicator) on the left edge
+        drawVerticalScrollDots(dc, pct(w, 8), h / 2, h);
+    }
+
+    //! Draw a mini line chart within the given bounding box.
+    function drawMiniChart(dc as Dc, x as Number, y as Number, w as Number, h as Number,
+        values as Array, lineColor, bounds as Dictionary, axisLabels as Array, compactLayout as Boolean) as Void {
+        if (values.size() < 2) { return; }
+
+        var minV = bounds[:minV].toFloat();
+        var range = bounds[:range].toFloat();
+
+        // Time range
+        var tsMin = (values[0] as Dictionary)[:ts].toNumber();
+        var tsMax = (values[values.size() - 1] as Dictionary)[:ts].toNumber();
+        var tsRange = tsMax - tsMin;
+        if (tsRange < 1) { tsRange = 1; }
+
+        // Plot area padding to prevent the line from visually becoming the x-axis.
+        var plotPadX = compactLayout ? 2 : 3;
+        var plotPadY = compactLayout ? 4 : 3;
+        var plotX = x + plotPadX;
+        var plotY = y + plotPadY;
+        var plotW = w - plotPadX * 2;
+        var plotH = h - plotPadY * 2;
+        if (plotW < 10 || plotH < 10) { return; }
+
+        // Map to pixel coordinates
+        var pts = new [values.size()];
+        for (var i = 0; i < values.size(); i++) {
+            var entry = values[i] as Dictionary;
+            var px = plotX + ((entry[:ts].toNumber() - tsMin) * plotW / tsRange);
+            var fpy = (entry[:val].toFloat() - minV) * plotH.toFloat() / range;
+            var py = plotY + plotH - fpy.toNumber();
+            pts[i] = [px, py];
+        }
+
+        // Subtle horizontal grid lines (top and middle only)
+        dc.setColor(0x333333, Graphics.COLOR_TRANSPARENT);
+        dc.drawLine(plotX, plotY, plotX + plotW, plotY);
+        dc.drawLine(plotX, plotY + plotH / 2, plotX + plotW, plotY + plotH / 2);
+
+        // Y-axis numeric references
+        var axisFont = Graphics.FONT_XTINY;
+        var axisX = x - 4;
+        var axisColor = 0x777777;
+        var axisH = dc.getFontHeight(axisFont);
+        dc.setColor(axisColor, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(axisX, y - axisH / 2, axisFont,
+            axisLabels[0] as String, Graphics.TEXT_JUSTIFY_RIGHT);
+        if (axisLabels[1] != null) {
+            dc.drawText(axisX, y + h / 2 - axisH / 2, axisFont,
+                axisLabels[1] as String, Graphics.TEXT_JUSTIFY_RIGHT);
+        }
+        dc.drawText(axisX, y + h - axisH, axisFont,
+            axisLabels[2] as String, Graphics.TEXT_JUSTIFY_RIGHT);
+
+        // Connecting lines
+        dc.setPenWidth(compactLayout ? 1 : 2);
+        dc.setColor(lineColor, Graphics.COLOR_TRANSPARENT);
+        for (var i = 0; i < pts.size() - 1; i++) {
+            var p1 = pts[i] as Array;
+            var p2 = pts[i + 1] as Array;
+            dc.drawLine(p1[0], p1[1], p2[0], p2[1]);
+        }
+        dc.setPenWidth(1);
+
+        // Data point dots (last point larger)
+        var dotStep = values.size() / 24;
+        if (dotStep < 1) { dotStep = 1; }
+        for (var i = 0; i < pts.size(); i++) {
+            if (i != pts.size() - 1 && (i % dotStep) != 0) {
+                continue;
+            }
+            var p = pts[i] as Array;
+            var dotR = (i == pts.size() - 1) ? 4 : (compactLayout ? 1 : 2);
+            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+            dc.fillCircle(p[0], p[1], dotR);
+        }
+    }
+
+    //! Draw vertical scroll dots (Garmin-style page indicator for UP/DOWN scrolling).
+    //! Shows only the currently available trend windows for the selected metric.
+    function drawVerticalScrollDots(dc as Dc, x as Number, cy as Number, screenH as Number) as Void {
+        var windows = _availableTrendWindows();
+        var count = windows.size();
+        if (count == 0) { return; }
+
+        var spacing = pct(screenH, 4);
+        if (spacing < 8) { spacing = 8; }
+        var activeR = 4;
+        var inactiveR = 2;
+        var startY = cy - ((count - 1) * spacing) / 2;
+
+        var currentIndex = 0;
+        for (var i = 0; i < windows.size(); i += 1) {
+            if ((windows[i] as Number) == _trendWindow) {
+                currentIndex = i;
+                break;
+            }
+        }
+
+        for (var i = 0; i < count; i++) {
+            var dotY = startY + i * spacing;
+            if (i == currentIndex) {
+                dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+                dc.fillCircle(x, dotY, activeR);
+            } else {
+                dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
+                dc.fillCircle(x, dotY, inactiveR);
+            }
+        }
+    }
+
+    //! Returns the appropriate color for a trend arrow based on metric and direction.
+    //! For "lower is better" metrics (BMI, fat%, weight): DOWN=green, UP=red.
+    //! For "higher is better" metrics (muscle%, muscleKg, water%, bone, BMR): UP=green, DOWN=red.
+    function _trendArrowColor(metricIndex as Number, direction as Number) as Number {
+        // Metrics where LOWER is better: BMI(0), fat%(1), weight(6)
+        // Metrics where HIGHER is better: muscleKg(2), muscle%(3), water%(4), bone(5), BMR(7)
+        var lowerIsBetter = (metricIndex == 0 || metricIndex == 1 || metricIndex == 6);
+
+        if (direction == TREND_UP) {
+            return lowerIsBetter ? Graphics.COLOR_RED : Graphics.COLOR_GREEN;
+        } else if (direction == TREND_DOWN) {
+            return lowerIsBetter ? Graphics.COLOR_GREEN : Graphics.COLOR_RED;
+        }
+        return Graphics.COLOR_YELLOW;
+    }
+
+    function _trendValueBounds(values as Array) as Dictionary {
+        var minV = (values[0] as Dictionary)[:val].toFloat();
+        var maxV = minV;
+        for (var i = 1; i < values.size(); i++) {
+            var v = (values[i] as Dictionary)[:val].toFloat();
+            if (v < minV) { minV = v; }
+            if (v > maxV) { maxV = v; }
+        }
+
+        var range = maxV - minV;
+        if (range < 0.01) { range = 1.0; }
+        var vPad = range * 0.15;
+        minV = minV - vPad;
+        maxV = maxV + vPad;
+        range = maxV - minV;
+
+        return {
+            :minV => minV,
+            :maxV => maxV,
+            :midV => minV + range / 2.0,
+            :range => range
+        };
+    }
+
+    function _trendAxisLabels(bounds as Dictionary, compactLayout as Boolean) as Array {
+        var range = bounds[:range].toFloat();
+        var topLabel = _formatAxisValue(bounds[:maxV].toFloat(), range, compactLayout);
+        var midLabel = compactLayout ? null : _formatAxisValue(bounds[:midV].toFloat(), range, compactLayout);
+        var bottomLabel = _formatAxisValue(bounds[:minV].toFloat(), range, compactLayout);
+        return [topLabel, midLabel, bottomLabel];
+    }
+
+    function _maxTextWidth(dc as Dc, values as Array, font) as Number {
+        var maxWidth = 0;
+        for (var i = 0; i < values.size(); i++) {
+            var value = values[i];
+            if (value == null) { continue; }
+            var width = dc.getTextWidthInPixels(value as String, font);
+            if (width > maxWidth) {
+                maxWidth = width;
+            }
+        }
+        return maxWidth;
+    }
+
+    //! Compute the usable horizontal width at a given Y on a round screen.
+    //! Uses the most constrained edge (top or bottom of text) to avoid clipping.
+    function _availableWidthAtY(screenW as Number, screenH as Number, textY as Number, textH as Number) as Number {
+        var r = screenW < screenH ? screenW / 2 : screenH / 2;
+        var cy = screenH / 2;
+        var dyTop = textY - cy;
+        if (dyTop < 0) { dyTop = -dyTop; }
+        var dyBottom = (textY + textH) - cy;
+        if (dyBottom < 0) { dyBottom = -dyBottom; }
+        var dy = dyTop > dyBottom ? dyTop : dyBottom;
+        if (dy >= r) { return 24; }
+        return (Math.sqrt((r * r - dy * dy).toFloat()).toNumber()) * 2;
+    }
+
+    function _trendWindowLabel(dc as Dc, font, maxWidth as Number) as String {
+        var fullLabel = text("trend.last_prefix") + " " + _trendWindow.toString() + " " + text("trend.last_suffix");
+        if (dc.getTextWidthInPixels(fullLabel, font) <= maxWidth) {
+            return fullLabel;
+        }
+
+        var compactLabel = _trendWindow.toString() + " " + text("trend.last_suffix_short");
+        if (dc.getTextWidthInPixels(compactLabel, font) <= maxWidth) {
+            return compactLabel;
+        }
+        return _trendWindow.toString();
+    }
+
+    function _formatAxisValue(value as Float, range as Float, compactLayout as Boolean) as String {
+        return fmt1Global(value);
     }
 
 }

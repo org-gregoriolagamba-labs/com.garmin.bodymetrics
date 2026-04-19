@@ -20,6 +20,24 @@ const PROFILE_HEIGHT_KEY = "bodyMetrics.profile.heightCm";
 
 class BodyMetricsDomain {
 
+    //! DEBUG: Popola la history con dati casuali per 90 giorni
+    function populateHistoryDebug() as Void {
+        _history.populateHistoryDebug();
+        // Ricarica metriche se necessario
+        rebuildMetrics();
+    }
+
+    //! DEBUG: Cancella la history
+    function clearHistoryDebug() as Void {
+        _history.clearHistory();
+        rebuildMetrics();
+    }
+
+    function disableDebugMode() as Void {
+        _history.disableDebugHistory();
+        rebuildMetrics();
+    }
+
     var _metrics;
     var _locale;
     var _profile as Dictionary;
@@ -27,15 +45,21 @@ class BodyMetricsDomain {
     var _hasStoredProfile as Boolean;
     var _dataProvider;
     var _garminProfile;
+    var _history;
 
     function initialize() {
         _locale = new BodyMetricsLocale();
         _garminProfile = new BodyMetricsGarminProfile();
         _dataProvider = new BodyMetricsDataProvider(_garminProfile);
+        _history = new BodyMetricsHistory();
         _hasStoredProfile = false;
         _profile = loadProfile();
         _measurements = _dataProvider.loadMeasurements();
         rebuildMetrics();
+        // Record snapshot on startup to capture any Garmin data changes
+        if (_dataProvider.hasStoredMeasurements()) {
+            _history.recordSnapshot(_metrics as Array);
+        }
     }
 
     function defaultProfile() as Dictionary {
@@ -151,6 +175,25 @@ class BodyMetricsDomain {
         _dataProvider.saveMeasurements(draft);
         _measurements = _dataProvider.loadMeasurements();
         rebuildMetrics();
+        _history.recordSnapshot(_metrics as Array);
+    }
+
+    // --- History / Trend API ---
+
+    function historyBestWindow(metricIndex as Number) as Number {
+        return _history.bestWindow(metricIndex);
+    }
+
+    function historyValues(metricIndex as Number, windowDays as Number) as Array {
+        return _history.valuesForMetric(metricIndex, windowDays);
+    }
+
+    function historyTrend(metricIndex as Number, windowDays as Number) as Number {
+        return _history.computeTrend(metricIndex, windowDays);
+    }
+
+    function historyEntryCount() as Number {
+        return _history.entryCount();
     }
 
     function refreshDerivedMeasurementFields(draft as Dictionary) as Dictionary {
@@ -182,12 +225,9 @@ class BodyMetricsDomain {
         return null;
     }
 
+    //! @deprecated Use module-level fmt1() instead.
     function fmt1(v as Float) as String {
-        var scaled = Math.round(v * 10.0).toNumber();
-        var whole = scaled / 10;
-        var frac = scaled - whole * 10;
-        if (frac < 0) { frac = -frac; }
-        return whole.toString() + "." + frac.toString();
+        return fmt1Global(v);
     }
 
     function loadProfile() as Dictionary {
@@ -230,6 +270,7 @@ class BodyMetricsDomain {
         Storage.setValue(PROFILE_HEIGHT_KEY, _profile[:heightCm].toNumber());
         _hasStoredProfile = true;
         rebuildMetrics();
+        _history.recordSnapshot(_metrics as Array);
     }
 
     function profileFields() as Array {
@@ -1276,6 +1317,15 @@ class BodyMetricsDomain {
 
         return Graphics.COLOR_RED;
     }
+}
+
+//! Format float to 1 decimal place.
+function fmt1Global(v as Float) as String {
+    var scaled = Math.round(v * 10.0).toNumber();
+    var whole = scaled / 10;
+    var frac = scaled - whole * 10;
+    if (frac < 0) { frac = -frac; }
+    return whole.toString() + "." + frac.toString();
 }
 
 //! Format float to 2 decimal places. Handles negative values.
