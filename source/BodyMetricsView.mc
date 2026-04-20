@@ -1244,7 +1244,7 @@ class BodyMetricsView extends WatchUi.View {
 
         // Combined title: "Andamento BMI" on one row in metric color
         var topY = pct(h, 10);
-        var labelText = text("trend.title") + " " + _domain.metricLabel(_selectedMetric);
+        var labelText = _domain.metricLabel(_selectedMetric);
         var labelFont = Graphics.FONT_TINY;
         var labelSafeW = _availableWidthAtY(w, h, topY, dc.getFontHeight(labelFont)) - pct(w, 10);
         if (dc.getTextWidthInPixels(labelText, labelFont) > labelSafeW) {

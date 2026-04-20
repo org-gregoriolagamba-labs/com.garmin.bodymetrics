@@ -197,7 +197,6 @@ class BodyMetricsLocale {
         if (key.equals("label.target.red_low")) { return "Molto basso"; }
         if (key.equals("label.target.red_high")) { return "Molto alto"; }
         if (key.equals("hint.unavailable")) { return "Non disponibile"; }
-        if (key.equals("trend.title")) { return "Andamento"; }
         if (key.equals("trend.up")) { return "In aumento"; }
         if (key.equals("trend.down")) { return "In calo"; }
         if (key.equals("trend.flat")) { return "Stabile"; }
@@ -333,7 +332,6 @@ class BodyMetricsLocale {
         if (key.equals("label.target.red_low")) { return "Very low"; }
         if (key.equals("label.target.red_high")) { return "Very high"; }
         if (key.equals("hint.unavailable")) { return "Not available"; }
-        if (key.equals("trend.title")) { return "Trend"; }
         if (key.equals("trend.up")) { return "Rising"; }
         if (key.equals("trend.down")) { return "Declining"; }
         if (key.equals("trend.flat")) { return "Stable"; }
@@ -469,7 +467,6 @@ class BodyMetricsLocale {
         if (key.equals("label.target.red_low")) { return "Tres bas"; }
         if (key.equals("label.target.red_high")) { return "Tres haut"; }
         if (key.equals("hint.unavailable")) { return "Non disponible"; }
-        if (key.equals("trend.title")) { return "Tendance"; }
         if (key.equals("trend.up")) { return "En hausse"; }
         if (key.equals("trend.down")) { return "En baisse"; }
         if (key.equals("trend.flat")) { return "Stable"; }
@@ -605,7 +602,6 @@ class BodyMetricsLocale {
         if (key.equals("label.target.red_low")) { return "Muy bajo"; }
         if (key.equals("label.target.red_high")) { return "Muy alto"; }
         if (key.equals("hint.unavailable")) { return "No disponible"; }
-        if (key.equals("trend.title")) { return "Tendencia"; }
         if (key.equals("trend.up")) { return "En aumento"; }
         if (key.equals("trend.down")) { return "En descenso"; }
         if (key.equals("trend.flat")) { return "Estable"; }
