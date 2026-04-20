@@ -71,7 +71,7 @@ class BodyMetricsDomain {
         rebuildMetrics();
     }
 
-    var _metrics;
+    var _metrics as Array = [];
     var _locale;
     var _profile as Dictionary;
     var _measurements as Dictionary;
@@ -407,13 +407,9 @@ class BodyMetricsDomain {
         // Source classification helpers
         var garminData = _garminProfile.readProfile() as Dictionary;
         var weightIsGarmin  = weightSrc != null && weightSrc.equals(SOURCE_GARMIN);
-        var weightIsManual  = weightSrc != null && weightSrc.equals(SOURCE_MANUAL);
         var heightIsGarmin  = garminData[:heightCm] != null;
-        var heightIsManual  = !heightIsGarmin && profile[:heightCm] != null;
         var sexIsGarmin     = garminData[:sex] != null;
-        var sexIsManual     = !sexIsGarmin && profile[:sex] != null;
         var ageBandIsGarmin = garminData[:ageBand] != null;
-        var ageBandIsManual = !ageBandIsGarmin && profile[:ageBand] != null;
 
         // BMI - preferisce sorgenti omogenee (CG/CM); con sorgenti miste usa SOURCE_CALC_MANUAL
         if (measurements[:weightKg] != null && profile[:heightCm] != null) {
