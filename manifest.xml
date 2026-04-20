@@ -13,14 +13,13 @@
                                        that belong to the same product category
             "Monkey C: Edit Products" - Lets you add or remove any product
         -->
-        <iq:products>
-            <iq:product id="fr265"/>
-        </iq:products>
+        <iq:products/>
         <!--
             Use "Monkey C: Edit Permissions" from the Visual Studio Code command
             palette to update permissions.
         -->
         <iq:permissions>
+            <iq:uses-permission id="UserProfile"/>
             <iq:uses-permission id="UserProfile"/>
         </iq:permissions>
         <!--
@@ -29,8 +28,12 @@
         -->
         <iq:languages>
             <iq:language>eng</iq:language>
+            <iq:language>eng</iq:language>
+            <iq:language>fre</iq:language>
             <iq:language>fre</iq:language>
             <iq:language>ita</iq:language>
+            <iq:language>ita</iq:language>
+            <iq:language>spa</iq:language>
             <iq:language>spa</iq:language>
         </iq:languages>
         <!--
