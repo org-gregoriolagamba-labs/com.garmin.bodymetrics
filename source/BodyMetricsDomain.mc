@@ -15,7 +15,6 @@ const ZONE_RED = 3;
 //! - referenceOnly: deviazione percentuale da un valore di riferimento (es. BMR)
 const POLICY_TARGET_RANGE = "targetRange";
 const POLICY_LOW_ONLY = "lowOnly";
-const POLICY_HIGH_ONLY = "highOnly";
 const POLICY_REFERENCE_ONLY = "referenceOnly";
 
 const PROFILE_SEX_KEY = "bodyMetrics.profile.sex";
@@ -418,25 +417,18 @@ class BodyMetricsDomain {
 
         // BMI - preferisce sorgenti omogenee (CG/CM); con sorgenti miste usa SOURCE_CALC_MANUAL
         if (measurements[:weightKg] != null && profile[:heightCm] != null) {
-            var bmiSrc = null;
-            if (weightIsGarmin && heightIsGarmin)      { bmiSrc = SOURCE_CALC_GARMIN; }
-            else if (weightIsManual && heightIsManual) { bmiSrc = SOURCE_CALC_MANUAL; }
-            else                                       { bmiSrc = SOURCE_CALC_MANUAL; } // sorgente mista
-            if (bmiSrc != null) {
-                var m = buildTargetMetric(
-                    "bmi", "BMI", "kg/m2", calculateBmi(measurements[:weightKg], profile[:heightCm]),
-                    bmiRange[:greenMin], bmiRange[:greenMax],
-                    bmiRange[:yellowLowMin], bmiRange[:yellowLowMax],
-                    bmiRange[:yellowHighMin], bmiRange[:yellowHighMax],
-                    bmiRange[:orangeLowMin], bmiRange[:orangeLowMax],
-                    bmiRange[:orangeHighMin], bmiRange[:orangeHighMax]
-                );
-                m[:available] = true;
-                m[:source] = bmiSrc;
-                metrics.add(m);
-            } else {
-                metrics.add(unavailableMetric("bmi", "BMI", "kg/m2"));
-            }
+            var bmiSrc = (weightIsGarmin && heightIsGarmin) ? SOURCE_CALC_GARMIN : SOURCE_CALC_MANUAL;
+            var m = buildTargetMetric(
+                "bmi", "BMI", "kg/m2", calculateBmi(measurements[:weightKg], profile[:heightCm]),
+                bmiRange[:greenMin], bmiRange[:greenMax],
+                bmiRange[:yellowLowMin], bmiRange[:yellowLowMax],
+                bmiRange[:yellowHighMin], bmiRange[:yellowHighMax],
+                bmiRange[:orangeLowMin], bmiRange[:orangeLowMax],
+                bmiRange[:orangeHighMin], bmiRange[:orangeHighMax]
+            );
+            m[:available] = true;
+            m[:source] = bmiSrc;
+            metrics.add(m);
         } else {
             metrics.add(unavailableMetric("bmi", "BMI", "kg/m2"));
         }
@@ -536,29 +528,19 @@ class BodyMetricsDomain {
         }
 
         // BMR - Mifflin-St Jeor: requires weight + height + sex + ageBand.
-        // CG se tutti i valori da Garmin; CM se tutti manuali; CM se sorgenti miste.
+        // CG se tutti i valori da Garmin; altrimenti CM.
         if (measurements[:weightKg] != null && profile[:heightCm] != null &&
             profile[:sex] != null && profile[:ageBand] != null) {
-            var bmrSrc = null;
-            if (weightIsGarmin && heightIsGarmin && sexIsGarmin && ageBandIsGarmin) {
-                bmrSrc = SOURCE_CALC_GARMIN;
-            } else if (weightIsManual && heightIsManual && sexIsManual && ageBandIsManual) {
-                bmrSrc = SOURCE_CALC_MANUAL;
-            } else {
-                bmrSrc = SOURCE_CALC_MANUAL; // sorgente mista
-            }
-            if (bmrSrc != null) {
-                var calculatedBmr = calculateBmrReference(profile, measurements[:weightKg]).toFloat();
-                var m = buildReferenceMetric(
-                    "bmr", "BMR", "kcal", calculatedBmr,
-                    calculatedBmr, 5.0, 10.0
-                );
-                m[:available] = true;
-                m[:source] = bmrSrc;
-                metrics.add(m);
-            } else {
-                metrics.add(unavailableMetric("bmr", "BMR", "kcal"));
-            }
+            var bmrSrc = (weightIsGarmin && heightIsGarmin && sexIsGarmin && ageBandIsGarmin)
+                ? SOURCE_CALC_GARMIN : SOURCE_CALC_MANUAL;
+            var calculatedBmr = calculateBmrReference(profile, measurements[:weightKg]).toFloat();
+            var m = buildReferenceMetric(
+                "bmr", "BMR", "kcal", calculatedBmr,
+                calculatedBmr, 5.0, 10.0
+            );
+            m[:available] = true;
+            m[:source] = bmrSrc;
+            metrics.add(m);
         } else {
             metrics.add(unavailableMetric("bmr", "BMR", "kcal"));
         }
@@ -966,88 +948,18 @@ class BodyMetricsDomain {
         return lines;
     }
 
+    //! Returns the metric definition for the given ID from the pre-built metrics array.
+    //! Returns null if the metric is unavailable or not found.
     function infoMetricDefinition(metricId as String) {
-        if (metricId.equals("bmi")) {
-            var bmiRange = bmiTargetRange(_profile);
-            return buildTargetMetric(
-                "bmi", "BMI", "kg/m2", 0.0,
-                bmiRange[:greenMin], bmiRange[:greenMax],
-                bmiRange[:yellowLowMin], bmiRange[:yellowLowMax],
-                bmiRange[:yellowHighMin], bmiRange[:yellowHighMax],
-                bmiRange[:orangeLowMin], bmiRange[:orangeLowMax],
-                bmiRange[:orangeHighMin], bmiRange[:orangeHighMax]
-            );
-        }
-
-        if (metricId.equals("fat_pct")) {
-            var fatRange = fatPctRange(_profile);
-            return buildTargetMetric(
-                "fat_pct", "Fat", "%", 0.0,
-                fatRange[:greenMin], fatRange[:greenMax],
-                fatRange[:yellowLowMin], fatRange[:yellowLowMax],
-                fatRange[:yellowHighMin], fatRange[:yellowHighMax],
-                fatRange[:orangeLowMin], fatRange[:orangeLowMax],
-                fatRange[:orangeHighMin], fatRange[:orangeHighMax]
-            );
-        }
-
-        if (metricId.equals("muscle_kg")) {
-            var muscleKgBand = muscleKgRange(_profile);
-            return buildLowOnlyMetric(
-                "muscle_kg", "Muscle Kg", "kg", 0.0,
-                muscleKgBand[:greenMin], muscleKgBand[:greenMax],
-                muscleKgBand[:yellowMin], muscleKgBand[:orangeMin]
-            );
-        }
-
-        if (metricId.equals("muscle_pct")) {
-            var musclePctBand = musclePctRange(_profile);
-            return buildLowOnlyMetric(
-                "muscle_pct", "Muscle %", "%", 0.0,
-                musclePctBand[:greenMin], musclePctBand[:greenMax],
-                musclePctBand[:yellowMin], musclePctBand[:orangeMin]
-            );
-        }
-
-        if (metricId.equals("water_pct")) {
-            var waterBand = waterPctRange(_profile);
-            return buildLowOnlyMetric(
-                "water_pct", "Water %", "%", 0.0,
-                waterBand[:greenMin], waterBand[:greenMax],
-                waterBand[:yellowMin], waterBand[:orangeMin]
-            );
-        }
-
-        if (metricId.equals("bone_kg")) {
-            var boneBand = boneKgRange(_profile);
-            return buildLowOnlyMetric(
-                "bone_kg", "Bone Kg", "kg", 0.0,
-                boneBand[:greenMin], boneBand[:greenMax],
-                boneBand[:yellowMin], boneBand[:orangeMin]
-            );
-        }
-
-        if (metricId.equals("weight")) {
-            var weightRange = weightTargetRange(_profile, bmiTargetRange(_profile));
-            return buildTargetMetric(
-                "weight", "Weight", "kg", 0.0,
-                weightRange[:greenMin], weightRange[:greenMax],
-                weightRange[:yellowLowMin], weightRange[:yellowLowMax],
-                weightRange[:yellowHighMin], weightRange[:yellowHighMax],
-                weightRange[:orangeLowMin], weightRange[:orangeLowMax],
-                weightRange[:orangeHighMin], weightRange[:orangeHighMax]
-            );
-        }
-
-        if (metricId.equals("bmr")) {
-            if (_measurements[:weightKg] == null || _profile[:heightCm] == null ||
-                _profile[:sex] == null || _profile[:ageBand] == null) {
+        for (var i = 0; i < _metrics.size(); i += 1) {
+            var m = _metrics[i] as Dictionary;
+            if (m[:id].equals(metricId)) {
+                if (m.hasKey(:available) && m[:available]) {
+                    return m;
+                }
                 return null;
             }
-            var reference = calculateBmrReference(_profile, _measurements[:weightKg]).toFloat();
-            return buildReferenceMetric("bmr", "BMR", "kcal", reference, reference, 5.0, 10.0);
         }
-
         return null;
     }
 
@@ -1094,10 +1006,6 @@ class BodyMetricsDomain {
 
         if (policy.equals(POLICY_LOW_ONLY)) {
             return classifyLowOnly(metric, value);
-        }
-
-        if (policy.equals(POLICY_HIGH_ONLY)) {
-            return classifyHighOnly(metric, value);
         }
 
         if (policy.equals(POLICY_REFERENCE_ONLY)) {
@@ -1155,22 +1063,6 @@ class BodyMetricsDomain {
         return ZONE_RED;
     }
 
-    function classifyHighOnly(metric as Dictionary, value) {
-        if (value <= metric[:greenMax]) {
-            return ZONE_GREEN;
-        }
-
-        if (value <= metric[:yellowHighMax]) {
-            return ZONE_YELLOW;
-        }
-
-        if (value <= metric[:orangeHighMax]) {
-            return ZONE_ORANGE;
-        }
-
-        return ZONE_RED;
-    }
-
     function classifyReferenceOnly(metric as Dictionary, value) {
         var deltaPct = referenceDeltaPct(metric, value);
         if (deltaPct <= metric[:toleranceGoodPct].toFloat()) {
@@ -1222,10 +1114,6 @@ class BodyMetricsDomain {
             return zoneRangeTextLowOnly(metric, zone);
         }
 
-        if (policy.equals(POLICY_HIGH_ONLY)) {
-            return zoneRangeTextHighOnly(metric, zone);
-        }
-
         if (policy.equals(POLICY_REFERENCE_ONLY)) {
             return zoneRangeTextReferenceOnly(metric);
         }
@@ -1238,10 +1126,6 @@ class BodyMetricsDomain {
 
         if (policy.equals(POLICY_LOW_ONLY)) {
             return fmtThreshold(metric[:greenMin]) + "-" + fmtThreshold(metric[:greenMax]);
-        }
-
-        if (policy.equals(POLICY_HIGH_ONLY)) {
-            return "<= " + fmtThreshold(metric[:greenMax]);
         }
 
         if (policy.equals(POLICY_REFERENCE_ONLY)) {
@@ -1305,22 +1189,6 @@ class BodyMetricsDomain {
         return "< " + fmtThreshold(metric[:orangeMin]);
     }
 
-    function zoneRangeTextHighOnly(metric as Dictionary, zone as Number) as String {
-        if (zone == ZONE_GREEN) {
-            return "<= " + fmtThreshold(metric[:greenMax]);
-        }
-
-        if (zone == ZONE_YELLOW) {
-            return fmtThreshold(metric[:greenMax]) + "-" + fmtThreshold(metric[:yellowHighMax]);
-        }
-
-        if (zone == ZONE_ORANGE) {
-            return fmtThreshold(metric[:yellowHighMax]) + "-" + fmtThreshold(metric[:orangeHighMax]);
-        }
-
-        return "> " + fmtThreshold(metric[:orangeHighMax]);
-    }
-
     function zoneRangeTextReferenceOnly(metric as Dictionary) as String {
         return _locale.text("reference.prefix") + " " + fmtThreshold(metric[:referenceValue]) + " (+/-" + fmtThreshold(metric[:toleranceGoodPct]) + "%)";
     }
@@ -1349,19 +1217,6 @@ class BodyMetricsDomain {
                 return _locale.text("hint.low_only.orange");
             }
             return _locale.text("hint.low_only.red");
-        }
-
-        if (policy.equals(POLICY_HIGH_ONLY)) {
-            if (zone == ZONE_GREEN) {
-                return _locale.text("hint.high_only.green");
-            }
-            if (zone == ZONE_YELLOW) {
-                return _locale.text("hint.high_only.yellow");
-            }
-            if (zone == ZONE_ORANGE) {
-                return _locale.text("hint.high_only.orange");
-            }
-            return _locale.text("hint.high_only.red");
         }
 
         if (policy.equals(POLICY_REFERENCE_ONLY)) {

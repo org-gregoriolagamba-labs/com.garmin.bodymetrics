@@ -9,7 +9,6 @@ const MEAS_FAT_KEY = "bodyMetrics.meas.fatPct";
 const MEAS_MUSCLE_KEY = "bodyMetrics.meas.musclePct";
 const MEAS_WATER_KEY = "bodyMetrics.meas.waterPct";
 const MEAS_BONE_KEY = "bodyMetrics.meas.boneKg";
-const MEAS_BMR_KEY = "bodyMetrics.meas.bmr";
 const MEAS_TIMESTAMP_KEY = "bodyMetrics.meas.timestamp";
 const MEAS_SOURCE_KEY = "bodyMetrics.meas.source";
 

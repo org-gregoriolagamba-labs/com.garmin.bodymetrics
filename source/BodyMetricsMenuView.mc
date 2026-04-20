@@ -6,9 +6,6 @@ import Toybox.WatchUi;
 //! Replaces the built-in WatchUi.Menu for a modern, adaptive appearance.
 class BodyMetricsMenuView extends WatchUi.View {
 
-    const ACCENT = 0x66CCFF;
-    const ACCENT_DIM = 0x224466;
-
     var _items as Array;       // [{:label, :id}]
     var _title as String;
     var _selected as Number;
@@ -48,7 +45,7 @@ class BodyMetricsMenuView extends WatchUi.View {
         var lineY = pct(h, 8);
         var lineHalfW = pct(w, 25);
         dc.setPenWidth(2);
-        dc.setColor(ACCENT_DIM, Graphics.COLOR_TRANSPARENT);
+        dc.setColor(COLOR_ACCENT_DIM, Graphics.COLOR_TRANSPARENT);
         dc.drawLine(cx - lineHalfW, lineY, cx + lineHalfW, lineY);
         dc.setPenWidth(1);
 
@@ -58,12 +55,12 @@ class BodyMetricsMenuView extends WatchUi.View {
         if (dc.getTextWidthInPixels(_title, titleFont) > pct(w, 75)) {
             titleFont = Graphics.FONT_XTINY;
         }
-        dc.setColor(ACCENT, Graphics.COLOR_TRANSPARENT);
+        dc.setColor(COLOR_ACCENT, Graphics.COLOR_TRANSPARENT);
         dc.drawText(cx, titleY, titleFont, _title, Graphics.TEXT_JUSTIFY_CENTER);
 
         // Separator below title
         var sepY = titleY + dc.getFontHeight(titleFont) + pct(h, 2);
-        dc.setColor(ACCENT_DIM, Graphics.COLOR_TRANSPARENT);
+        dc.setColor(COLOR_ACCENT_DIM, Graphics.COLOR_TRANSPARENT);
         dc.drawLine(cx - lineHalfW, sepY, cx + lineHalfW, sepY);
 
         // Items layout
@@ -116,7 +113,7 @@ class BodyMetricsMenuView extends WatchUi.View {
                 var pillY = iy - pct(h, 1);
                 var pillR = pillH / 2;
 
-                dc.setColor(ACCENT_DIM, ACCENT_DIM);
+                dc.setColor(COLOR_ACCENT_DIM, COLOR_ACCENT_DIM);
                 dc.fillRoundedRectangle(pillX, pillY, pillW, pillH, pillR);
 
                 dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
@@ -129,7 +126,7 @@ class BodyMetricsMenuView extends WatchUi.View {
 
         // Bottom accent line
         var bottomLineY = h - pct(h, 8);
-        dc.setColor(ACCENT_DIM, Graphics.COLOR_TRANSPARENT);
+        dc.setColor(COLOR_ACCENT_DIM, Graphics.COLOR_TRANSPARENT);
         dc.setPenWidth(2);
         dc.drawLine(cx - lineHalfW, bottomLineY, cx + lineHalfW, bottomLineY);
         dc.setPenWidth(1);

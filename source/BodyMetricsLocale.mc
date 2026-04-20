@@ -173,10 +173,6 @@ class BodyMetricsLocale {
         if (key.equals("hint.low_only.yellow")) { return "Da consolidare"; }
         if (key.equals("hint.low_only.orange")) { return "Sotto soglia"; }
         if (key.equals("hint.low_only.red")) { return "Recupero prioritario"; }
-        if (key.equals("hint.high_only.green")) { return "Valore gestito"; }
-        if (key.equals("hint.high_only.yellow")) { return "Attenzione"; }
-        if (key.equals("hint.high_only.orange")) { return "Oltre soglia"; }
-        if (key.equals("hint.high_only.red")) { return "Ridurre presto"; }
         if (key.equals("hint.reference.green")) { return "Coerente col profilo"; }
         if (key.equals("hint.reference.below")) { return "Sotto il riferimento"; }
         if (key.equals("hint.reference.above")) { return "Sopra il riferimento"; }
@@ -190,10 +186,6 @@ class BodyMetricsLocale {
         if (key.equals("label.low_only.yellow")) { return "Al limite"; }
         if (key.equals("label.low_only.orange")) { return "Basso"; }
         if (key.equals("label.low_only.red")) { return "Molto basso"; }
-        if (key.equals("label.high_only.green")) { return "Adeguato"; }
-        if (key.equals("label.high_only.yellow")) { return "Da monitorare"; }
-        if (key.equals("label.high_only.orange")) { return "Alto"; }
-        if (key.equals("label.high_only.red")) { return "Molto alto"; }
         if (key.equals("label.reference.green")) { return "In linea"; }
         if (key.equals("label.reference.below")) { return "Sotto rif."; }
         if (key.equals("label.reference.above")) { return "Sopra rif."; }
@@ -317,10 +309,6 @@ class BodyMetricsLocale {
         if (key.equals("hint.low_only.yellow")) { return "Build up"; }
         if (key.equals("hint.low_only.orange")) { return "Below thr."; }
         if (key.equals("hint.low_only.red")) { return "Priority"; }
-        if (key.equals("hint.high_only.green")) { return "Managed"; }
-        if (key.equals("hint.high_only.yellow")) { return "Attention"; }
-        if (key.equals("hint.high_only.orange")) { return "Over thr."; }
-        if (key.equals("hint.high_only.red")) { return "Reduce"; }
         if (key.equals("hint.reference.green")) { return "Aligned"; }
         if (key.equals("hint.reference.below")) { return "Below ref."; }
         if (key.equals("hint.reference.above")) { return "Above ref."; }
@@ -334,10 +322,6 @@ class BodyMetricsLocale {
         if (key.equals("label.low_only.yellow")) { return "Borderline"; }
         if (key.equals("label.low_only.orange")) { return "Low"; }
         if (key.equals("label.low_only.red")) { return "Very low"; }
-        if (key.equals("label.high_only.green")) { return "Adequate"; }
-        if (key.equals("label.high_only.yellow")) { return "Watch"; }
-        if (key.equals("label.high_only.orange")) { return "High"; }
-        if (key.equals("label.high_only.red")) { return "Very high"; }
         if (key.equals("label.reference.green")) { return "Aligned"; }
         if (key.equals("label.reference.below")) { return "Below ref."; }
         if (key.equals("label.reference.above")) { return "Above ref."; }
@@ -461,10 +445,6 @@ class BodyMetricsLocale {
         if (key.equals("hint.low_only.yellow")) { return "A renforcer"; }
         if (key.equals("hint.low_only.orange")) { return "Sous seuil"; }
         if (key.equals("hint.low_only.red")) { return "Prioritaire"; }
-        if (key.equals("hint.high_only.green")) { return "Maitrise"; }
-        if (key.equals("hint.high_only.yellow")) { return "Attention"; }
-        if (key.equals("hint.high_only.orange")) { return "Au-dessus"; }
-        if (key.equals("hint.high_only.red")) { return "A reduire"; }
         if (key.equals("hint.reference.green")) { return "Coherent"; }
         if (key.equals("hint.reference.below")) { return "Sous ref."; }
         if (key.equals("hint.reference.above")) { return "Au-dessus ref."; }
@@ -478,10 +458,6 @@ class BodyMetricsLocale {
         if (key.equals("label.low_only.yellow")) { return "Limite"; }
         if (key.equals("label.low_only.orange")) { return "Bas"; }
         if (key.equals("label.low_only.red")) { return "Tres bas"; }
-        if (key.equals("label.high_only.green")) { return "Adequat"; }
-        if (key.equals("label.high_only.yellow")) { return "A suivre"; }
-        if (key.equals("label.high_only.orange")) { return "Haut"; }
-        if (key.equals("label.high_only.red")) { return "Tres haut"; }
         if (key.equals("label.reference.green")) { return "Conforme"; }
         if (key.equals("label.reference.below")) { return "Sous ref."; }
         if (key.equals("label.reference.above")) { return "Sur ref."; }
@@ -605,10 +581,6 @@ class BodyMetricsLocale {
         if (key.equals("hint.low_only.yellow")) { return "Por reforzar"; }
         if (key.equals("hint.low_only.orange")) { return "Bajo umbral"; }
         if (key.equals("hint.low_only.red")) { return "Muy priorit."; }
-        if (key.equals("hint.high_only.green")) { return "Controlado"; }
-        if (key.equals("hint.high_only.yellow")) { return "Atencion"; }
-        if (key.equals("hint.high_only.orange")) { return "Por encima"; }
-        if (key.equals("hint.high_only.red")) { return "Reducir ya"; }
         if (key.equals("hint.reference.green")) { return "Coherente"; }
         if (key.equals("hint.reference.below")) { return "Bajo ref."; }
         if (key.equals("hint.reference.above")) { return "Sobre la ref."; }
@@ -622,10 +594,6 @@ class BodyMetricsLocale {
         if (key.equals("label.low_only.yellow")) { return "Al limite"; }
         if (key.equals("label.low_only.orange")) { return "Bajo"; }
         if (key.equals("label.low_only.red")) { return "Muy bajo"; }
-        if (key.equals("label.high_only.green")) { return "Adecuado"; }
-        if (key.equals("label.high_only.yellow")) { return "Controlar"; }
-        if (key.equals("label.high_only.orange")) { return "Alto"; }
-        if (key.equals("label.high_only.red")) { return "Muy alto"; }
         if (key.equals("label.reference.green")) { return "Correcto"; }
         if (key.equals("label.reference.below")) { return "Bajo ref."; }
         if (key.equals("label.reference.above")) { return "Sobre ref."; }

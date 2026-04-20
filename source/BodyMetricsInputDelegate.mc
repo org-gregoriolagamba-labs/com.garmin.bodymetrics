@@ -44,7 +44,6 @@ class BodyMetricsInputDelegate extends WatchUi.InputDelegate {
             var pressType = evt.getType();
             if (pressType == WatchUi.PRESS_TYPE_DOWN) {
                 _selectDownTime = System.getTimer();
-                System.println("DEBUG: KEY_START PRESS_TYPE_DOWN, time=" + _selectDownTime);
                 return true;
             }
             // PRESS_TYPE_ACTION = release
@@ -52,14 +51,11 @@ class BodyMetricsInputDelegate extends WatchUi.InputDelegate {
             var currentTime = System.getTimer();
             _selectDownTime = 0;
             
-            System.println("DEBUG: KEY_START PRESS_TYPE_ACTION, downTime=" + downTime + ", currentTime=" + currentTime);
             
             // Check for traditional long-press (with PRESS_TYPE_DOWN timing)
             if (downTime > 0 && _view.isSummaryMode()) {
                 var held = currentTime - downTime;
-                System.println("DEBUG: Long-press timing check: held=" + held + "ms, threshold=" + LONG_PRESS_MS);
                 if (held >= LONG_PRESS_MS) {
-                    System.println("DEBUG: Long-press detected (timing)");
                     _view.openMetricInfo();
                     _lastKeyReleaseTime = currentTime;
                     return true;
@@ -70,16 +66,13 @@ class BodyMetricsInputDelegate extends WatchUi.InputDelegate {
             // use double-tap detection as a long-press substitute
             if (downTime == 0) {
                 var timeSinceLastRelease = currentTime - _lastKeyReleaseTime;
-                System.println("DEBUG: Simulator fallback - timeSinceLastRelease=" + timeSinceLastRelease);
                 if (_lastKeyReleaseTime > 0 && timeSinceLastRelease < DOUBLE_TAP_WINDOW_MS) {
-                    System.println("DEBUG: Long-press detected (double-tap)");
                     _view.openMetricInfo();
                     _lastKeyReleaseTime = 0;  // Reset to prevent triple-tap
                     return true;
                 }
             }
             
-            System.println("DEBUG: Normal toggleMode");
             _view.toggleMode();
             _lastKeyReleaseTime = currentTime;
             return true;

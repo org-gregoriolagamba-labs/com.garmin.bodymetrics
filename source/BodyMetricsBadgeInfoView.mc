@@ -1,13 +1,10 @@
 import Toybox.Graphics;
 import Toybox.Lang;
-import Toybox.Math;
 import Toybox.WatchUi;
 
 //! Scrollable badge info view, opened from the main menu.
 //! Displays badge legend as structured list items on a round screen.
 class BodyMetricsBadgeInfoView extends WatchUi.View {
-
-    const ACCENT = 0x66CCFF;
 
     var _title as String;
     var _lines as Array;      // [{:label, :value}]
@@ -42,15 +39,15 @@ class BodyMetricsBadgeInfoView extends WatchUi.View {
         var contentTop = topMargin + dc.getFontHeight(titleFont) + pct(h, 2);
         var visibleH = h - contentTop - pct(h, 15);
         var visibleBottom = contentTop + visibleH;
-        var wTop = _availableWidthAtY(w, h, contentTop, lineH) - pct(w, 14);
-        var wBot = _availableWidthAtY(w, h, visibleBottom - lineH, lineH) - pct(w, 14);
+        var wTop = availableWidthAtYGlobal(w, h, contentTop, lineH) - pct(w, 14);
+        var wBot = availableWidthAtYGlobal(w, h, visibleBottom - lineH, lineH) - pct(w, 14);
         var safeW = wTop < wBot ? wTop : wBot;
         var bulletIndent = pct(w, 5);
         var textLeft = pct(w, 11) + bulletIndent;
         var itemW = safeW - bulletIndent;
 
         // Fixed title
-        dc.setColor(ACCENT, Graphics.COLOR_TRANSPARENT);
+        dc.setColor(COLOR_ACCENT, Graphics.COLOR_TRANSPARENT);
         dc.drawText(cx, topMargin, titleFont, _title, Graphics.TEXT_JUSTIFY_CENTER);
 
         // Build renderable lines from structured data
@@ -65,7 +62,7 @@ class BodyMetricsBadgeInfoView extends WatchUi.View {
                 allLines.add({:text => lbl, :type => :subheading});
             } else {
                 var bText = lbl.equals("") ? val : lbl + " - " + val;
-                var wrapped = _wrapText(dc, bText, font, itemW);
+                var wrapped = wrapTextGlobal(dc, bText, font, itemW);
                 for (var wl = 0; wl < wrapped.size(); wl += 1) {
                     allLines.add({:text => wrapped[wl].toString(), :type => (wl == 0) ? :bullet : :bulletCont, :label => lbl});
                 }
@@ -87,10 +84,10 @@ class BodyMetricsBadgeInfoView extends WatchUi.View {
             var lineType = line[:type];
             if (y + lineH > contentTop - lineH && y < contentTop + visibleH + lineH) {
                 if (lineType == :subheading) {
-                    dc.setColor(ACCENT, Graphics.COLOR_TRANSPARENT);
+                    dc.setColor(COLOR_ACCENT, Graphics.COLOR_TRANSPARENT);
                     dc.drawText(textLeft - bulletIndent, y, font, line[:text].toString(), Graphics.TEXT_JUSTIFY_LEFT);
                 } else if (lineType == :bullet) {
-                    dc.setColor(ACCENT, Graphics.COLOR_TRANSPARENT);
+                    dc.setColor(COLOR_ACCENT, Graphics.COLOR_TRANSPARENT);
                     dc.fillCircle(textLeft - bulletIndent + 3, y + lineH / 2, 2);
                     var fullText = line[:text].toString();
                     var lbl = line[:label] != null ? line[:label].toString() : "";
@@ -98,7 +95,7 @@ class BodyMetricsBadgeInfoView extends WatchUi.View {
                         dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
                         dc.drawText(textLeft, y, font, fullText, Graphics.TEXT_JUSTIFY_LEFT);
                         var lblPart = fullText.substring(0, lbl.length());
-                        dc.setColor(ACCENT, Graphics.COLOR_TRANSPARENT);
+                        dc.setColor(COLOR_ACCENT, Graphics.COLOR_TRANSPARENT);
                         dc.drawText(textLeft, y, font, lblPart, Graphics.TEXT_JUSTIFY_LEFT);
                     } else {
                         dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
@@ -123,57 +120,9 @@ class BodyMetricsBadgeInfoView extends WatchUi.View {
             var trackX = w - pct(w, 5);
             dc.setColor(0x333333, Graphics.COLOR_TRANSPARENT);
             dc.fillRectangle(trackX, trackY, 3, trackH);
-            dc.setColor(ACCENT, Graphics.COLOR_TRANSPARENT);
+            dc.setColor(COLOR_ACCENT, Graphics.COLOR_TRANSPARENT);
             dc.fillRectangle(trackX, thumbY, 3, thumbH);
         }
-    }
-
-    hidden function _wrapText(dc as Dc, value as String, font, maxWidth as Number) as Array {
-        var words = _splitWords(value);
-        var lines = [] as Array;
-        var current = "";
-        for (var i = 0; i < words.size(); i += 1) {
-            var word = words[i].toString();
-            var candidate = current.equals("") ? word : current + " " + word;
-            if (!current.equals("") && dc.getTextWidthInPixels(candidate, font) > maxWidth) {
-                lines.add(current);
-                current = word;
-            } else {
-                current = candidate;
-            }
-        }
-        if (!current.equals("")) { lines.add(current); }
-        return lines;
-    }
-
-    hidden function _splitWords(value as String) as Array {
-        var words = [] as Array;
-        var start = 0;
-        var length = value.length();
-        for (var i = 0; i < length; i += 1) {
-            if (value.substring(i, i + 1).equals(" ")) {
-                if (i > start) { words.add(value.substring(start, i)); }
-                start = i + 1;
-            }
-        }
-        if (start < length) { words.add(value.substring(start, length)); }
-        return words;
-    }
-
-    hidden function _availableWidthAtY(screenW as Number, screenH as Number, textY as Number, textH as Number) as Number {
-        var r = screenW < screenH ? screenW / 2 : screenH / 2;
-        var cy = screenH / 2;
-        var dyTop = textY - cy;
-        if (dyTop < 0) { dyTop = -dyTop; }
-        var dyBottom = (textY + textH) - cy;
-        if (dyBottom < 0) { dyBottom = -dyBottom; }
-        var dy = dyTop > dyBottom ? dyTop : dyBottom;
-        if (dy >= r) { return 24; }
-        return (Math.sqrt((r * r - dy * dy).toFloat()).toNumber()) * 2;
-    }
-
-    hidden function pct(base as Number, percent as Number) as Number {
-        return (base * percent / 100).toNumber();
     }
 }
 

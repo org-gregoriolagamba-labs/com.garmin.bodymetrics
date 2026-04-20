@@ -27,11 +27,6 @@ class BodyMetricsGarminProfile {
         return _cachedRawProfile;
     }
 
-    //! Invalidates the cached profile so the next access re-reads the hardware.
-    function invalidateCache() as Void {
-        _cachedRawProfile = null;
-    }
-
     //! Read the Garmin user profile and return available data.
     //! Returns a Dictionary with :weightKg (Float, kg), :heightCm (Number),
     //! :sex (String "male"/"female"), :ageBand (String), or null values.
@@ -48,12 +43,6 @@ class BodyMetricsGarminProfile {
     //! Returns true if at least weight is available from Garmin profile.
     function hasWeight() as Boolean {
         return _getProfile().weight != null;
-    }
-
-    //! Returns true if enough data for auto-profile (height + gender + birthYear).
-    function hasProfileData() as Boolean {
-        var profile = _getProfile();
-        return profile.height != null && profile.gender != null && profile.birthYear != null;
     }
 
     //! Weight in kg (Float) or null. Garmin stores in grams.

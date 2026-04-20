@@ -92,9 +92,6 @@ class BodyMetricsView extends WatchUi.View {
         }
     }
 
-    function onLayout(dc as Dc) as Void {
-    }
-
     function onShow() as Void {
         if (_animTimer != null) {
             _animTimer.stop();
@@ -491,7 +488,7 @@ class BodyMetricsView extends WatchUi.View {
         var valueY = labelY + hTiny + gap + badgeSpace;
 
         // Field label
-        dc.setColor(isReadOnly ? 0x66CCFF : Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
+        dc.setColor(isReadOnly ? COLOR_ACCENT : Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
         dc.drawText(cx, labelY, Graphics.FONT_TINY,
             field[:label].toString(),
             Graphics.TEXT_JUSTIFY_CENTER);
@@ -501,7 +498,7 @@ class BodyMetricsView extends WatchUi.View {
         }
 
         // Field value (auto-shrink if too wide)
-        dc.setColor(isReadOnly ? 0x66CCFF : Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+        dc.setColor(isReadOnly ? COLOR_ACCENT : Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
         var valueFont = Graphics.FONT_MEDIUM;
         var safeW = pct(w, 65);
         if (dc.getTextWidthInPixels(valueText, valueFont) > safeW) {
@@ -523,7 +520,7 @@ class BodyMetricsView extends WatchUi.View {
         for (var i = 0; i < totalSteps; i++) {
             var dotX = dotsStartX + i * dotSpacing;
             if (i < stepIndex) {
-                dc.setColor(0x66CCFF, Graphics.COLOR_TRANSPARENT);
+                dc.setColor(COLOR_ACCENT, Graphics.COLOR_TRANSPARENT);
                 dc.fillCircle(dotX, dotsY, activeR);
             } else if (i == stepIndex) {
                 dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
@@ -536,7 +533,7 @@ class BodyMetricsView extends WatchUi.View {
 
         // Title below dots
         var titleY = dotsY + activeR + gap + 2;
-        dc.setColor(0x66CCFF, Graphics.COLOR_TRANSPARENT);
+        dc.setColor(COLOR_ACCENT, Graphics.COLOR_TRANSPARENT);
         dc.drawText(cx, titleY, Graphics.FONT_XTINY,
             titleText,
             Graphics.TEXT_JUSTIFY_CENTER);
@@ -545,7 +542,7 @@ class BodyMetricsView extends WatchUi.View {
         if (!isReadOnly) {
             var arrowY = valueY + dc.getFontHeight(valueFont) / 2;
             var arrowX = pct(w, 12);
-            dc.setColor(0x66CCFF, Graphics.COLOR_TRANSPARENT);
+            dc.setColor(COLOR_ACCENT, Graphics.COLOR_TRANSPARENT);
             drawTriangle(dc, arrowX, arrowY, pct(w, 2), true);
             drawTriangle(dc, w - arrowX, arrowY, pct(w, 2), false);
         }
@@ -581,9 +578,9 @@ class BodyMetricsView extends WatchUi.View {
         if (dateText.equals("")) {
             // Badge only, centered
             var bx = cx - (badgeW / 2);
-            dc.setColor(0x335C99, Graphics.COLOR_TRANSPARENT);
+            dc.setColor(COLOR_BADGE_BG, Graphics.COLOR_TRANSPARENT);
             dc.fillRectangle(bx, y, badgeW, badgeH);
-            dc.setColor(0x66CCFF, Graphics.COLOR_TRANSPARENT);
+            dc.setColor(COLOR_ACCENT, Graphics.COLOR_TRANSPARENT);
             dc.drawRectangle(bx, y, badgeW, badgeH);
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
             dc.drawText(cx, y + padY, font, badgeText, Graphics.TEXT_JUSTIFY_CENTER);
@@ -595,9 +592,9 @@ class BodyMetricsView extends WatchUi.View {
             var startX = cx - (totalW / 2);
 
             // Badge
-            dc.setColor(0x335C99, Graphics.COLOR_TRANSPARENT);
+            dc.setColor(COLOR_BADGE_BG, Graphics.COLOR_TRANSPARENT);
             dc.fillRectangle(startX, y, badgeW, badgeH);
-            dc.setColor(0x66CCFF, Graphics.COLOR_TRANSPARENT);
+            dc.setColor(COLOR_ACCENT, Graphics.COLOR_TRANSPARENT);
             dc.drawRectangle(startX, y, badgeW, badgeH);
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
             dc.drawText(startX + badgeW / 2, y + padY, font, badgeText, Graphics.TEXT_JUSTIFY_CENTER);
@@ -618,9 +615,9 @@ class BodyMetricsView extends WatchUi.View {
         var badgeH = dc.getFontHeight(font) + (padY * 2);
         var x = cx - (badgeW / 2);
 
-        dc.setColor(0x335C99, Graphics.COLOR_TRANSPARENT);
+        dc.setColor(COLOR_BADGE_BG, Graphics.COLOR_TRANSPARENT);
         dc.fillRectangle(x, y, badgeW, badgeH);
-        dc.setColor(0x66CCFF, Graphics.COLOR_TRANSPARENT);
+        dc.setColor(COLOR_ACCENT, Graphics.COLOR_TRANSPARENT);
         dc.drawRectangle(x, y, badgeW, badgeH);
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
         dc.drawText(cx, y + padY, font, textValue, Graphics.TEXT_JUSTIFY_CENTER);
@@ -764,7 +761,7 @@ class BodyMetricsView extends WatchUi.View {
         var bulletIndent = pct(w, 5);
         var textLeft = pct(w, 11) + bulletIndent;
         var itemW = safeW - bulletIndent;
-        var accentColor = 0x66CCFF;
+        var accentColor = COLOR_ACCENT;
 
         // Fixed title at top
         dc.setColor(available ? _domain.zoneColor(metric, zone) : accentColor, Graphics.COLOR_TRANSPARENT);
@@ -1016,22 +1013,18 @@ class BodyMetricsView extends WatchUi.View {
             bright = [Graphics.COLOR_RED, Graphics.COLOR_ORANGE, Graphics.COLOR_YELLOW, Graphics.COLOR_GREEN];
             dim    = [0x330000, 0x331A00, 0x333300, 0x003300];
             displayZone = 3 - activeZone;
-        } else if (policy.equals(POLICY_TARGET_RANGE)) {
+        } else if (policy.equals(POLICY_REFERENCE_ONLY)) {
+            arcStarts = [240, 165, 90, 15];
+            arcEnds   = [165, 90, 15, 300];
+            bright = [COLOR_ACCENT_DIM, 0x336699, 0x4D99CC, COLOR_ACCENT];
+            dim    = [0x112233, 0x19334D, 0x204966, 0x2A607F];
+        } else {
+            // POLICY_TARGET_RANGE
             arcStarts = [240, 205, 170, 135, 100, 65, 30];
             arcEnds   = [205, 170, 135, 100, 65, 30, 355];
             bright = [Graphics.COLOR_RED, Graphics.COLOR_ORANGE, Graphics.COLOR_YELLOW, Graphics.COLOR_GREEN, Graphics.COLOR_YELLOW, Graphics.COLOR_ORANGE, Graphics.COLOR_RED];
             dim    = [0x330000, 0x331A00, 0x333300, 0x003300, 0x333300, 0x331A00, 0x330000];
             displayZone = targetRangeDisplayIndex(metric, activeZone);
-        } else if (policy.equals(POLICY_REFERENCE_ONLY)) {
-            arcStarts = [240, 165, 90, 15];
-            arcEnds   = [165, 90, 15, 300];
-            bright = [0x224466, 0x336699, 0x4D99CC, 0x66CCFF];
-            dim    = [0x112233, 0x19334D, 0x204966, 0x2A607F];
-        } else {
-            arcStarts = [240, 165, 90, 15];
-            arcEnds   = [165, 90, 15, 300];
-            bright = [Graphics.COLOR_GREEN, Graphics.COLOR_YELLOW, Graphics.COLOR_ORANGE, Graphics.COLOR_RED];
-            dim    = [0x003300, 0x333300, 0x331A00, 0x330000];
         }
 
         var thickPen = pct(cx * 2, 2);
@@ -1077,23 +1070,6 @@ class BodyMetricsView extends WatchUi.View {
         }
     }
 
-    function drawFooterCta(dc as Dc, cx as Number, y as Number, label as String) as Void {
-        var font = Graphics.FONT_XTINY;
-        var padX = 7;
-        var padY = 2;
-        var textW = dc.getTextWidthInPixels(label, font);
-        var pillW = textW + (padX * 2);
-        var pillH = dc.getFontHeight(font) + (padY * 2);
-        var x = cx - pillW / 2;
-
-        dc.setColor(0x224466, 0x224466);
-        dc.fillRoundedRectangle(x, y, pillW, pillH, pillH / 2);
-        dc.setColor(0x66CCFF, Graphics.COLOR_TRANSPARENT);
-        dc.drawRoundedRectangle(x, y, pillW, pillH, pillH / 2);
-        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, y + padY, font, label, Graphics.TEXT_JUSTIFY_CENTER);
-    }
-
     //! Draw a small ⓘ icon to the right of the metric label (tap target for info view)
     function drawInfoIcon(dc as Dc, cx as Number, labelY as Number, labelText as String, labelFont) as Void {
         var labelW = dc.getTextWidthInPixels(labelText, labelFont);
@@ -1108,7 +1084,7 @@ class BodyMetricsView extends WatchUi.View {
         _infoIconR = r;
 
         // Draw circle
-        dc.setColor(0x66CCFF, Graphics.COLOR_TRANSPARENT);
+        dc.setColor(COLOR_ACCENT, Graphics.COLOR_TRANSPARENT);
         dc.drawCircle(iconX, iconY, r);
 
         // Draw geometric "i": dot (2px circle) + stem (2px wide rect)
@@ -1122,82 +1098,12 @@ class BodyMetricsView extends WatchUi.View {
         dc.fillRectangle(iconX - stemW / 2, stemY, stemW, stemH);
     }
 
-    function drawInfoSection(dc as Dc, cx as Number, y as Number, maxWidth as Number,
-        title as String, body as String, headingFont, bodyFont, gap as Number) as Number {
-        dc.setColor(0x66CCFF, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, y, headingFont, title, Graphics.TEXT_JUSTIFY_CENTER);
-        y += dc.getFontHeight(headingFont) + 1;
-
-        var lines = wrapText(dc, body, bodyFont, maxWidth);
-        dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
-        for (var i = 0; i < lines.size(); i += 1) {
-            dc.drawText(cx, y, bodyFont, lines[i].toString(), Graphics.TEXT_JUSTIFY_CENTER);
-            y += dc.getFontHeight(bodyFont);
-        }
-
-        return y + gap;
-    }
-
     function wrapText(dc as Dc, value as String, font, maxWidth as Number) as Array {
-        var words = splitWords(value);
-        var lines = [] as Array;
-        var current = "";
-
-        for (var i = 0; i < words.size(); i += 1) {
-            var word = words[i].toString();
-            var candidate = current.equals("") ? word : current + " " + word;
-            if (!current.equals("") && dc.getTextWidthInPixels(candidate, font) > maxWidth) {
-                lines.add(current);
-                current = word;
-            } else {
-                current = candidate;
-            }
-        }
-
-        if (!current.equals("")) {
-            lines.add(current);
-        }
-
-        return lines;
+        return wrapTextGlobal(dc, value, font, maxWidth);
     }
 
     function splitWords(value as String) as Array {
-        var words = [] as Array;
-        var start = 0;
-        var length = value.length();
-
-        for (var i = 0; i < length; i += 1) {
-            if (value.substring(i, i + 1).equals(" ")) {
-                if (i > start) {
-                    words.add(value.substring(start, i));
-                }
-                start = i + 1;
-            }
-        }
-
-        if (start < length) {
-            words.add(value.substring(start, length));
-        }
-
-        return words;
-    }
-
-    function drawZoneSummary(dc as Dc, cx as Number, y as Number, screenW as Number) as Void {
-        var colors = [Graphics.COLOR_GREEN, Graphics.COLOR_YELLOW, Graphics.COLOR_ORANGE, Graphics.COLOR_RED];
-        var spacing = pct(screenW, 10);
-        var dotR = pct(screenW, 1);
-        if (dotR < 3) { dotR = 3; }
-        var startX = cx - (3 * spacing) / 2;
-
-        for (var i = 0; i < 4; i++) {
-            var x = startX + i * spacing;
-            var count = countByZone(i);
-            dc.setColor(colors[i], Graphics.COLOR_TRANSPARENT);
-            dc.fillCircle(x - dotR - 3, y, dotR);
-            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(x + 2, y - 10, Graphics.FONT_XTINY,
-                count.toString(), Graphics.TEXT_JUSTIFY_LEFT);
-        }
+        return splitWordsGlobal(value);
     }
 
     function drawDetailZoneBar(dc as Dc, x as Number, y as Number, w as Number, h as Number, metric as Dictionary, zone as Number, policy) as Void {
@@ -1210,14 +1116,15 @@ class BodyMetricsView extends WatchUi.View {
             colors = [Graphics.COLOR_RED, Graphics.COLOR_ORANGE, Graphics.COLOR_YELLOW, Graphics.COLOR_GREEN];
             highlights = [0xFF8888, 0xFFBB66, 0xFFFF88, 0x88FF88];
             displayZone = 3 - zone;
-        } else if (policy.equals(POLICY_TARGET_RANGE)) {
+        } else if (policy.equals(POLICY_REFERENCE_ONLY)) {
+            colors = [COLOR_ACCENT_DIM, 0x336699, 0x4D99CC, COLOR_ACCENT];
+            highlights = [0x335577, 0x4477AA, 0x66AAD9, 0x88DDFF];
+        } else {
+            // POLICY_TARGET_RANGE
             colors = [Graphics.COLOR_RED, Graphics.COLOR_ORANGE, Graphics.COLOR_YELLOW, Graphics.COLOR_GREEN, Graphics.COLOR_YELLOW, Graphics.COLOR_ORANGE, Graphics.COLOR_RED];
             highlights = [0xFF8888, 0xFFBB66, 0xFFFF88, 0x88FF88, 0xFFFF88, 0xFFBB66, 0xFF8888];
             displayZone = targetRangeDisplayIndex(metric, zone);
             segCount = 7;
-        } else if (policy.equals(POLICY_REFERENCE_ONLY)) {
-            colors = [0x224466, 0x336699, 0x4D99CC, 0x66CCFF];
-            highlights = [0x335577, 0x4477AA, 0x66AAD9, 0x88DDFF];
         }
 
         var segW = w / segCount;
@@ -1264,17 +1171,6 @@ class BodyMetricsView extends WatchUi.View {
             return "--";
         }
         return fmt1Global(metric[:value].toFloat());
-    }
-
-    function countByZone(zone as Number) as Number {
-        var count = 0;
-        for (var i = 0; i < _domain.metricsCount(); i += 1) {
-            var m = _domain.metricAt(i) as Dictionary;
-            if (m[:available] && _domain.classify(m) == zone) {
-                count += 1;
-            }
-        }
-        return count;
     }
 
     // --- Trend Screen ---
@@ -1620,17 +1516,8 @@ class BodyMetricsView extends WatchUi.View {
     }
 
     //! Compute the usable horizontal width at a given Y on a round screen.
-    //! Uses the most constrained edge (top or bottom of text) to avoid clipping.
     function _availableWidthAtY(screenW as Number, screenH as Number, textY as Number, textH as Number) as Number {
-        var r = screenW < screenH ? screenW / 2 : screenH / 2;
-        var cy = screenH / 2;
-        var dyTop = textY - cy;
-        if (dyTop < 0) { dyTop = -dyTop; }
-        var dyBottom = (textY + textH) - cy;
-        if (dyBottom < 0) { dyBottom = -dyBottom; }
-        var dy = dyTop > dyBottom ? dyTop : dyBottom;
-        if (dy >= r) { return 24; }
-        return (Math.sqrt((r * r - dy * dy).toFloat()).toNumber()) * 2;
+        return availableWidthAtYGlobal(screenW, screenH, textY, textH);
     }
 
     function _trendWindowLabel(dc as Dc, font, maxWidth as Number) as String {
@@ -1652,7 +1539,60 @@ class BodyMetricsView extends WatchUi.View {
 
 }
 
+//! UI color constants used across views and menus.
+const COLOR_ACCENT = 0x66CCFF;
+const COLOR_ACCENT_DIM = 0x224466;
+const COLOR_BADGE_BG = 0x335C99;
+
 //! Percentage of a total value.
 function pct(total as Number, percent as Number) as Number {
     return total * percent / 100;
+}
+
+//! Compute the usable horizontal width at a given Y on a round screen.
+//! Uses the most constrained edge (top or bottom of text) to avoid clipping.
+function availableWidthAtYGlobal(screenW as Number, screenH as Number, textY as Number, textH as Number) as Number {
+    var r = screenW < screenH ? screenW / 2 : screenH / 2;
+    var cy = screenH / 2;
+    var dyTop = textY - cy;
+    if (dyTop < 0) { dyTop = -dyTop; }
+    var dyBottom = (textY + textH) - cy;
+    if (dyBottom < 0) { dyBottom = -dyBottom; }
+    var dy = dyTop > dyBottom ? dyTop : dyBottom;
+    if (dy >= r) { return 24; }
+    return (Math.sqrt((r * r - dy * dy).toFloat()).toNumber()) * 2;
+}
+
+//! Word-wrap text to fit within maxWidth pixels.
+function wrapTextGlobal(dc as Dc, value as String, font, maxWidth as Number) as Array {
+    var words = splitWordsGlobal(value);
+    var lines = [] as Array;
+    var current = "";
+    for (var i = 0; i < words.size(); i += 1) {
+        var word = words[i].toString();
+        var candidate = current.equals("") ? word : current + " " + word;
+        if (!current.equals("") && dc.getTextWidthInPixels(candidate, font) > maxWidth) {
+            lines.add(current);
+            current = word;
+        } else {
+            current = candidate;
+        }
+    }
+    if (!current.equals("")) { lines.add(current); }
+    return lines;
+}
+
+//! Split a string into words by spaces.
+function splitWordsGlobal(value as String) as Array {
+    var words = [] as Array;
+    var start = 0;
+    var length = value.length();
+    for (var i = 0; i < length; i += 1) {
+        if (value.substring(i, i + 1).equals(" ")) {
+            if (i > start) { words.add(value.substring(start, i)); }
+            start = i + 1;
+        }
+    }
+    if (start < length) { words.add(value.substring(start, length)); }
+    return words;
 }
