@@ -32,6 +32,42 @@ class BodyMetricsMenuView extends WatchUi.View {
         WatchUi.requestUpdate();
     }
 
+    function fitMenuText(dc as Dc, value as String, primaryFont, fallbackFont, maxWidth as Number) as Dictionary {
+        var font = primaryFont;
+        var lines = wrapTextGlobal(dc, value, font, maxWidth);
+        if (lines.size() > 2 || maxTextWidth(dc, lines, font) > maxWidth) {
+            font = fallbackFont;
+            lines = wrapTextGlobal(dc, value, font, maxWidth);
+        }
+        return {
+            :font => font,
+            :lines => lines,
+            :lineHeight => dc.getFontHeight(font),
+            :width => maxTextWidth(dc, lines, font)
+        };
+    }
+
+    function maxTextWidth(dc as Dc, lines as Array, font) as Number {
+        var maxWidth = 0;
+        for (var i = 0; i < lines.size(); i += 1) {
+            var lineWidth = dc.getTextWidthInPixels(lines[i].toString(), font);
+            if (lineWidth > maxWidth) {
+                maxWidth = lineWidth;
+            }
+        }
+        return maxWidth;
+    }
+
+    function drawCenteredLines(dc as Dc, cx as Number, startY as Number, layout as Dictionary, color as Number) as Void {
+        var lines = layout[:lines] as Array;
+        var font = layout[:font];
+        var lineHeight = layout[:lineHeight];
+        dc.setColor(color, Graphics.COLOR_TRANSPARENT);
+        for (var i = 0; i < lines.size(); i += 1) {
+            dc.drawText(cx, startY + i * lineHeight, font, lines[i].toString(), Graphics.TEXT_JUSTIFY_CENTER);
+        }
+    }
+
     function onUpdate(dc as Dc) as Void {
         var w = dc.getWidth();
         var h = dc.getHeight();
@@ -51,23 +87,31 @@ class BodyMetricsMenuView extends WatchUi.View {
 
         // Title
         var titleY = lineY + pct(h, 2);
-        var titleFont = Graphics.FONT_TINY;
-        if (dc.getTextWidthInPixels(_title, titleFont) > pct(w, 75)) {
-            titleFont = Graphics.FONT_XTINY;
-        }
-        dc.setColor(COLOR_ACCENT, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, titleY, titleFont, _title, Graphics.TEXT_JUSTIFY_CENTER);
+        var titleLayout = fitMenuText(dc, _title, Graphics.FONT_TINY, Graphics.FONT_XTINY, pct(w, 72));
+        var titleLineHeight = titleLayout[:lineHeight];
+        drawCenteredLines(dc, cx, titleY, titleLayout, COLOR_ACCENT);
 
         // Separator below title
-        var sepY = titleY + dc.getFontHeight(titleFont) + pct(h, 2);
+        var titleBlockH = (titleLayout[:lines] as Array).size() * titleLineHeight;
+        var sepY = titleY + titleBlockH + pct(h, 2);
         dc.setColor(COLOR_ACCENT_DIM, Graphics.COLOR_TRANSPARENT);
         dc.drawLine(cx - lineHalfW, sepY, cx + lineHalfW, sepY);
 
         // Items layout
-        var itemFont = Graphics.FONT_TINY;
-        var itemH = dc.getFontHeight(itemFont);
         var itemGap = pct(h, 3);
-        var totalItemsH = _items.size() * itemH + (_items.size() - 1) * itemGap;
+        var safeW = pct(w, 70);
+        var itemLayouts = [] as Array;
+        var totalItemsH = 0;
+
+        for (var i = 0; i < _items.size(); i += 1) {
+            var item = _items[i] as Dictionary;
+            var layout = fitMenuText(dc, item[:label].toString(), Graphics.FONT_TINY, Graphics.FONT_XTINY, safeW);
+            itemLayouts.add(layout);
+            totalItemsH += (layout[:lines] as Array).size() * layout[:lineHeight];
+            if (i < _items.size() - 1) {
+                totalItemsH += itemGap;
+            }
+        }
 
         // Vertical centering of items in remaining space
         var availTop = sepY + pct(h, 3);
@@ -77,51 +121,29 @@ class BodyMetricsMenuView extends WatchUi.View {
             itemsStartY = availTop;
         }
 
-        // Check if items need smaller font
-        var safeW = pct(w, 70);
-        var needsSmallFont = false;
-        for (var i = 0; i < _items.size(); i++) {
-            var item = _items[i] as Dictionary;
-            if (dc.getTextWidthInPixels(item[:label].toString(), itemFont) > safeW) {
-                needsSmallFont = true;
-                break;
-            }
-        }
-        if (needsSmallFont) {
-            itemFont = Graphics.FONT_XTINY;
-            itemH = dc.getFontHeight(itemFont);
-            totalItemsH = _items.size() * itemH + (_items.size() - 1) * itemGap;
-            itemsStartY = availTop + (availBottom - availTop - totalItemsH) / 2;
-            if (itemsStartY < availTop) {
-                itemsStartY = availTop;
-            }
-        }
-
         // Draw items
+        var currentY = itemsStartY;
         for (var i = 0; i < _items.size(); i++) {
-            var iy = itemsStartY + i * (itemH + itemGap);
-            var item = _items[i] as Dictionary;
-            var label = item[:label].toString();
+            var layout = itemLayouts[i] as Dictionary;
+            var itemH = (layout[:lines] as Array).size() * layout[:lineHeight];
 
             if (i == _selected) {
                 // Highlight pill for selected item
-                var textW = dc.getTextWidthInPixels(label, itemFont);
+                var textW = layout[:width];
                 var pillPadX = pct(w, 5);
                 var pillW = textW + pillPadX * 2;
-                var pillH = itemH + pct(h, 2);
+                var pillH = itemH + pct(h, 3);
                 var pillX = cx - pillW / 2;
-                var pillY = iy - pct(h, 1);
+                var pillY = currentY - pct(h, 1);
                 var pillR = pillH / 2;
 
                 dc.setColor(COLOR_ACCENT_DIM, COLOR_ACCENT_DIM);
                 dc.fillRoundedRectangle(pillX, pillY, pillW, pillH, pillR);
-
-                dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+                drawCenteredLines(dc, cx, currentY, layout, Graphics.COLOR_WHITE);
             } else {
-                dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
+                drawCenteredLines(dc, cx, currentY, layout, Graphics.COLOR_LT_GRAY);
             }
-
-            dc.drawText(cx, iy, itemFont, label, Graphics.TEXT_JUSTIFY_CENTER);
+            currentY += itemH + itemGap;
         }
 
         // Bottom accent line

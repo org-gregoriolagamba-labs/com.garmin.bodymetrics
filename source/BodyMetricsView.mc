@@ -474,24 +474,25 @@ class BodyMetricsView extends WatchUi.View {
         var cy = h / 2;
 
         var hXtiny = dc.getFontHeight(Graphics.FONT_XTINY);
-        var hTiny = dc.getFontHeight(Graphics.FONT_TINY);
         var hMedium = dc.getFontHeight(Graphics.FONT_MEDIUM);
         var gap = pct(h, 2);
 
         var isReadOnly = field.hasKey(:readOnly) && field[:readOnly];
         var badgeSpace = isReadOnly ? (hXtiny + gap) : 0;
 
+        var fieldLabelLayout = fitTextBlock(dc, field[:label].toString(), Graphics.FONT_TINY, Graphics.FONT_XTINY, pct(w, 68));
+        var titleLayout = fitTextBlock(dc, titleText, Graphics.FONT_XTINY, Graphics.FONT_XTINY, pct(w, 72));
+        var footerText = isReadOnly ? field[:readOnlyText].toString() : (stepIndex == totalSteps - 1 ? saveHint : nextHint);
+        var footerLayout = fitTextBlock(dc, footerText, Graphics.FONT_XTINY, Graphics.FONT_XTINY, pct(w, 76));
+
         // Central content: label + optional badge + value, centered vertically
-        var centralH = hTiny + gap + badgeSpace + hMedium;
+        var centralH = fieldLabelLayout[:height] + gap + badgeSpace + hMedium;
         var labelY = cy - centralH / 2;
-        var badgeY = labelY + hTiny + 2;
-        var valueY = labelY + hTiny + gap + badgeSpace;
+        var badgeY = labelY + fieldLabelLayout[:height] + 2;
+        var valueY = labelY + fieldLabelLayout[:height] + gap + badgeSpace;
 
         // Field label
-        dc.setColor(isReadOnly ? COLOR_ACCENT : Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, labelY, Graphics.FONT_TINY,
-            field[:label].toString(),
-            Graphics.TEXT_JUSTIFY_CENTER);
+        drawCenteredTextBlock(dc, cx, labelY, fieldLabelLayout, isReadOnly ? COLOR_ACCENT : Graphics.COLOR_LT_GRAY);
 
         if (isReadOnly && field.hasKey(:badgeText)) {
             drawReadOnlyBadge(dc, cx, badgeY, field[:badgeText].toString());
@@ -533,10 +534,7 @@ class BodyMetricsView extends WatchUi.View {
 
         // Title below dots
         var titleY = dotsY + activeR + gap + 2;
-        dc.setColor(COLOR_ACCENT, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, titleY, Graphics.FONT_XTINY,
-            titleText,
-            Graphics.TEXT_JUSTIFY_CENTER);
+        drawCenteredTextBlock(dc, cx, titleY, titleLayout, COLOR_ACCENT);
 
         // Arrows for editable fields
         if (!isReadOnly) {
@@ -548,11 +546,8 @@ class BodyMetricsView extends WatchUi.View {
         }
 
         // Footer action hint
-        var footerY = h - pct(h, 16) - hXtiny;
-        dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, footerY, Graphics.FONT_XTINY,
-            isReadOnly ? field[:readOnlyText].toString() : (stepIndex == totalSteps - 1 ? saveHint : nextHint),
-            Graphics.TEXT_JUSTIFY_CENTER);
+        var footerY = h - pct(h, 16) - footerLayout[:height];
+        drawCenteredTextBlock(dc, cx, footerY, footerLayout, Graphics.COLOR_LT_GRAY);
     }
 
     function manualDateText(metric as Dictionary) as String {
@@ -713,7 +708,9 @@ class BodyMetricsView extends WatchUi.View {
 
         // Semantic zone hint (colored)
         var hintY = unitY + hXtiny + pad;
-        var dotsY = hintY + hXtiny + pct(h, 3);
+        var hintText = available ? _domain.semanticZoneHint(metric) : text("hint.unavailable");
+        var hintLayout = fitTextBlock(dc, hintText, Graphics.FONT_XTINY, Graphics.FONT_XTINY, pct(w, 72));
+        var dotsY = hintY + hintLayout[:height] + pct(h, 3);
 
         // Overflow check: ensure bottom content fits in safe zone
         var overflow = dotsY - bottomSafe;
@@ -723,15 +720,9 @@ class BodyMetricsView extends WatchUi.View {
         }
 
         if (available) {
-            dc.setColor(_domain.zoneColor(metric, zone), Graphics.COLOR_TRANSPARENT);
-            dc.drawText(cx, hintY, Graphics.FONT_XTINY,
-                _domain.semanticZoneHint(metric),
-                Graphics.TEXT_JUSTIFY_CENTER);
+            drawCenteredTextBlock(dc, cx, hintY, hintLayout, _domain.zoneColor(metric, zone));
         } else {
-            dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(cx, hintY, Graphics.FONT_XTINY,
-                text("hint.unavailable"),
-                Graphics.TEXT_JUSTIFY_CENTER);
+            drawCenteredTextBlock(dc, cx, hintY, hintLayout, Graphics.COLOR_DK_GRAY);
         }
 
         // Page dots
@@ -903,9 +894,18 @@ class BodyMetricsView extends WatchUi.View {
 
         // Calculate total content height to center vertically
         var subtitleH = hasSubtitle ? (hXtiny + 1) : 0;
-        var totalH = hLabel + subtitleH + pad + hLarge + pad + barH + pad + hXtiny + 2 + hXtiny;
+        var detailSafeW = pct(w, 74);
+        var hintText = available ? _domain.semanticZoneHint(metric) : text("hint.unavailable");
+        var hintLayout = fitTextBlock(dc, hintText, Graphics.FONT_XTINY, Graphics.FONT_XTINY, detailSafeW);
+        var rangeLayout = available ? fitTextBlock(dc, _domain.zoneRangeText(metric), Graphics.FONT_XTINY, Graphics.FONT_XTINY, detailSafeW) : null;
+        var idealLayout = showIdealRange ? fitTextBlock(dc, text("detail.ideal") + _domain.idealRangeText(metric), Graphics.FONT_XTINY, Graphics.FONT_XTINY, detailSafeW) : null;
+
+        var totalH = hLabel + subtitleH + pad + hLarge + pad + barH + pad + hintLayout[:height];
+        if (available) {
+            totalH += 2 + rangeLayout[:height];
+        }
         if (showIdealRange) {
-            totalH = totalH + 2 + hXtiny;
+            totalH += 2 + idealLayout[:height];
         }
         var labelY = cy - totalH / 2;
         if (labelY < topSafe) { labelY = topSafe; }
@@ -933,9 +933,9 @@ class BodyMetricsView extends WatchUi.View {
 
         // Zone hint and lower content
         var hintY = barY + barH + pad;
-        var rangeY = hintY + hXtiny + 2;
-        var idealY = rangeY + hXtiny + 2;
-        var dotsY = (showIdealRange ? idealY : rangeY) + hXtiny + pct(h, 3);
+        var rangeY = hintY + hintLayout[:height] + 2;
+        var idealY = rangeY + (available ? rangeLayout[:height] : 0) + 2;
+        var dotsY = (showIdealRange ? (idealY + idealLayout[:height]) : (available ? (rangeY + rangeLayout[:height]) : (hintY + hintLayout[:height]))) + pct(h, 3);
 
         // Overflow check: push everything up if bottom content exceeds safe zone
         var contentBottom = dotsY;
@@ -946,35 +946,22 @@ class BodyMetricsView extends WatchUi.View {
             valueY = labelY + hLabel + subtitleH + pad;
             barY = valueY + hLarge + pad;
             hintY = barY + barH + pad;
-            rangeY = hintY + hXtiny + 2;
-            idealY = rangeY + hXtiny + 2;
-            dotsY = (showIdealRange ? idealY : rangeY) + hXtiny + pct(h, 3);
+            rangeY = hintY + hintLayout[:height] + 2;
+            idealY = rangeY + (available ? rangeLayout[:height] : 0) + 2;
+            dotsY = (showIdealRange ? (idealY + idealLayout[:height]) : (available ? (rangeY + rangeLayout[:height]) : (hintY + hintLayout[:height]))) + pct(h, 3);
         }
 
         if (available) {
             drawDetailZoneBar(dc, barX, barY, barW, barH, metric, zone, policy);
 
-            dc.setColor(_domain.zoneColor(metric, zone), Graphics.COLOR_TRANSPARENT);
-            dc.drawText(cx, hintY, Graphics.FONT_XTINY,
-                _domain.semanticZoneHint(metric),
-                Graphics.TEXT_JUSTIFY_CENTER);
-
-            var rangeText = _domain.zoneRangeText(metric);
-            dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(cx, rangeY, Graphics.FONT_XTINY,
-                rangeText, Graphics.TEXT_JUSTIFY_CENTER);
+            drawCenteredTextBlock(dc, cx, hintY, hintLayout, _domain.zoneColor(metric, zone));
+            drawCenteredTextBlock(dc, cx, rangeY, rangeLayout, Graphics.COLOR_DK_GRAY);
 
             if (showIdealRange) {
-                dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
-                dc.drawText(cx, idealY, Graphics.FONT_XTINY,
-                    text("detail.ideal") + _domain.idealRangeText(metric),
-                    Graphics.TEXT_JUSTIFY_CENTER);
+                drawCenteredTextBlock(dc, cx, idealY, idealLayout, Graphics.COLOR_LT_GRAY);
             }
         } else {
-            dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(cx, barY, Graphics.FONT_XTINY,
-                text("hint.unavailable"),
-                Graphics.TEXT_JUSTIFY_CENTER);
+            drawCenteredTextBlock(dc, cx, hintY, hintLayout, Graphics.COLOR_DK_GRAY);
         }
 
         drawPageDots(dc, cx, dotsY, w);
@@ -1100,6 +1087,42 @@ class BodyMetricsView extends WatchUi.View {
 
     function wrapText(dc as Dc, value as String, font, maxWidth as Number) as Array {
         return wrapTextGlobal(dc, value, font, maxWidth);
+    }
+
+    function fitTextBlock(dc as Dc, value as String, primaryFont, fallbackFont, maxWidth as Number) as Dictionary {
+        var font = primaryFont;
+        var lines = wrapText(dc, value, font, maxWidth);
+        if (maxTextWidth(dc, lines, font) > maxWidth || lines.size() > 2) {
+            font = fallbackFont;
+            lines = wrapText(dc, value, font, maxWidth);
+        }
+        return {
+            :font => font,
+            :lines => lines,
+            :lineHeight => dc.getFontHeight(font),
+            :height => lines.size() * dc.getFontHeight(font)
+        };
+    }
+
+    function maxTextWidth(dc as Dc, lines as Array, font) as Number {
+        var maxWidth = 0;
+        for (var i = 0; i < lines.size(); i += 1) {
+            var lineWidth = dc.getTextWidthInPixels(lines[i].toString(), font);
+            if (lineWidth > maxWidth) {
+                maxWidth = lineWidth;
+            }
+        }
+        return maxWidth;
+    }
+
+    function drawCenteredTextBlock(dc as Dc, cx as Number, startY as Number, layout as Dictionary, color as Number) as Void {
+        var lines = layout[:lines] as Array;
+        var font = layout[:font];
+        var lineHeight = layout[:lineHeight];
+        dc.setColor(color, Graphics.COLOR_TRANSPARENT);
+        for (var i = 0; i < lines.size(); i += 1) {
+            dc.drawText(cx, startY + i * lineHeight, font, lines[i].toString(), Graphics.TEXT_JUSTIFY_CENTER);
+        }
     }
 
     function splitWords(value as String) as Array {
@@ -1270,9 +1293,8 @@ class BodyMetricsView extends WatchUi.View {
 
         if (_trendWindow == 0 || (_trendValues as Array).size() < 2) {
             // No history data - show message
-            dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(cx, h / 2, Graphics.FONT_XTINY,
-                text("trend.no_data"), Graphics.TEXT_JUSTIFY_CENTER);
+            var noDataLayout = fitTextBlock(dc, text("trend.no_data"), Graphics.FONT_XTINY, Graphics.FONT_XTINY, pct(w, 72));
+            drawCenteredTextBlock(dc, cx, (h / 2) - (noDataLayout[:height] / 2), noDataLayout, Graphics.COLOR_DK_GRAY);
         } else {
             var compactLayout = (_trendWindow >= 90 || w < 240);
             var bounds = _trendValueBounds(_trendValues as Array);
