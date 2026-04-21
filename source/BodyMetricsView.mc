@@ -44,6 +44,7 @@ class BodyMetricsView extends WatchUi.View {
     const MODE_SETUP = 3;
     const MODE_DATA = 4;
     const MODE_TREND = 5;
+    const MODE_TARGET = 6;
 
     var _mode;
     var _selectedMetric;
@@ -55,6 +56,8 @@ class BodyMetricsView extends WatchUi.View {
     var _pendingMenuAction;
     var _dataIndex;
     var _dataDraft;
+    var _targetIndex;
+    var _targetDraft;
     var _trendWindow;
     var _trendDirection;
     var _trendValues;
@@ -78,6 +81,8 @@ class BodyMetricsView extends WatchUi.View {
         _reopenDataMenuAfterExit = false;
         _dataIndex = 0;
         _dataDraft = _domain.currentMeasurements();
+        _targetIndex = 0;
+        _targetDraft = _domain.currentTargets();
         _trendWindow = 0;
         _trendDirection = TREND_FLAT;
         _trendValues = [];
@@ -116,6 +121,8 @@ class BodyMetricsView extends WatchUi.View {
             drawSetup(dc);
         } else if (_mode == MODE_DATA) {
             drawDataEntry(dc);
+        } else if (_mode == MODE_TARGET) {
+            drawTargetEditor(dc);
         } else if (_mode == MODE_INFO) {
             drawInfo(dc);
         } else if (_mode == MODE_SUMMARY) {
@@ -156,6 +163,13 @@ class BodyMetricsView extends WatchUi.View {
         _dataDraft = _domain.currentMeasurements();
         _dataIndex = 0;
         _mode = MODE_DATA;
+        WatchUi.requestUpdate();
+    }
+
+    function openTargetEditor() as Void {
+        _targetDraft = _domain.currentTargets();
+        _targetIndex = 0;
+        _mode = MODE_TARGET;
         WatchUi.requestUpdate();
     }
 
@@ -293,6 +307,11 @@ class BodyMetricsView extends WatchUi.View {
             WatchUi.requestUpdate();
             return;
         }
+        if (_mode == MODE_TARGET) {
+            _targetDraft = _domain.cycleTargetField(_targetDraft, _targetIndex, -1);
+            WatchUi.requestUpdate();
+            return;
+        }
 
         if (_mode == MODE_INFO) {
             _infoScrollY += 30;
@@ -318,6 +337,11 @@ class BodyMetricsView extends WatchUi.View {
         }
         if (_mode == MODE_DATA) {
             _dataDraft = _domain.cycleMeasurementField(_dataDraft, _dataIndex, 1);
+            WatchUi.requestUpdate();
+            return;
+        }
+        if (_mode == MODE_TARGET) {
+            _targetDraft = _domain.cycleTargetField(_targetDraft, _targetIndex, 1);
             WatchUi.requestUpdate();
             return;
         }
@@ -376,6 +400,18 @@ class BodyMetricsView extends WatchUi.View {
             return;
         }
 
+        if (_mode == MODE_TARGET) {
+            if (_targetIndex < _domain.targetFieldCount() - 1) {
+                _targetIndex += 1;
+            } else {
+                _domain.saveTargets(_targetDraft);
+                _mode = MODE_SUMMARY;
+                _selectedMetric = 0;
+            }
+            WatchUi.requestUpdate();
+            return;
+        }
+
         if (_mode == MODE_INFO) {
             _mode = MODE_SUMMARY;
             WatchUi.requestUpdate();
@@ -426,6 +462,16 @@ class BodyMetricsView extends WatchUi.View {
             return true;
         }
 
+        if (_mode == MODE_TARGET) {
+            if (_targetIndex > 0) {
+                _targetIndex -= 1;
+            } else {
+                _mode = MODE_SUMMARY;
+            }
+            WatchUi.requestUpdate();
+            return true;
+        }
+
         if (_mode == MODE_INFO) {
             _mode = MODE_SUMMARY;
             WatchUi.requestUpdate();
@@ -461,6 +507,14 @@ class BodyMetricsView extends WatchUi.View {
             _domain.measurementFieldValueLabel(_dataDraft, _dataIndex),
             text("data.title"),
             text("data.select_save"), text("data.select_next"));
+    }
+
+    function drawTargetEditor(dc as Dc) as Void {
+        var field = _domain.targetFieldDefinition(_targetIndex) as Dictionary;
+        drawWizardScreen(dc, _targetIndex, _domain.targetFieldCount(), field,
+            _domain.targetFieldValueLabel(_targetDraft, _targetIndex),
+            text("target.title"),
+            text("target.select_save"), text("target.select_next"));
     }
 
     //! Shared wizard screen for both profile setup and data entry modes.
@@ -726,7 +780,7 @@ class BodyMetricsView extends WatchUi.View {
         }
 
         // Page dots
-        drawPageDots(dc, cx, dotsY, w);
+        drawPageDots(dc, cx, dotsY, w, _domain.priorityMetricIndex());
     }
 
     function drawInfo(dc as Dc) as Void {
@@ -899,6 +953,20 @@ class BodyMetricsView extends WatchUi.View {
         var hintLayout = fitTextBlock(dc, hintText, Graphics.FONT_XTINY, Graphics.FONT_XTINY, detailSafeW);
         var rangeLayout = available ? fitTextBlock(dc, _domain.zoneRangeText(metric), Graphics.FONT_XTINY, Graphics.FONT_XTINY, detailSafeW) : null;
         var idealLayout = showIdealRange ? fitTextBlock(dc, text("detail.ideal") + _domain.idealRangeText(metric), Graphics.FONT_XTINY, Graphics.FONT_XTINY, detailSafeW) : null;
+        var effectiveTarget = _domain.getEffectiveTargetForIndex(_selectedMetric);
+        var deltaToTarget = _domain.getDeltaToTargetForIndex(_selectedMetric);
+        var deltaPctToTarget = _domain.getDeltaPctToTargetForIndex(_selectedMetric);
+        var showTargetBlock = available && !policy.equals(POLICY_REFERENCE_ONLY) &&
+            effectiveTarget != null && deltaToTarget != null && deltaPctToTarget != null;
+        var targetText = showTargetBlock
+            ? text("target.label") + ": " + fmt1Global(effectiveTarget.toFloat()) + " " + metric[:unit].toString()
+            : "";
+        var deltaText = showTargetBlock
+            ? text("target.delta_abs") + ": " + formatDeltaValue(deltaToTarget.toFloat(), metric[:unit].toString()) + " / " + formatDeltaPercent(deltaPctToTarget.toFloat())
+            : "";
+        var targetLayout = showTargetBlock ? fitTextBlock(dc, targetText, Graphics.FONT_XTINY, Graphics.FONT_XTINY, detailSafeW) : null;
+        var deltaLayout = showTargetBlock ? fitTextBlock(dc, deltaText, Graphics.FONT_XTINY, Graphics.FONT_XTINY, detailSafeW) : null;
+        var disclaimerLayout = showTargetBlock ? fitTextBlock(dc, text("target.disclaimer"), Graphics.FONT_XTINY, Graphics.FONT_XTINY, detailSafeW) : null;
 
         var totalH = hLabel + subtitleH + pad + hLarge + pad + barH + pad + hintLayout[:height];
         if (available) {
@@ -906,6 +974,11 @@ class BodyMetricsView extends WatchUi.View {
         }
         if (showIdealRange) {
             totalH += 2 + idealLayout[:height];
+        }
+        if (showTargetBlock) {
+            totalH += 2 + targetLayout[:height];
+            totalH += 2 + deltaLayout[:height];
+            totalH += 2 + disclaimerLayout[:height];
         }
         var labelY = cy - totalH / 2;
         if (labelY < topSafe) { labelY = topSafe; }
@@ -935,7 +1008,13 @@ class BodyMetricsView extends WatchUi.View {
         var hintY = barY + barH + pad;
         var rangeY = hintY + hintLayout[:height] + 2;
         var idealY = rangeY + (available ? rangeLayout[:height] : 0) + 2;
-        var dotsY = (showIdealRange ? (idealY + idealLayout[:height]) : (available ? (rangeY + rangeLayout[:height]) : (hintY + hintLayout[:height]))) + pct(h, 3);
+        var afterRangeY = available ? (rangeY + rangeLayout[:height]) : (hintY + hintLayout[:height]);
+        var afterIdealY = showIdealRange ? (idealY + idealLayout[:height]) : afterRangeY;
+        var targetY = afterIdealY + 2;
+        var deltaY = targetY + (showTargetBlock ? targetLayout[:height] + 2 : 0);
+        var disclaimerY = deltaY + (showTargetBlock ? deltaLayout[:height] + 2 : 0);
+        var afterTargetY = showTargetBlock ? (disclaimerY + disclaimerLayout[:height]) : afterIdealY;
+        var dotsY = afterTargetY + pct(h, 3);
 
         // Overflow check: push everything up if bottom content exceeds safe zone
         var contentBottom = dotsY;
@@ -948,7 +1027,13 @@ class BodyMetricsView extends WatchUi.View {
             hintY = barY + barH + pad;
             rangeY = hintY + hintLayout[:height] + 2;
             idealY = rangeY + (available ? rangeLayout[:height] : 0) + 2;
-            dotsY = (showIdealRange ? (idealY + idealLayout[:height]) : (available ? (rangeY + rangeLayout[:height]) : (hintY + hintLayout[:height]))) + pct(h, 3);
+            afterRangeY = available ? (rangeY + rangeLayout[:height]) : (hintY + hintLayout[:height]);
+            afterIdealY = showIdealRange ? (idealY + idealLayout[:height]) : afterRangeY;
+            targetY = afterIdealY + 2;
+            deltaY = targetY + (showTargetBlock ? targetLayout[:height] + 2 : 0);
+            disclaimerY = deltaY + (showTargetBlock ? deltaLayout[:height] + 2 : 0);
+            afterTargetY = showTargetBlock ? (disclaimerY + disclaimerLayout[:height]) : afterIdealY;
+            dotsY = afterTargetY + pct(h, 3);
         }
 
         if (available) {
@@ -960,11 +1045,17 @@ class BodyMetricsView extends WatchUi.View {
             if (showIdealRange) {
                 drawCenteredTextBlock(dc, cx, idealY, idealLayout, Graphics.COLOR_LT_GRAY);
             }
+            if (showTargetBlock) {
+                var deltaColor = deltaColorByPct(deltaPctToTarget.toFloat());
+                drawCenteredTextBlock(dc, cx, targetY, targetLayout, COLOR_ACCENT);
+                drawCenteredTextBlock(dc, cx, deltaY, deltaLayout, deltaColor);
+                drawCenteredTextBlock(dc, cx, disclaimerY, disclaimerLayout, Graphics.COLOR_DK_GRAY);
+            }
         } else {
             drawCenteredTextBlock(dc, cx, hintY, hintLayout, Graphics.COLOR_DK_GRAY);
         }
 
-        drawPageDots(dc, cx, dotsY, w);
+        drawPageDots(dc, cx, dotsY, w, -1);
     }
 
     // --- Drawing Helpers ---
@@ -1035,7 +1126,7 @@ class BodyMetricsView extends WatchUi.View {
         dc.setPenWidth(1);
     }
 
-    function drawPageDots(dc as Dc, cx as Number, y as Number, screenW as Number) as Void {
+    function drawPageDots(dc as Dc, cx as Number, y as Number, screenW as Number, priorityIndex as Number) as Void {
         var count = _domain.metricsCount();
         var spacing = pct(screenW, 4);
         if (spacing < 10) { spacing = 10; }
@@ -1051,10 +1142,41 @@ class BodyMetricsView extends WatchUi.View {
                 dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
                 dc.fillCircle(dotX, y, activeR);
             } else {
-                dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
+                if (priorityIndex == i) {
+                    dc.setColor(Graphics.COLOR_ORANGE, Graphics.COLOR_TRANSPARENT);
+                } else {
+                    dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
+                }
                 dc.fillCircle(dotX, y, inactiveR);
             }
         }
+    }
+
+    function formatDeltaValue(value as Float, unit as String) as String {
+        var sign = value >= 0.0 ? "+" : "";
+        return sign + fmt1Global(value) + " " + unit;
+    }
+
+    function formatDeltaPercent(value as Float) as String {
+        var sign = value >= 0.0 ? "+" : "";
+        return sign + fmt1Global(value) + "%";
+    }
+
+    function deltaColorByPct(deltaPct as Float) {
+        var absDelta = deltaPct;
+        if (absDelta < 0.0) {
+            absDelta = -absDelta;
+        }
+        if (absDelta < 5.0) {
+            return Graphics.COLOR_GREEN;
+        }
+        if (absDelta < 10.0) {
+            return Graphics.COLOR_YELLOW;
+        }
+        if (absDelta < 20.0) {
+            return Graphics.COLOR_ORANGE;
+        }
+        return Graphics.COLOR_RED;
     }
 
     //! Draw a small ⓘ icon to the right of the metric label (tap target for info view)

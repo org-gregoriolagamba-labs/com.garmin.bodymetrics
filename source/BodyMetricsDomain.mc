@@ -79,12 +79,14 @@ class BodyMetricsDomain {
     var _dataProvider;
     var _garminProfile;
     var _history;
+    var _targets;
 
     function initialize() {
         _locale = new BodyMetricsLocale();
         _garminProfile = new BodyMetricsGarminProfile();
         _dataProvider = new BodyMetricsDataProvider(_garminProfile);
         _history = new BodyMetricsHistory();
+        _targets = new BodyMetricsTargets();
         _hasStoredProfile = false;
         _profile = loadProfile();
         _measurements = _dataProvider.loadMeasurements();
@@ -191,6 +193,165 @@ class BodyMetricsDomain {
         _measurements = _dataProvider.loadMeasurements();
         rebuildMetrics();
         _history.recordSnapshot(_metrics as Array);
+    }
+
+    // --- Personalized targets ---
+
+    function targetFieldDefinitions() as Array {
+        return [
+            {:key => :bmi, :metricId => "bmi", :label => _locale.metricLabel("bmi"), :unit => "kg/m2", :min => 15.0, :max => 35.0, :step => 0.1},
+            {:key => :fat_pct, :metricId => "fat_pct", :label => _locale.metricLabel("fat_pct"), :unit => "%", :min => 5.0, :max => 45.0, :step => 0.5},
+            {:key => :muscle_kg, :metricId => "muscle_kg", :label => _locale.metricLabel("muscle_kg"), :unit => "kg", :min => 15.0, :max => 70.0, :step => 0.1},
+            {:key => :muscle_pct, :metricId => "muscle_pct", :label => _locale.metricLabel("muscle_pct"), :unit => "%", :min => 20.0, :max => 65.0, :step => 0.5},
+            {:key => :water_pct, :metricId => "water_pct", :label => _locale.metricLabel("water_pct"), :unit => "%", :min => 40.0, :max => 75.0, :step => 0.5},
+            {:key => :bone_kg, :metricId => "bone_kg", :label => _locale.metricLabel("bone_kg"), :unit => "kg", :min => 1.0, :max => 6.0, :step => 0.1},
+            {:key => :weight, :metricId => "weight", :label => _locale.metricLabel("weight"), :unit => "kg", :min => 40.0, :max => 200.0, :step => 0.5}
+        ];
+    }
+
+    function targetFieldCount() as Number {
+        return targetFieldDefinitions().size();
+    }
+
+    function targetFieldDefinition(index as Number) as Dictionary {
+        return targetFieldDefinitions()[index] as Dictionary;
+    }
+
+    function currentTargets() as Dictionary {
+        var draft = {};
+        var fields = targetFieldDefinitions();
+        for (var i = 0; i < fields.size(); i += 1) {
+            var field = fields[i] as Dictionary;
+            var metricId = field[:metricId].toString();
+            var metric = metricById(metricId);
+            if (metric != null) {
+                draft[field[:key]] = _targets.getEffectiveTarget(metricId, metric as Dictionary);
+            }
+        }
+        return draft;
+    }
+
+    function cycleTargetField(draft as Dictionary, index as Number, delta as Number) as Dictionary {
+        var field = targetFieldDefinition(index);
+        var key = field[:key];
+        var current = draft[key] != null ? draft[key].toFloat() : field[:min].toFloat();
+        var step = field[:step].toFloat();
+        var next = current + (delta * step);
+        if (next < field[:min].toFloat()) {
+            next = field[:max].toFloat();
+        } else if (next > field[:max].toFloat()) {
+            next = field[:min].toFloat();
+        }
+        draft[key] = round1Global(next);
+        return draft;
+    }
+
+    function targetFieldValueLabel(draft as Dictionary, index as Number) as String {
+        var field = targetFieldDefinition(index);
+        var key = field[:key];
+        if (draft[key] == null) {
+            return _locale.text("hint.unavailable");
+        }
+        return fmt1Global(draft[key].toFloat()) + " " + field[:unit].toString();
+    }
+
+    function saveTargets(draft as Dictionary) as Void {
+        var fields = targetFieldDefinitions();
+        for (var i = 0; i < fields.size(); i += 1) {
+            var field = fields[i] as Dictionary;
+            var key = field[:key];
+            var metricId = field[:metricId].toString();
+            if (draft[key] != null) {
+                _targets.setUserTarget(metricId, draft[key].toFloat());
+            }
+        }
+    }
+
+    function effectiveTargetForMetric(metric as Dictionary) {
+        if (metric == null || !metric.hasKey(:id)) {
+            return null;
+        }
+        return _targets.getEffectiveTarget(metric[:id].toString(), metric);
+    }
+
+    function getEffectiveTargetForIndex(metricIndex as Number) {
+        var metric = metricAt(metricIndex);
+        if (!metric[:available]) {
+            return null;
+        }
+        return effectiveTargetForMetric(metric);
+    }
+
+    function getDeltaToTargetForIndex(metricIndex as Number) {
+        var metric = metricAt(metricIndex);
+        if (!metric[:available]) {
+            return null;
+        }
+        if (classificationPolicy(metric).equals(POLICY_REFERENCE_ONLY)) {
+            return null;
+        }
+        var target = effectiveTargetForMetric(metric);
+        if (target == null) {
+            return null;
+        }
+        return _targets.deltaToTarget(metric[:value].toFloat(), target.toFloat());
+    }
+
+    function getDeltaPctToTargetForIndex(metricIndex as Number) {
+        var metric = metricAt(metricIndex);
+        if (!metric[:available]) {
+            return null;
+        }
+        if (classificationPolicy(metric).equals(POLICY_REFERENCE_ONLY)) {
+            return null;
+        }
+        var target = effectiveTargetForMetric(metric);
+        if (target == null) {
+            return null;
+        }
+        return _targets.deltaPctToTarget(metric[:value].toFloat(), target.toFloat());
+    }
+
+    function priorityMetricIndex() as Number {
+        var bestIndex = -1;
+        var bestScore = 0.0;
+
+        for (var i = 0; i < _metrics.size(); i += 1) {
+            var metric = _metrics[i] as Dictionary;
+            if (!metric[:available]) {
+                continue;
+            }
+            if (classificationPolicy(metric).equals(POLICY_REFERENCE_ONLY)) {
+                continue;
+            }
+
+            var zone = classify(metric);
+            if (zone == ZONE_GREEN) {
+                continue;
+            }
+
+            var target = effectiveTargetForMetric(metric);
+            if (target == null || target.toFloat() == 0.0) {
+                continue;
+            }
+
+            var deltaPct = _targets.deltaPctToTarget(metric[:value].toFloat(), target.toFloat());
+            var absDeltaPct = 0.0;
+            if (deltaPct != null) {
+                absDeltaPct = deltaPct.toFloat();
+                if (absDeltaPct < 0.0) {
+                    absDeltaPct = -absDeltaPct;
+                }
+            }
+
+            var score = (zone.toFloat() * 100.0) + absDeltaPct;
+            if (bestIndex < 0 || score > bestScore) {
+                bestIndex = i;
+                bestScore = score;
+            }
+        }
+
+        return bestIndex;
     }
 
     // --- History / Trend API ---
@@ -897,6 +1058,16 @@ class BodyMetricsDomain {
 
     function metricLabel(index as Number) as String {
         return _locale.metricLabel(metricAt(index)[:id].toString());
+    }
+
+    function metricById(metricId as String) {
+        for (var i = 0; i < _metrics.size(); i += 1) {
+            var metric = _metrics[i] as Dictionary;
+            if (metric[:id].toString().equals(metricId)) {
+                return metric;
+            }
+        }
+        return null;
     }
 
     function metricInfo(index as Number) as Dictionary {

@@ -2,4 +2,7 @@
     <string id="AppName">BodyMetrics</string>
     <string id="SummaryTitle">Riepilogo</string>
     <string id="DetailTitle">Dettaglio</string>
+    <string id="TargetsTitle">Obiettivi</string>
+    <string id="TargetDeltaTitle">Delta target</string>
+    <string id="TargetDisclaimer">Rif. non clinico</string>
 </strings>

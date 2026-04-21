@@ -77,6 +77,7 @@ class BodyMetricsLocale {
         if (key.equals("menu.profile")) { return "Profilo"; }
         if (key.equals("menu.info")) { return "Info"; }
         if (key.equals("menu.language")) { return "Lingua"; }
+        if (key.equals("menu.targets")) { return "Obiettivi"; }
         if (key.equals("menu.data")) { return "Rilevazioni"; }
         if (key.equals("menu.badge_info")) { return "Origine Dati"; }
         if (key.equals("menu.system_info")) { return "App"; }
@@ -114,6 +115,12 @@ class BodyMetricsLocale {
         if (key.equals("setup.configure_profile")) { return "Nuovo profilo"; }
         if (key.equals("setup.select_save")) { return "SELECT  conferma"; }
         if (key.equals("setup.select_next")) { return "SELECT  continua"; }
+        if (key.equals("target.title")) { return "I tuoi obiettivi"; }
+        if (key.equals("target.select_save")) { return "SELECT  conferma"; }
+        if (key.equals("target.select_next")) { return "SELECT  continua"; }
+        if (key.equals("target.label")) { return "Obiettivo"; }
+        if (key.equals("target.delta_abs")) { return "Delta"; }
+        if (key.equals("target.disclaimer")) { return "Rif. non clinico"; }
         if (key.equals("detail.ideal")) { return "Zona ideale: "; }
         if (key.equals("cta.summary_info")) { return "SELECT  info"; }
         if (key.equals("cta.info_detail")) { return "SELECT  dettagli"; }
@@ -212,6 +219,7 @@ class BodyMetricsLocale {
         if (key.equals("menu.profile")) { return "Profile"; }
         if (key.equals("menu.info")) { return "Info"; }
         if (key.equals("menu.language")) { return "Language"; }
+        if (key.equals("menu.targets")) { return "Targets"; }
         if (key.equals("menu.data")) { return "Check-ins"; }
         if (key.equals("menu.badge_info")) { return "Data Origin"; }
         if (key.equals("menu.system_info")) { return "App"; }
@@ -249,6 +257,12 @@ class BodyMetricsLocale {
         if (key.equals("setup.configure_profile")) { return "Create profile"; }
         if (key.equals("setup.select_save")) { return "SELECT  confirm"; }
         if (key.equals("setup.select_next")) { return "SELECT  continue"; }
+        if (key.equals("target.title")) { return "Your targets"; }
+        if (key.equals("target.select_save")) { return "SELECT  confirm"; }
+        if (key.equals("target.select_next")) { return "SELECT  next"; }
+        if (key.equals("target.label")) { return "Target"; }
+        if (key.equals("target.delta_abs")) { return "Delta"; }
+        if (key.equals("target.disclaimer")) { return "Non-clinical ref."; }
         if (key.equals("detail.ideal")) { return "Ideal zone: "; }
         if (key.equals("cta.summary_info")) { return "SELECT  explore"; }
         if (key.equals("cta.info_detail")) { return "SELECT  details"; }
@@ -347,6 +361,7 @@ class BodyMetricsLocale {
         if (key.equals("menu.profile")) { return "Profil"; }
         if (key.equals("menu.info")) { return "Info"; }
         if (key.equals("menu.language")) { return "Langue"; }
+        if (key.equals("menu.targets")) { return "Objectifs"; }
         if (key.equals("menu.data")) { return "Mesures"; }
         if (key.equals("menu.badge_info")) { return "Origine Données"; }
         if (key.equals("menu.system_info")) { return "App"; }
@@ -384,6 +399,12 @@ class BodyMetricsLocale {
         if (key.equals("setup.configure_profile")) { return "Creer profil"; }
         if (key.equals("setup.select_save")) { return "SELECT  valider"; }
         if (key.equals("setup.select_next")) { return "SELECT  continuer"; }
+        if (key.equals("target.title")) { return "Vos objectifs"; }
+        if (key.equals("target.select_save")) { return "SELECT  confirmer"; }
+        if (key.equals("target.select_next")) { return "SELECT  continuer"; }
+        if (key.equals("target.label")) { return "Objectif"; }
+        if (key.equals("target.delta_abs")) { return "Delta"; }
+        if (key.equals("target.disclaimer")) { return "Ref. non clinique"; }
         if (key.equals("detail.ideal")) { return "Zone ideale: "; }
         if (key.equals("cta.summary_info")) { return "SELECT  info"; }
         if (key.equals("cta.info_detail")) { return "SELECT  details"; }
@@ -482,6 +503,7 @@ class BodyMetricsLocale {
         if (key.equals("menu.profile")) { return "Perfil"; }
         if (key.equals("menu.info")) { return "Info"; }
         if (key.equals("menu.language")) { return "Idioma"; }
+        if (key.equals("menu.targets")) { return "Objetivos"; }
         if (key.equals("menu.data")) { return "Registros"; }
         if (key.equals("menu.badge_info")) { return "Origen Datos"; }
         if (key.equals("menu.system_info")) { return "App"; }
@@ -519,6 +541,12 @@ class BodyMetricsLocale {
         if (key.equals("setup.configure_profile")) { return "Crear perfil"; }
         if (key.equals("setup.select_save")) { return "SELECT  confirmar"; }
         if (key.equals("setup.select_next")) { return "SELECT  continuar"; }
+        if (key.equals("target.title")) { return "Tus objetivos"; }
+        if (key.equals("target.select_save")) { return "SELECT  confirmar"; }
+        if (key.equals("target.select_next")) { return "SELECT  continuar"; }
+        if (key.equals("target.label")) { return "Objetivo"; }
+        if (key.equals("target.delta_abs")) { return "Delta"; }
+        if (key.equals("target.disclaimer")) { return "Ref. no clinica"; }
         if (key.equals("detail.ideal")) { return "Zona ideal: "; }
         if (key.equals("cta.summary_info")) { return "SELECT  explora"; }
         if (key.equals("cta.info_detail")) { return "SELECT  detalles"; }

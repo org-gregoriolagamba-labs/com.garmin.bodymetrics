@@ -222,6 +222,7 @@ class BodyMetricsCustomMenuDelegate extends BodyMetricsBaseMenuDelegate {
     
     function _openOptionsSubmenu() as Void {
         var items = [] as Array;
+        items.add({:label => _view.text("menu.targets"), :id => :targets});
         items.add({:label => _view.text("menu.language"), :id => :language});
         var subView = new BodyMetricsMenuView(_view.text("menu.cat.options"), items);
         WatchUi.pushView(subView, new BodyMetricsOptionsMenuDelegate(subView, _view), WatchUi.SLIDE_UP);
@@ -290,7 +291,11 @@ class BodyMetricsOptionsMenuDelegate extends BodyMetricsBaseMenuDelegate {
 
     function onSelect() as Boolean {
         var id = _menuView.selectedId();
-        if (id == :language) {
+        if (id == :targets) {
+            WatchUi.popView(WatchUi.SLIDE_DOWN);
+            WatchUi.popView(WatchUi.SLIDE_DOWN);
+            _view.openTargetEditor();
+        } else if (id == :language) {
             _openLanguageSubmenu();
         }
         return true;
