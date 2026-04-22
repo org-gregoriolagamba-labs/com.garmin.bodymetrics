@@ -2,4 +2,7 @@
     <string id="AppName">BodyMetrics</string>
     <string id="SummaryTitle">Body Metrics</string>
     <string id="DetailTitle">Metric Detail</string>
+    <string id="TargetsTitle">Targets</string>
+    <string id="TargetDeltaTitle">Target gap</string>
+    <string id="TargetDisclaimer">Non-clinical ref.</string>
 </strings>

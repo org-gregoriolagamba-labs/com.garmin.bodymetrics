@@ -75,16 +75,20 @@ class BodyMetricsLocale {
     function textIt(key as String) as String {
         if (key.equals("menu.title")) { return "Menu"; }
         if (key.equals("menu.profile")) { return "Profilo"; }
-        if (key.equals("menu.info")) { return "Info"; }
+        if (key.equals("menu.info")) { return "Sistema"; }
         if (key.equals("menu.language")) { return "Lingua"; }
         if (key.equals("menu.targets")) { return "Obiettivi"; }
+        if (key.equals("menu.targets_set")) { return "Imposta"; }
+        if (key.equals("menu.targets_reset_all")) { return "Reset completo"; }
         if (key.equals("menu.data")) { return "Rilevazioni"; }
         if (key.equals("menu.badge_info")) { return "Origine Dati"; }
-        if (key.equals("menu.system_info")) { return "App"; }
+        if (key.equals("menu.system_info")) { return "Informazioni"; }
+        if (key.equals("menu.reset_data")) { return "Reset Dati"; }
+        if (key.equals("menu.reset_done")) { return "Reset eseguito"; }
         if (key.equals("menu.cat.data")) { return "Dati utente"; }
         if (key.equals("menu.cat.options")) { return "Preferenze"; }
-        if (key.equals("menu.cat.info")) { return "Info"; }
-        if (key.equals("sysinfo.title")) { return "App"; }
+        if (key.equals("menu.cat.info")) { return "Sistema"; }
+        if (key.equals("sysinfo.title")) { return "Informazioni"; }
         if (key.equals("sysinfo.app")) { return "Nome"; }
         if (key.equals("sysinfo.version")) { return "Versione"; }
         if (key.equals("sysinfo.release")) { return "Rilascio"; }
@@ -99,8 +103,8 @@ class BodyMetricsLocale {
         if (key.equals("data.select_next")) { return "SELECT  continua"; }
         if (key.equals("data.read_only")) { return "Valore derivato"; }
         if (key.equals("data.from_garmin")) { return "Rilevato da Garmin"; }
-        if (key.equals("data.badge_auto")) { return "C"; }
-        if (key.equals("data.badge_garmin")) { return "G"; }
+        if (key.equals("data.badge_auto")) { return "Calcolato"; }
+        if (key.equals("data.badge_garmin")) { return "Garmin"; }
         if (key.equals("data.weight")) { return "Peso"; }
         if (key.equals("data.fat_pct")) { return "Grasso %"; }
         if (key.equals("data.muscle_pct")) { return "Muscoli %"; }
@@ -115,12 +119,16 @@ class BodyMetricsLocale {
         if (key.equals("setup.configure_profile")) { return "Nuovo profilo"; }
         if (key.equals("setup.select_save")) { return "SELECT  conferma"; }
         if (key.equals("setup.select_next")) { return "SELECT  continua"; }
-        if (key.equals("target.title")) { return "I tuoi obiettivi"; }
+        if (key.equals("target.title")) { return "I miei obiettivi"; }
         if (key.equals("target.select_save")) { return "SELECT  conferma"; }
         if (key.equals("target.select_next")) { return "SELECT  continua"; }
+        if (key.equals("target.view.title")) { return "Obiettivo"; }
+        if (key.equals("target.current")) { return "Attuale"; }
         if (key.equals("target.label")) { return "Obiettivo"; }
         if (key.equals("target.delta_abs")) { return "Delta"; }
         if (key.equals("target.disclaimer")) { return "Rif. non clinico"; }
+        if (key.equals("target.unavailable")) { return "Non disponibile"; }
+        if (key.equals("target.reset_done")) { return "Reset eseguito"; }
         if (key.equals("detail.ideal")) { return "Zona ideale: "; }
         if (key.equals("cta.summary_info")) { return "SELECT  info"; }
         if (key.equals("cta.info_detail")) { return "SELECT  dettagli"; }
@@ -138,13 +146,13 @@ class BodyMetricsLocale {
         if (key.equals("info.badges.current_prefix")) { return "Origine attuale"; }
         if (key.equals("info.badges.none")) { return "non disponibile"; }
         if (key.equals("info.badges.section_metrics")) { return "Metriche derivate"; }
-        if (key.equals("info.badges.G")) { return "rilevato da Garmin"; }
-        if (key.equals("info.badges.M")) { return "inserito da te"; }
-        if (key.equals("info.badges.CG")) { return "elaborato da dati Garmin"; }
-        if (key.equals("info.badges.CM")) { return "elaborato da dati inseriti"; }
+        if (key.equals("info.badges.G")) { return "Dato Garmin diretto"; }
+        if (key.equals("info.badges.M")) { return "Dato inserito manualmente"; }
+        if (key.equals("info.badges.CG")) { return "Calcolato da dati Garmin"; }
+        if (key.equals("info.badges.CM")) { return "Calcolato da dati manuali"; }
         if (key.equals("info.badges.section_inputs")) { return "Fonti di base"; }
-        if (key.equals("info.badges.input_G")) { return "rilevato da Garmin"; }
-        if (key.equals("info.badges.input_C")) { return "elaborato automaticamente"; }
+        if (key.equals("info.badges.input_G")) { return "Origine Garmin"; }
+        if (key.equals("info.badges.input_C")) { return "Origine calcolata"; }
         if (key.equals("info.factor.sex")) { return "sesso"; }
         if (key.equals("info.factor.age")) { return "eta"; }
         if (key.equals("info.factor.training")) { return "profilo allenamento"; }
@@ -164,7 +172,7 @@ class BodyMetricsLocale {
         if (key.equals("field.profile")) { return "Profilo allenamento"; }
         if (key.equals("option.sex.male")) { return "Uomo"; }
         if (key.equals("option.sex.female")) { return "Donna"; }
-        if (key.equals("option.profile.general")) { return "Dati utente"; }
+        if (key.equals("option.profile.general")) { return "Standard"; }
         if (key.equals("option.profile.endurance")) { return "Resistenza"; }
         if (key.equals("option.profile.strength")) { return "Forza"; }
         if (key.equals("metric.bmi")) { return "BMI"; }
@@ -211,22 +219,27 @@ class BodyMetricsLocale {
         if (key.equals("trend.last_prefix")) { return "ultimi"; }
         if (key.equals("trend.last_suffix")) { return "giorni"; }
         if (key.equals("trend.last_suffix_short")) { return "g"; }
+        if (key.equals("summary.updated_on")) { return "Aggiornato: "; }
         return key;
     }
 
     function textEn(key as String) as String {
         if (key.equals("menu.title")) { return "Menu"; }
         if (key.equals("menu.profile")) { return "Profile"; }
-        if (key.equals("menu.info")) { return "Info"; }
+        if (key.equals("menu.info")) { return "System"; }
         if (key.equals("menu.language")) { return "Language"; }
         if (key.equals("menu.targets")) { return "Targets"; }
+        if (key.equals("menu.targets_set")) { return "Set"; }
+        if (key.equals("menu.targets_reset_all")) { return "Reset all targets"; }
         if (key.equals("menu.data")) { return "Check-ins"; }
         if (key.equals("menu.badge_info")) { return "Data Origin"; }
-        if (key.equals("menu.system_info")) { return "App"; }
+        if (key.equals("menu.system_info")) { return "Information"; }
+        if (key.equals("menu.reset_data")) { return "Reset Data"; }
+        if (key.equals("menu.reset_done")) { return "Reset completed"; }
         if (key.equals("menu.cat.data")) { return "User data"; }
         if (key.equals("menu.cat.options")) { return "Preferences"; }
-        if (key.equals("menu.cat.info")) { return "Info"; }
-        if (key.equals("sysinfo.title")) { return "App"; }
+        if (key.equals("menu.cat.info")) { return "System"; }
+        if (key.equals("sysinfo.title")) { return "Information"; }
         if (key.equals("sysinfo.app")) { return "Name"; }
         if (key.equals("sysinfo.version")) { return "Version"; }
         if (key.equals("sysinfo.release")) { return "Release"; }
@@ -241,8 +254,8 @@ class BodyMetricsLocale {
         if (key.equals("data.select_next")) { return "SELECT  continue"; }
         if (key.equals("data.read_only")) { return "Derived value"; }
         if (key.equals("data.from_garmin")) { return "Captured from Garmin"; }
-        if (key.equals("data.badge_auto")) { return "C"; }
-        if (key.equals("data.badge_garmin")) { return "G"; }
+        if (key.equals("data.badge_auto")) { return "Computed"; }
+        if (key.equals("data.badge_garmin")) { return "Garmin"; }
         if (key.equals("data.weight")) { return "Weight"; }
         if (key.equals("data.fat_pct")) { return "Body fat %"; }
         if (key.equals("data.muscle_pct")) { return "Muscle %"; }
@@ -260,9 +273,13 @@ class BodyMetricsLocale {
         if (key.equals("target.title")) { return "Your targets"; }
         if (key.equals("target.select_save")) { return "SELECT  confirm"; }
         if (key.equals("target.select_next")) { return "SELECT  next"; }
+        if (key.equals("target.view.title")) { return "Target"; }
+        if (key.equals("target.current")) { return "Current"; }
         if (key.equals("target.label")) { return "Target"; }
         if (key.equals("target.delta_abs")) { return "Delta"; }
         if (key.equals("target.disclaimer")) { return "Non-clinical ref."; }
+        if (key.equals("target.unavailable")) { return "Not available"; }
+        if (key.equals("target.reset_done")) { return "Reset completed"; }
         if (key.equals("detail.ideal")) { return "Ideal zone: "; }
         if (key.equals("cta.summary_info")) { return "SELECT  explore"; }
         if (key.equals("cta.info_detail")) { return "SELECT  details"; }
@@ -280,13 +297,13 @@ class BodyMetricsLocale {
         if (key.equals("info.badges.current_prefix")) { return "Current origin"; }
         if (key.equals("info.badges.none")) { return "not available"; }
         if (key.equals("info.badges.section_metrics")) { return "Derived metrics"; }
-        if (key.equals("info.badges.G")) { return "captured from Garmin"; }
-        if (key.equals("info.badges.M")) { return "entered by you"; }
-        if (key.equals("info.badges.CG")) { return "derived from Garmin data"; }
-        if (key.equals("info.badges.CM")) { return "derived from entered data"; }
+        if (key.equals("info.badges.G")) { return "Direct Garmin value"; }
+        if (key.equals("info.badges.M")) { return "Manual value"; }
+        if (key.equals("info.badges.CG")) { return "Computed from Garmin data"; }
+        if (key.equals("info.badges.CM")) { return "Computed from manual data"; }
         if (key.equals("info.badges.section_inputs")) { return "Core sources"; }
-        if (key.equals("info.badges.input_G")) { return "captured from Garmin"; }
-        if (key.equals("info.badges.input_C")) { return "derived automatically"; }
+        if (key.equals("info.badges.input_G")) { return "Garmin source"; }
+        if (key.equals("info.badges.input_C")) { return "Computed source"; }
         if (key.equals("info.factor.sex")) { return "sex"; }
         if (key.equals("info.factor.age")) { return "age"; }
         if (key.equals("info.factor.training")) { return "training profile"; }
@@ -306,7 +323,7 @@ class BodyMetricsLocale {
         if (key.equals("field.profile")) { return "Training profile"; }
         if (key.equals("option.sex.male")) { return "Male"; }
         if (key.equals("option.sex.female")) { return "Female"; }
-        if (key.equals("option.profile.general")) { return "User data"; }
+        if (key.equals("option.profile.general")) { return "Standard"; }
         if (key.equals("option.profile.endurance")) { return "Endurance"; }
         if (key.equals("option.profile.strength")) { return "Strength"; }
         if (key.equals("metric.bmi")) { return "BMI"; }
@@ -353,22 +370,27 @@ class BodyMetricsLocale {
         if (key.equals("trend.last_prefix")) { return "last"; }
         if (key.equals("trend.last_suffix")) { return "days"; }
         if (key.equals("trend.last_suffix_short")) { return "d"; }
+        if (key.equals("summary.updated_on")) { return "Updated: "; }
         return textIt(key);
     }
 
     function textFr(key as String) as String {
         if (key.equals("menu.title")) { return "Menu"; }
         if (key.equals("menu.profile")) { return "Profil"; }
-        if (key.equals("menu.info")) { return "Info"; }
+        if (key.equals("menu.info")) { return "Systeme"; }
         if (key.equals("menu.language")) { return "Langue"; }
         if (key.equals("menu.targets")) { return "Objectifs"; }
+        if (key.equals("menu.targets_set")) { return "Configurer"; }
+        if (key.equals("menu.targets_reset_all")) { return "Reset tous objectifs"; }
         if (key.equals("menu.data")) { return "Mesures"; }
         if (key.equals("menu.badge_info")) { return "Origine Données"; }
-        if (key.equals("menu.system_info")) { return "App"; }
+        if (key.equals("menu.system_info")) { return "Informations"; }
+        if (key.equals("menu.reset_data")) { return "Reset Donnees"; }
+        if (key.equals("menu.reset_done")) { return "Reset effectue"; }
         if (key.equals("menu.cat.data")) { return "Donnees utilisateur"; }
         if (key.equals("menu.cat.options")) { return "Preferences"; }
-        if (key.equals("menu.cat.info")) { return "Info"; }
-        if (key.equals("sysinfo.title")) { return "App"; }
+        if (key.equals("menu.cat.info")) { return "Systeme"; }
+        if (key.equals("sysinfo.title")) { return "Informations"; }
         if (key.equals("sysinfo.app")) { return "Nom"; }
         if (key.equals("sysinfo.version")) { return "Version"; }
         if (key.equals("sysinfo.release")) { return "Edition"; }
@@ -383,8 +405,8 @@ class BodyMetricsLocale {
         if (key.equals("data.select_next")) { return "SELECT  continuer"; }
         if (key.equals("data.read_only")) { return "Valeur derivee"; }
         if (key.equals("data.from_garmin")) { return "Releve via Garmin"; }
-        if (key.equals("data.badge_auto")) { return "C"; }
-        if (key.equals("data.badge_garmin")) { return "G"; }
+        if (key.equals("data.badge_auto")) { return "Calcule"; }
+        if (key.equals("data.badge_garmin")) { return "Garmin"; }
         if (key.equals("data.weight")) { return "Poids"; }
         if (key.equals("data.fat_pct")) { return "Graisse %"; }
         if (key.equals("data.muscle_pct")) { return "Muscles %"; }
@@ -402,9 +424,13 @@ class BodyMetricsLocale {
         if (key.equals("target.title")) { return "Vos objectifs"; }
         if (key.equals("target.select_save")) { return "SELECT  confirmer"; }
         if (key.equals("target.select_next")) { return "SELECT  continuer"; }
+        if (key.equals("target.view.title")) { return "Objectif"; }
+        if (key.equals("target.current")) { return "Actuel"; }
         if (key.equals("target.label")) { return "Objectif"; }
         if (key.equals("target.delta_abs")) { return "Delta"; }
         if (key.equals("target.disclaimer")) { return "Ref. non clinique"; }
+        if (key.equals("target.unavailable")) { return "Non disponible"; }
+        if (key.equals("target.reset_done")) { return "Reset effectue"; }
         if (key.equals("detail.ideal")) { return "Zone ideale: "; }
         if (key.equals("cta.summary_info")) { return "SELECT  info"; }
         if (key.equals("cta.info_detail")) { return "SELECT  details"; }
@@ -422,13 +448,13 @@ class BodyMetricsLocale {
         if (key.equals("info.badges.current_prefix")) { return "Origine actuelle"; }
         if (key.equals("info.badges.none")) { return "non disponible"; }
         if (key.equals("info.badges.section_metrics")) { return "Metriques derivees"; }
-        if (key.equals("info.badges.G")) { return "releve via Garmin"; }
-        if (key.equals("info.badges.M")) { return "saisi par vous"; }
-        if (key.equals("info.badges.CG")) { return "derive des donnees Garmin"; }
-        if (key.equals("info.badges.CM")) { return "derive des donnees saisies"; }
+        if (key.equals("info.badges.G")) { return "Valeur Garmin directe"; }
+        if (key.equals("info.badges.M")) { return "Valeur saisie manuellement"; }
+        if (key.equals("info.badges.CG")) { return "Calcule a partir des donnees Garmin"; }
+        if (key.equals("info.badges.CM")) { return "Calcule a partir des donnees saisies"; }
         if (key.equals("info.badges.section_inputs")) { return "Sources essentielles"; }
-        if (key.equals("info.badges.input_G")) { return "releve via Garmin"; }
-        if (key.equals("info.badges.input_C")) { return "derive automatiquement"; }
+        if (key.equals("info.badges.input_G")) { return "Source Garmin"; }
+        if (key.equals("info.badges.input_C")) { return "Source calculee"; }
         if (key.equals("info.factor.sex")) { return "sexe"; }
         if (key.equals("info.factor.age")) { return "age"; }
         if (key.equals("info.factor.training")) { return "profil d'entrainement"; }
@@ -448,7 +474,7 @@ class BodyMetricsLocale {
         if (key.equals("field.profile")) { return "Profil d'entrainement"; }
         if (key.equals("option.sex.male")) { return "Homme"; }
         if (key.equals("option.sex.female")) { return "Femme"; }
-        if (key.equals("option.profile.general")) { return "Donnees utilisateur"; }
+        if (key.equals("option.profile.general")) { return "Standard"; }
         if (key.equals("option.profile.endurance")) { return "Endurance"; }
         if (key.equals("option.profile.strength")) { return "Force"; }
         if (key.equals("metric.bmi")) { return "IMC"; }
@@ -495,22 +521,27 @@ class BodyMetricsLocale {
         if (key.equals("trend.last_prefix")) { return "derniers"; }
         if (key.equals("trend.last_suffix")) { return "jours"; }
         if (key.equals("trend.last_suffix_short")) { return "j"; }
+        if (key.equals("summary.updated_on")) { return "Mise a jour: "; }
         return textIt(key);
     }
 
     function textEs(key as String) as String {
         if (key.equals("menu.title")) { return "Menu"; }
         if (key.equals("menu.profile")) { return "Perfil"; }
-        if (key.equals("menu.info")) { return "Info"; }
+        if (key.equals("menu.info")) { return "Sistema"; }
         if (key.equals("menu.language")) { return "Idioma"; }
         if (key.equals("menu.targets")) { return "Objetivos"; }
+        if (key.equals("menu.targets_set")) { return "Configurar"; }
+        if (key.equals("menu.targets_reset_all")) { return "Reset todos objetivos"; }
         if (key.equals("menu.data")) { return "Registros"; }
         if (key.equals("menu.badge_info")) { return "Origen Datos"; }
-        if (key.equals("menu.system_info")) { return "App"; }
+        if (key.equals("menu.system_info")) { return "Informacion"; }
+        if (key.equals("menu.reset_data")) { return "Reset Datos"; }
+        if (key.equals("menu.reset_done")) { return "Reset completado"; }
         if (key.equals("menu.cat.data")) { return "Datos usuario"; }
         if (key.equals("menu.cat.options")) { return "Preferencias"; }
-        if (key.equals("menu.cat.info")) { return "Info"; }
-        if (key.equals("sysinfo.title")) { return "App"; }
+        if (key.equals("menu.cat.info")) { return "Sistema"; }
+        if (key.equals("sysinfo.title")) { return "Informacion"; }
         if (key.equals("sysinfo.app")) { return "Nombre"; }
         if (key.equals("sysinfo.version")) { return "Version"; }
         if (key.equals("sysinfo.release")) { return "Lanzamiento"; }
@@ -525,8 +556,8 @@ class BodyMetricsLocale {
         if (key.equals("data.select_next")) { return "SELECT  continuar"; }
         if (key.equals("data.read_only")) { return "Valor derivado"; }
         if (key.equals("data.from_garmin")) { return "Registrado desde Garmin"; }
-        if (key.equals("data.badge_auto")) { return "C"; }
-        if (key.equals("data.badge_garmin")) { return "G"; }
+        if (key.equals("data.badge_auto")) { return "Calculado"; }
+        if (key.equals("data.badge_garmin")) { return "Garmin"; }
         if (key.equals("data.weight")) { return "Peso"; }
         if (key.equals("data.fat_pct")) { return "Grasa %"; }
         if (key.equals("data.muscle_pct")) { return "Musculos %"; }
@@ -544,9 +575,13 @@ class BodyMetricsLocale {
         if (key.equals("target.title")) { return "Tus objetivos"; }
         if (key.equals("target.select_save")) { return "SELECT  confirmar"; }
         if (key.equals("target.select_next")) { return "SELECT  continuar"; }
+        if (key.equals("target.view.title")) { return "Objetivo"; }
+        if (key.equals("target.current")) { return "Actual"; }
         if (key.equals("target.label")) { return "Objetivo"; }
         if (key.equals("target.delta_abs")) { return "Delta"; }
         if (key.equals("target.disclaimer")) { return "Ref. no clinica"; }
+        if (key.equals("target.unavailable")) { return "No disponible"; }
+        if (key.equals("target.reset_done")) { return "Reset completado"; }
         if (key.equals("detail.ideal")) { return "Zona ideal: "; }
         if (key.equals("cta.summary_info")) { return "SELECT  explora"; }
         if (key.equals("cta.info_detail")) { return "SELECT  detalles"; }
@@ -564,13 +599,13 @@ class BodyMetricsLocale {
         if (key.equals("info.badges.current_prefix")) { return "Origen actual"; }
         if (key.equals("info.badges.none")) { return "no disponible"; }
         if (key.equals("info.badges.section_metrics")) { return "Metricas derivadas"; }
-        if (key.equals("info.badges.G")) { return "registrado desde Garmin"; }
-        if (key.equals("info.badges.M")) { return "ingresado por ti"; }
-        if (key.equals("info.badges.CG")) { return "derivado de datos Garmin"; }
-        if (key.equals("info.badges.CM")) { return "derivado de datos ingresados"; }
+        if (key.equals("info.badges.G")) { return "Valor Garmin directo"; }
+        if (key.equals("info.badges.M")) { return "Valor ingresado manualmente"; }
+        if (key.equals("info.badges.CG")) { return "Calculado con datos Garmin"; }
+        if (key.equals("info.badges.CM")) { return "Calculado con datos manuales"; }
         if (key.equals("info.badges.section_inputs")) { return "Fuentes clave"; }
-        if (key.equals("info.badges.input_G")) { return "registrado desde Garmin"; }
-        if (key.equals("info.badges.input_C")) { return "derivado automaticamente"; }
+        if (key.equals("info.badges.input_G")) { return "Origen Garmin"; }
+        if (key.equals("info.badges.input_C")) { return "Origen calculado"; }
         if (key.equals("info.factor.sex")) { return "sexo"; }
         if (key.equals("info.factor.age")) { return "edad"; }
         if (key.equals("info.factor.training")) { return "perfil de entrenamiento"; }
@@ -590,7 +625,7 @@ class BodyMetricsLocale {
         if (key.equals("field.profile")) { return "Perfil de entrenamiento"; }
         if (key.equals("option.sex.male")) { return "Hombre"; }
         if (key.equals("option.sex.female")) { return "Mujer"; }
-        if (key.equals("option.profile.general")) { return "Datos usuario"; }
+        if (key.equals("option.profile.general")) { return "Standard"; }
         if (key.equals("option.profile.endurance")) { return "Resistencia"; }
         if (key.equals("option.profile.strength")) { return "Fuerza"; }
         if (key.equals("metric.bmi")) { return "IMC"; }
@@ -637,6 +672,7 @@ class BodyMetricsLocale {
         if (key.equals("trend.last_prefix")) { return "ultimos"; }
         if (key.equals("trend.last_suffix")) { return "dias"; }
         if (key.equals("trend.last_suffix_short")) { return "d"; }
+        if (key.equals("summary.updated_on")) { return "Actualizado: "; }
         return textIt(key);
     }
 }

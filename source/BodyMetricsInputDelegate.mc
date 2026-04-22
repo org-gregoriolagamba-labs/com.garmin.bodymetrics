@@ -89,11 +89,11 @@ class BodyMetricsInputDelegate extends WatchUi.InputDelegate {
     function onSwipe(evt as WatchUi.SwipeEvent) as Boolean {
         var dir = evt.getDirection();
         if (dir == WatchUi.SWIPE_UP) {
-            _view.nextMetric();
+            _view.handleSwipeUp();
             return true;
         }
         if (dir == WatchUi.SWIPE_DOWN) {
-            _view.previousMetric();
+            _view.handleSwipeDown();
             return true;
         }
         return false;

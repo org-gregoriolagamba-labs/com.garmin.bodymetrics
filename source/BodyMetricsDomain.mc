@@ -200,12 +200,12 @@ class BodyMetricsDomain {
     function targetFieldDefinitions() as Array {
         return [
             {:key => :bmi, :metricId => "bmi", :label => _locale.metricLabel("bmi"), :unit => "kg/m2", :min => 15.0, :max => 35.0, :step => 0.1},
-            {:key => :fat_pct, :metricId => "fat_pct", :label => _locale.metricLabel("fat_pct"), :unit => "%", :min => 5.0, :max => 45.0, :step => 0.5},
+            {:key => :fat_pct, :metricId => "fat_pct", :label => _locale.metricLabel("fat_pct"), :unit => "%", :min => 5.0, :max => 45.0, :step => 0.1},
             {:key => :muscle_kg, :metricId => "muscle_kg", :label => _locale.metricLabel("muscle_kg"), :unit => "kg", :min => 15.0, :max => 70.0, :step => 0.1},
-            {:key => :muscle_pct, :metricId => "muscle_pct", :label => _locale.metricLabel("muscle_pct"), :unit => "%", :min => 20.0, :max => 65.0, :step => 0.5},
-            {:key => :water_pct, :metricId => "water_pct", :label => _locale.metricLabel("water_pct"), :unit => "%", :min => 40.0, :max => 75.0, :step => 0.5},
+            {:key => :muscle_pct, :metricId => "muscle_pct", :label => _locale.metricLabel("muscle_pct"), :unit => "%", :min => 20.0, :max => 65.0, :step => 0.1},
+            {:key => :water_pct, :metricId => "water_pct", :label => _locale.metricLabel("water_pct"), :unit => "%", :min => 40.0, :max => 75.0, :step => 0.1},
             {:key => :bone_kg, :metricId => "bone_kg", :label => _locale.metricLabel("bone_kg"), :unit => "kg", :min => 1.0, :max => 6.0, :step => 0.1},
-            {:key => :weight, :metricId => "weight", :label => _locale.metricLabel("weight"), :unit => "kg", :min => 40.0, :max => 200.0, :step => 0.5}
+            {:key => :weight, :metricId => "weight", :label => _locale.metricLabel("weight"), :unit => "kg", :min => 40.0, :max => 200.0, :step => 0.1}
         ];
     }
 
@@ -265,6 +265,59 @@ class BodyMetricsDomain {
                 _targets.setUserTarget(metricId, draft[key].toFloat());
             }
         }
+    }
+
+    function resetTargetForMetricId(metricId as String) as Void {
+        _targets.clearUserTarget(metricId);
+    }
+
+    function resetTargetForIndex(metricIndex as Number) as Void {
+        var metric = metricAt(metricIndex);
+        if (metric == null || !metric.hasKey(:id)) {
+            return;
+        }
+        if (classificationPolicy(metric).equals(POLICY_REFERENCE_ONLY)) {
+            return;
+        }
+        _targets.clearUserTarget(metric[:id].toString());
+    }
+
+    function resetAllTargets() as Void {
+        var fields = targetFieldDefinitions();
+        for (var i = 0; i < fields.size(); i += 1) {
+            var field = fields[i] as Dictionary;
+            _targets.clearUserTarget(field[:metricId].toString());
+        }
+    }
+
+    function resetAllUserData() as Void {
+        // Profile storage
+        Storage.deleteValue(PROFILE_SEX_KEY);
+        Storage.deleteValue(PROFILE_AGE_BAND_KEY);
+        Storage.deleteValue(PROFILE_BODY_PROFILE_KEY);
+        Storage.deleteValue(PROFILE_HEIGHT_KEY);
+
+        // Measurement storage
+        Storage.deleteValue(MEAS_WEIGHT_KEY);
+        Storage.deleteValue(MEAS_FAT_KEY);
+        Storage.deleteValue(MEAS_MUSCLE_KEY);
+        Storage.deleteValue(MEAS_WATER_KEY);
+        Storage.deleteValue(MEAS_BONE_KEY);
+        Storage.deleteValue(MEAS_TIMESTAMP_KEY);
+        Storage.deleteValue(MEAS_SOURCE_KEY);
+
+        // Targets storage
+        resetAllTargets();
+
+        // History storage (also clears debug flags)
+        _history.clearHistory();
+        _history.disableDebugHistory();
+
+        // Runtime refresh
+        _hasStoredProfile = false;
+        _profile = loadProfile();
+        _measurements = _dataProvider.loadMeasurements();
+        rebuildMetrics();
     }
 
     function effectiveTargetForMetric(metric as Dictionary) {

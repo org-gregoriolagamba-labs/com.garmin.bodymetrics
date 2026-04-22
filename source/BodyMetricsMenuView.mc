@@ -215,6 +215,7 @@ class BodyMetricsCustomMenuDelegate extends BodyMetricsBaseMenuDelegate {
         var items = [] as Array;
         items.add({:label => _view.text("menu.profile"), :id => :profile});
         items.add({:label => _view.text("menu.data"), :id => :data});
+        items.add({:label => _view.text("menu.targets"), :id => :targets});
         var subView = new BodyMetricsMenuView(_view.text("menu.cat.data"), items);
         // 2 pops: main menu + data submenu
         WatchUi.pushView(subView, new BodyMetricsDataMenuDelegate(subView, _view, 2), WatchUi.SLIDE_UP);
@@ -222,7 +223,6 @@ class BodyMetricsCustomMenuDelegate extends BodyMetricsBaseMenuDelegate {
     
     function _openOptionsSubmenu() as Void {
         var items = [] as Array;
-        items.add({:label => _view.text("menu.targets"), :id => :targets});
         items.add({:label => _view.text("menu.language"), :id => :language});
         var subView = new BodyMetricsMenuView(_view.text("menu.cat.options"), items);
         WatchUi.pushView(subView, new BodyMetricsOptionsMenuDelegate(subView, _view), WatchUi.SLIDE_UP);
@@ -230,8 +230,8 @@ class BodyMetricsCustomMenuDelegate extends BodyMetricsBaseMenuDelegate {
     
     function _openInfoSubmenu() as Void {
         var items = [] as Array;
-        items.add({:label => _view.text("menu.badge_info"), :id => :badge_info});
         items.add({:label => _view.text("menu.system_info"), :id => :system_info});
+        items.add({:label => _view.text("menu.reset_data"), :id => :reset_data});
         var subView = new BodyMetricsMenuView(_view.text("menu.cat.info"), items);
         WatchUi.pushView(subView, new BodyMetricsInfoMenuDelegate(subView, _view), WatchUi.SLIDE_UP);
     }
@@ -277,6 +277,12 @@ class BodyMetricsDataMenuDelegate extends BodyMetricsBaseMenuDelegate {
             }
             _view.requestDataMenuOnExit();
             _view.openDataEntry();
+        } else if (id == :targets) {
+            for (var i = 0; i < _popCount; i++) {
+                WatchUi.popView(WatchUi.SLIDE_DOWN);
+            }
+            _view.requestDataMenuOnExit();
+            _view.openTargetEditor();
         }
         return true;
     }
@@ -291,11 +297,7 @@ class BodyMetricsOptionsMenuDelegate extends BodyMetricsBaseMenuDelegate {
 
     function onSelect() as Boolean {
         var id = _menuView.selectedId();
-        if (id == :targets) {
-            WatchUi.popView(WatchUi.SLIDE_DOWN);
-            WatchUi.popView(WatchUi.SLIDE_DOWN);
-            _view.openTargetEditor();
-        } else if (id == :language) {
+        if (id == :language) {
             _openLanguageSubmenu();
         }
         return true;
@@ -322,10 +324,12 @@ class BodyMetricsInfoMenuDelegate extends BodyMetricsBaseMenuDelegate {
 
     function onSelect() as Boolean {
         var id = _menuView.selectedId();
-        if (id == :badge_info) {
-            _view.openBadgeInfo();
-        } else if (id == :system_info) {
+        if (id == :system_info) {
             _view.openSystemInfo();
+        } else if (id == :reset_data) {
+            _view.resetAllDataWithFeedback();
+            WatchUi.popView(WatchUi.SLIDE_DOWN);
+            WatchUi.popView(WatchUi.SLIDE_DOWN);
         }
         return true;
     }

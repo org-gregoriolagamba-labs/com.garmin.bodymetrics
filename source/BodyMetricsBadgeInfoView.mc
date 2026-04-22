@@ -2,8 +2,8 @@ import Toybox.Graphics;
 import Toybox.Lang;
 import Toybox.WatchUi;
 
-//! Scrollable badge info view, opened from the main menu.
-//! Displays badge legend as structured list items on a round screen.
+//! Scrollable information view used for system/app details.
+//! Displays structured key-value items on a round screen.
 class BodyMetricsBadgeInfoView extends WatchUi.View {
 
     var _title as String;
@@ -42,9 +42,17 @@ class BodyMetricsBadgeInfoView extends WatchUi.View {
         var wTop = availableWidthAtYGlobal(w, h, contentTop, lineH) - pct(w, 14);
         var wBot = availableWidthAtYGlobal(w, h, visibleBottom - lineH, lineH) - pct(w, 14);
         var safeW = wTop < wBot ? wTop : wBot;
-        var bulletIndent = pct(w, 5);
-        var textLeft = pct(w, 11) + bulletIndent;
-        var itemW = safeW - bulletIndent;
+        var itemW = safeW;
+
+        // Decorative separators
+        var sepHalfW = pct(w, 24);
+        var topSepY = topMargin - pct(h, 2);
+        var bottomSepY = h - pct(h, 9);
+        dc.setPenWidth(2);
+        dc.setColor(COLOR_ACCENT_DIM, Graphics.COLOR_TRANSPARENT);
+        dc.drawLine(cx - sepHalfW, topSepY, cx + sepHalfW, topSepY);
+        dc.drawLine(cx - sepHalfW, bottomSepY, cx + sepHalfW, bottomSepY);
+        dc.setPenWidth(1);
 
         // Fixed title
         dc.setColor(COLOR_ACCENT, Graphics.COLOR_TRANSPARENT);
@@ -59,13 +67,17 @@ class BodyMetricsBadgeInfoView extends WatchUi.View {
             if (lbl.equals("") && val.equals("")) {
                 allLines.add({:text => "", :type => :empty});
             } else if (!lbl.equals("") && val.equals("")) {
-                allLines.add({:text => lbl, :type => :subheading});
+                allLines.add({:text => lbl, :type => :centered});
             } else {
-                var bText = lbl.equals("") ? val : lbl + " - " + val;
-                var wrapped = wrapTextGlobal(dc, bText, font, itemW);
-                for (var wl = 0; wl < wrapped.size(); wl += 1) {
-                    allLines.add({:text => wrapped[wl].toString(), :type => (wl == 0) ? :bullet : :bulletCont, :label => lbl});
+                var labelWrapped = wrapTextGlobal(dc, lbl, font, itemW);
+                for (var li = 0; li < labelWrapped.size(); li += 1) {
+                    allLines.add({:text => labelWrapped[li].toString(), :type => :label});
                 }
+                var valueWrapped = wrapTextGlobal(dc, val, Graphics.FONT_TINY, itemW);
+                for (var vi = 0; vi < valueWrapped.size(); vi += 1) {
+                    allLines.add({:text => valueWrapped[vi].toString(), :type => :value});
+                }
+                allLines.add({:text => "", :type => :empty});
             }
         }
 
@@ -83,27 +95,18 @@ class BodyMetricsBadgeInfoView extends WatchUi.View {
             var line = allLines[i] as Dictionary;
             var lineType = line[:type];
             if (y + lineH > contentTop - lineH && y < contentTop + visibleH + lineH) {
-                if (lineType == :subheading) {
+                if (lineType == :centered) {
                     dc.setColor(COLOR_ACCENT, Graphics.COLOR_TRANSPARENT);
-                    dc.drawText(textLeft - bulletIndent, y, font, line[:text].toString(), Graphics.TEXT_JUSTIFY_LEFT);
-                } else if (lineType == :bullet) {
-                    dc.setColor(COLOR_ACCENT, Graphics.COLOR_TRANSPARENT);
-                    dc.fillCircle(textLeft - bulletIndent + 3, y + lineH / 2, 2);
-                    var fullText = line[:text].toString();
-                    var lbl = line[:label] != null ? line[:label].toString() : "";
-                    if (!lbl.equals("") && fullText.length() > lbl.length()) {
-                        dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
-                        dc.drawText(textLeft, y, font, fullText, Graphics.TEXT_JUSTIFY_LEFT);
-                        var lblPart = fullText.substring(0, lbl.length());
-                        dc.setColor(COLOR_ACCENT, Graphics.COLOR_TRANSPARENT);
-                        dc.drawText(textLeft, y, font, lblPart, Graphics.TEXT_JUSTIFY_LEFT);
-                    } else {
-                        dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
-                        dc.drawText(textLeft, y, font, fullText, Graphics.TEXT_JUSTIFY_LEFT);
-                    }
-                } else if (lineType == :bulletCont) {
+                    dc.drawText(cx, y, font, line[:text].toString(), Graphics.TEXT_JUSTIFY_CENTER);
+                } else if (lineType == :label) {
                     dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
-                    dc.drawText(textLeft, y, font, line[:text].toString(), Graphics.TEXT_JUSTIFY_LEFT);
+                    dc.drawText(cx, y, font, line[:text].toString(), Graphics.TEXT_JUSTIFY_CENTER);
+                } else if (lineType == :value) {
+                    dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+                    dc.drawText(cx, y, Graphics.FONT_TINY, line[:text].toString(), Graphics.TEXT_JUSTIFY_CENTER);
+                } else if (lineType == :centeredText) {
+                    dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
+                    dc.drawText(cx, y, font, line[:text].toString(), Graphics.TEXT_JUSTIFY_CENTER);
                 }
             }
             y += lineH;

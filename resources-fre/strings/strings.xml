@@ -2,4 +2,7 @@
     <string id="AppName">BodyMetrics</string>
     <string id="SummaryTitle">Mesures Corps</string>
     <string id="DetailTitle">Detail Metrique</string>
+    <string id="TargetsTitle">Objectifs</string>
+    <string id="TargetDeltaTitle">Ecart objectif</string>
+    <string id="TargetDisclaimer">Ref. non clinique</string>
 </strings>
