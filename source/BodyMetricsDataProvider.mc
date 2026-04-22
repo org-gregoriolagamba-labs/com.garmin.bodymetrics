@@ -10,6 +10,7 @@ const MEAS_MUSCLE_KEY = "bodyMetrics.meas.musclePct";
 const MEAS_WATER_KEY = "bodyMetrics.meas.waterPct";
 const MEAS_BONE_KEY = "bodyMetrics.meas.boneKg";
 const MEAS_TIMESTAMP_KEY = "bodyMetrics.meas.timestamp";
+const MEAS_SYNC_TIMESTAMP_KEY = "bodyMetrics.meas.syncTimestamp";
 const MEAS_SOURCE_KEY = "bodyMetrics.meas.source";
 
 const SOURCE_MANUAL = "manual";
@@ -32,11 +33,17 @@ class BodyMetricsDataProvider {
         var garmin = _garminProfile.readProfile() as Dictionary;
         var garminWeight = _garminProfile.hasWeight() ? garmin[:weightKg] : null;
         var storageWeight = Storage.getValue(MEAS_WEIGHT_KEY);
+        var syncTimestamp = Storage.getValue(MEAS_SYNC_TIMESTAMP_KEY);
         var weightKg = null;
         var weightSource = null;
         if (garminWeight != null) {
             weightKg = garminWeight.toFloat();
             weightSource = SOURCE_GARMIN;
+            if (syncTimestamp == null || Storage.getValue(MEAS_SOURCE_KEY) != SOURCE_GARMIN) {
+                syncTimestamp = Time.now().value();
+                Storage.setValue(MEAS_SYNC_TIMESTAMP_KEY, syncTimestamp);
+                Storage.setValue(MEAS_SOURCE_KEY, SOURCE_GARMIN);
+            }
         } else if (storageWeight != null) {
             weightKg = storageWeight.toFloat();
             weightSource = SOURCE_MANUAL;
@@ -56,7 +63,8 @@ class BodyMetricsDataProvider {
             :boneKg => boneVal != null ? boneVal.toFloat() : null,
             :bmr => null,
             :weightSource => weightSource,
-            :bodyCompSource => fatVal != null ? SOURCE_MANUAL : null
+            :bodyCompSource => fatVal != null ? SOURCE_MANUAL : null,
+            :syncTimestamp => syncTimestamp
         };
     }
 
@@ -68,6 +76,7 @@ class BodyMetricsDataProvider {
         Storage.setValue(MEAS_WATER_KEY, measurements[:waterPct].toFloat());
         Storage.setValue(MEAS_BONE_KEY, measurements[:boneKg].toFloat());
         Storage.setValue(MEAS_TIMESTAMP_KEY, Time.now().value());
+        Storage.deleteValue(MEAS_SYNC_TIMESTAMP_KEY);
         Storage.setValue(MEAS_SOURCE_KEY, SOURCE_MANUAL);
     }
 
@@ -78,6 +87,10 @@ class BodyMetricsDataProvider {
 
     //! Returns the unix timestamp of last measurement update, or null.
     function lastUpdateTimestamp() {
+        var syncTimestamp = Storage.getValue(MEAS_SYNC_TIMESTAMP_KEY);
+        if (syncTimestamp != null) {
+            return syncTimestamp;
+        }
         return Storage.getValue(MEAS_TIMESTAMP_KEY);
     }
 

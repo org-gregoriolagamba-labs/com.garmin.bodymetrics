@@ -705,17 +705,12 @@ class BodyMetricsView extends WatchUi.View {
     }
 
     function manualDateText(metric as Dictionary) as String {
-        if (!metric[:available] || metric[:source] == null || !metric.hasKey(:id)) {
+        if (!metric[:available] || metric[:source] == null) {
             return "";
         }
-        var metricId = metric[:id].toString();
-        var isManualInputMetric = metricId.equals("weight") || metricId.equals("fat_pct") ||
-            metricId.equals("muscle_pct") || metricId.equals("water_pct") || metricId.equals("bone_kg");
-        if (isManualInputMetric && metric[:source].toString().equals(SOURCE_MANUAL)) {
-            var date = _domain.lastUpdateDateLabel();
-            if (date != null && date.length() > 0) {
-                return text("summary.updated_on") + date;
-            }
+        var date = _domain.lastUpdateDateLabel();
+        if (date != null && date.length() > 0) {
+            return text("summary.updated_on") + date;
         }
         return "";
     }
@@ -841,8 +836,18 @@ class BodyMetricsView extends WatchUi.View {
         // (i) info icon next to label
         drawInfoIcon(dc, cx, labelY, labelText, labelFont);
 
+        // Manual update date sits directly under the metric name, like the old badge row.
+        var dateText = manualDateText(metric);
+        var dateH = 0;
+        if (dateText != null && dateText.length() > 0) {
+            dateH = dc.getFontHeight(Graphics.FONT_XTINY);
+            var dateY = labelY + hLabelFont + pct(h, 1);
+            dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(cx, dateY, Graphics.FONT_XTINY, dateText, Graphics.TEXT_JUSTIFY_CENTER);
+        }
+
         // Hero value
-        var valueY = labelY + hLabelFont + pad;
+        var valueY = labelY + hLabelFont + dateH + pad;
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
         dc.drawText(cx, valueY, Graphics.FONT_NUMBER_MILD,
             formatValue(metric),
@@ -872,15 +877,6 @@ class BodyMetricsView extends WatchUi.View {
             drawCenteredTextBlock(dc, cx, hintY, hintLayout, _domain.zoneColor(metric, zone));
         } else {
             drawCenteredTextBlock(dc, cx, hintY, hintLayout, Graphics.COLOR_DK_GRAY);
-        }
-
-        // Show update date only for manually entered base metrics
-        var dateText = manualDateText(metric);
-        if (dateText != null && dateText.length() > 0) {
-            var dateY = hintY + hintLayout[:height] + pct(h, 1);
-            dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(cx, dateY, Graphics.FONT_XTINY, dateText, Graphics.TEXT_JUSTIFY_CENTER);
-            dotsY = dateY + hXtiny + pct(h, 2);
         }
 
         // Page dots
@@ -1612,7 +1608,11 @@ class BodyMetricsView extends WatchUi.View {
             // Compute bottom positions first for round-screen-aware label width
             var windowY = h - pct(h, 10);
             var trendY = windowY - hXtiny - pad;
-            var windowLabelMaxW = _availableWidthAtY(w, h, windowY, hXtiny) - pct(w, 4);
+            var windowLabelMaxW = _availableWidthAtY(w, h, windowY, hXtiny) * 0.66;
+            var hardCap = pct(w, 72);
+            if (windowLabelMaxW > hardCap) {
+                windowLabelMaxW = hardCap;
+            }
             var windowLabel = _trendWindowLabel(dc, Graphics.FONT_XTINY, windowLabelMaxW);
 
             // Mini chart
@@ -1660,7 +1660,11 @@ class BodyMetricsView extends WatchUi.View {
             }
 
             var trendFont = Graphics.FONT_XTINY;
-            var trendTextMaxW = _availableWidthAtY(w, h, trendY, dc.getFontHeight(trendFont)) - pct(w, 14);
+            var trendTextMaxW = _availableWidthAtY(w, h, trendY, dc.getFontHeight(trendFont)) * 0.66;
+            var trendHardCap = pct(w, 72);
+            if (trendTextMaxW > trendHardCap) {
+                trendTextMaxW = trendHardCap;
+            }
             var trendLayout = fitSingleLineText(dc, trendLabel, trendFont, trendFont, trendTextMaxW);
 
             dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);

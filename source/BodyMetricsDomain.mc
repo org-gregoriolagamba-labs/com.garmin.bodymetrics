@@ -304,6 +304,7 @@ class BodyMetricsDomain {
         Storage.deleteValue(MEAS_WATER_KEY);
         Storage.deleteValue(MEAS_BONE_KEY);
         Storage.deleteValue(MEAS_TIMESTAMP_KEY);
+        Storage.deleteValue("bodyMetrics.meas.syncTimestamp");
         Storage.deleteValue(MEAS_SOURCE_KEY);
 
         // Targets storage
