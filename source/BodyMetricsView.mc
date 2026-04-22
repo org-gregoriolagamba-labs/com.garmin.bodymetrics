@@ -229,11 +229,6 @@ class BodyMetricsView extends WatchUi.View {
         return true;
     }
 
-    function canEditProfile() as Boolean {
-        return _domain.hasConfiguredProfile() &&
-            (_mode == MODE_SUMMARY || _mode == MODE_INFO || _mode == MODE_DETAIL || _mode == MODE_TREND);
-    }
-
     //! Check if a screen tap hits the (i) info icon
     function isInfoIconTap(x as Number, y as Number) as Boolean {
         if (_mode != MODE_SUMMARY) { return false; }
@@ -259,10 +254,6 @@ class BodyMetricsView extends WatchUi.View {
         return _domain.languageLabel(language);
     }
 
-    function currentLanguageLabel() as String {
-        return languageLabel(currentLanguage());
-    }
-
     function languageMenuLabel() as String {
         return text("menu.language");
     }
@@ -272,29 +263,14 @@ class BodyMetricsView extends WatchUi.View {
         WatchUi.requestUpdate();
     }
 
-    function queueLanguageMenuOpen() as Void {
-        _pendingMenuAction = :openLanguageMenu;
-    }
-
     function requestDataMenuOnExit() as Void {
         _reopenDataMenuAfterExit = true;
-    }
-
-    function resetCurrentMetricTarget() as Void {
-        _domain.resetTargetForIndex(_selectedMetric);
-        _targetDraft = _domain.currentTargets();
-        WatchUi.requestUpdate();
     }
 
     function resetAllTargets() as Void {
         _domain.resetAllTargets();
         _targetDraft = _domain.currentTargets();
         WatchUi.requestUpdate();
-    }
-
-    function resetAllTargetsWithFeedback() as Void {
-        resetAllTargets();
-        showFeedbackBadge(text("target.reset_done"), 2200);
     }
 
     function resetAllDataWithFeedback() as Void {
@@ -713,64 +689,6 @@ class BodyMetricsView extends WatchUi.View {
             return text("summary.updated_on") + date;
         }
         return "";
-    }
-
-    //! Draws source badge (and optional date for manual) centered at cx, y.
-    //! Returns the total height consumed by the subtitle row.
-    function drawSourceSubtitle(dc as Dc, cx as Number, y as Number, badgeText as String, dateText as String) as Number {
-        var font = Graphics.FONT_XTINY;
-        var padX = 4;
-        var padY = 1;
-        var badgeTextW = dc.getTextWidthInPixels(badgeText, font);
-        var badgeW = badgeTextW + (padX * 2);
-        var badgeH = dc.getFontHeight(font) + (padY * 2);
-
-        if (dateText.equals("")) {
-            // Badge only, centered
-            var bx = cx - (badgeW / 2);
-            dc.setColor(COLOR_BADGE_BG, Graphics.COLOR_TRANSPARENT);
-            dc.fillRectangle(bx, y, badgeW, badgeH);
-            dc.setColor(COLOR_ACCENT, Graphics.COLOR_TRANSPARENT);
-            dc.drawRectangle(bx, y, badgeW, badgeH);
-            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(cx, y + padY, font, badgeText, Graphics.TEXT_JUSTIFY_CENTER);
-        } else {
-            // Badge + date, centered together
-            var gap = 4;
-            var dateW = dc.getTextWidthInPixels(dateText, font);
-            var totalW = badgeW + gap + dateW;
-            var startX = cx - (totalW / 2);
-
-            // Badge
-            dc.setColor(COLOR_BADGE_BG, Graphics.COLOR_TRANSPARENT);
-            dc.fillRectangle(startX, y, badgeW, badgeH);
-            dc.setColor(COLOR_ACCENT, Graphics.COLOR_TRANSPARENT);
-            dc.drawRectangle(startX, y, badgeW, badgeH);
-            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(startX + badgeW / 2, y + padY, font, badgeText, Graphics.TEXT_JUSTIFY_CENTER);
-
-            // Date text
-            dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(startX + badgeW + gap, y + padY, font, dateText, Graphics.TEXT_JUSTIFY_LEFT);
-        }
-        return badgeH;
-    }
-
-    function drawReadOnlyBadge(dc as Dc, cx as Number, y as Number, textValue as String) as Void {
-        var font = Graphics.FONT_XTINY;
-        var textW = dc.getTextWidthInPixels(textValue, font);
-        var padX = 6;
-        var padY = 1;
-        var badgeW = textW + (padX * 2);
-        var badgeH = dc.getFontHeight(font) + (padY * 2);
-        var x = cx - (badgeW / 2);
-
-        dc.setColor(COLOR_BADGE_BG, Graphics.COLOR_TRANSPARENT);
-        dc.fillRectangle(x, y, badgeW, badgeH);
-        dc.setColor(COLOR_ACCENT, Graphics.COLOR_TRANSPARENT);
-        dc.drawRectangle(x, y, badgeW, badgeH);
-        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, y + padY, font, textValue, Graphics.TEXT_JUSTIFY_CENTER);
     }
 
     function drawTriangle(dc as Dc, cx as Number, cy as Number, size as Number, pointUp as Boolean) as Void {
@@ -1427,10 +1345,6 @@ class BodyMetricsView extends WatchUi.View {
         for (var i = 0; i < lines.size(); i += 1) {
             dc.drawText(cx, startY + i * lineHeight, font, lines[i].toString(), Graphics.TEXT_JUSTIFY_CENTER);
         }
-    }
-
-    function splitWords(value as String) as Array {
-        return splitWordsGlobal(value);
     }
 
     function drawDetailZoneBar(dc as Dc, x as Number, y as Number, w as Number, h as Number, metric as Dictionary, zone as Number, policy) as Void {

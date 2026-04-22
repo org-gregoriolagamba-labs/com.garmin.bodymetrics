@@ -80,9 +80,27 @@ class BodyMetricsDataProvider {
         Storage.setValue(MEAS_SOURCE_KEY, SOURCE_MANUAL);
     }
 
+    //! Clears all persisted measurement values and related metadata.
+    function clearStoredMeasurements() as Void {
+        Storage.deleteValue(MEAS_WEIGHT_KEY);
+        Storage.deleteValue(MEAS_FAT_KEY);
+        Storage.deleteValue(MEAS_MUSCLE_KEY);
+        Storage.deleteValue(MEAS_WATER_KEY);
+        Storage.deleteValue(MEAS_BONE_KEY);
+        Storage.deleteValue(MEAS_TIMESTAMP_KEY);
+        Storage.deleteValue(MEAS_SYNC_TIMESTAMP_KEY);
+        Storage.deleteValue(MEAS_SOURCE_KEY);
+    }
+
     //! Returns true if user has saved at least one set of measurements.
     function hasStoredMeasurements() as Boolean {
         return Storage.getValue(MEAS_WEIGHT_KEY) != null;
+    }
+
+    //! Returns true when at least one measurement source can provide data.
+    //! This includes persisted manual data and Garmin weight.
+    function hasAnyMeasurements() as Boolean {
+        return hasStoredMeasurements() || _garminProfile.hasWeight();
     }
 
     //! Returns the unix timestamp of last measurement update, or null.

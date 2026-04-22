@@ -179,13 +179,6 @@ class BodyMetricsHistory {
         return 0;
     }
 
-    //! Number of stored history entries.
-    function entryCount() as Number {
-        var stored = Storage.getValue(HISTORY_KEY);
-        if (stored == null) { return 0; }
-        return (stored as Array).size();
-    }
-
     //! DEBUG: Clear all history entries.
     function clearHistory() as Void {
         if (isDebugHistoryActive()) {

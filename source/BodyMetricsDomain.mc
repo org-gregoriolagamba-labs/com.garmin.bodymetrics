@@ -92,7 +92,7 @@ class BodyMetricsDomain {
         _measurements = _dataProvider.loadMeasurements();
         rebuildMetrics();
         // Record snapshot on startup to capture any Garmin data changes
-        if (_dataProvider.hasStoredMeasurements()) {
+        if (_dataProvider.hasAnyMeasurements()) {
             _history.recordSnapshot(_metrics as Array);
         }
     }
@@ -267,21 +267,6 @@ class BodyMetricsDomain {
         }
     }
 
-    function resetTargetForMetricId(metricId as String) as Void {
-        _targets.clearUserTarget(metricId);
-    }
-
-    function resetTargetForIndex(metricIndex as Number) as Void {
-        var metric = metricAt(metricIndex);
-        if (metric == null || !metric.hasKey(:id)) {
-            return;
-        }
-        if (classificationPolicy(metric).equals(POLICY_REFERENCE_ONLY)) {
-            return;
-        }
-        _targets.clearUserTarget(metric[:id].toString());
-    }
-
     function resetAllTargets() as Void {
         var fields = targetFieldDefinitions();
         for (var i = 0; i < fields.size(); i += 1) {
@@ -298,21 +283,13 @@ class BodyMetricsDomain {
         Storage.deleteValue(PROFILE_HEIGHT_KEY);
 
         // Measurement storage
-        Storage.deleteValue(MEAS_WEIGHT_KEY);
-        Storage.deleteValue(MEAS_FAT_KEY);
-        Storage.deleteValue(MEAS_MUSCLE_KEY);
-        Storage.deleteValue(MEAS_WATER_KEY);
-        Storage.deleteValue(MEAS_BONE_KEY);
-        Storage.deleteValue(MEAS_TIMESTAMP_KEY);
-        Storage.deleteValue("bodyMetrics.meas.syncTimestamp");
-        Storage.deleteValue(MEAS_SOURCE_KEY);
+        _dataProvider.clearStoredMeasurements();
 
         // Targets storage
         resetAllTargets();
 
         // History storage (also clears debug flags)
         _history.clearHistory();
-        _history.disableDebugHistory();
 
         // Runtime refresh
         _hasStoredProfile = false;
@@ -420,10 +397,6 @@ class BodyMetricsDomain {
 
     function historyTrend(metricIndex as Number, windowDays as Number) as Number {
         return _history.computeTrend(metricIndex, windowDays);
-    }
-
-    function historyEntryCount() as Number {
-        return _history.entryCount();
     }
 
     function refreshDerivedMeasurementFields(draft as Dictionary) as Dictionary {
@@ -771,23 +744,6 @@ class BodyMetricsDomain {
             :greenMin => 0,
             :greenMax => 0
         };
-    }
-
-    function metricSourceBadgeText(index as Number) as String {
-        var metric = metricAt(index);
-        if (!metric[:available] || metric[:source] == null) {
-            return "";
-        }
-        if (metric[:source].toString().equals(SOURCE_GARMIN)) {
-            return "G";
-        }
-        if (metric[:source].toString().equals(SOURCE_CALC_GARMIN)) {
-            return "CG";
-        }
-        if (metric[:source].toString().equals(SOURCE_CALC_MANUAL)) {
-            return "CM";
-        }
-        return "M";
     }
 
     function buildTargetMetric(id as String, label as String, unit as String, value, greenMin, greenMax,
@@ -1151,21 +1107,6 @@ class BodyMetricsDomain {
             lines.add({:label => _locale.text("info.range.profile_prefix"), :value => activeProfileSummary()});
         }
         lines.add({:label => _locale.text("info.range.depends_prefix"), :value => metricInfoFactorsText(metricId)});
-        return lines;
-    }
-
-    //! Returns an array of {:label, :value} pairs for badge legend
-    function metricInfoBadgeLines(index as Number) as Array {
-        var lines = [] as Array;
-        lines.add({:label => _locale.text("info.badges.section_metrics"), :value => ""});
-        lines.add({:label => "G", :value => _locale.text("info.badges.G")});
-        lines.add({:label => "M", :value => _locale.text("info.badges.M")});
-        lines.add({:label => "CG", :value => _locale.text("info.badges.CG")});
-        lines.add({:label => "CM", :value => _locale.text("info.badges.CM")});
-        lines.add({:label => "", :value => ""});
-        lines.add({:label => _locale.text("info.badges.section_inputs"), :value => ""});
-        lines.add({:label => "G", :value => _locale.text("info.badges.input_G")});
-        lines.add({:label => "C", :value => _locale.text("info.badges.input_C")});
         return lines;
     }
 

@@ -158,7 +158,19 @@ class BodyMetricsMenuView extends WatchUi.View {
 
 //! Toggle globale per abilitare funzioni di debug nel menu.
 //! Impostare a false prima della build di release.
-const DEBUG = true;
+const DEBUG = false;
+
+function buildDebugMenuItems(view as BodyMetricsView) as Array {
+    var items = [] as Array;
+    if (view.isDebugEnabled()) {
+        items.add({:label => view.text("debug.menu.populate_history"), :id => :debug_populate_history});
+        items.add({:label => view.text("debug.menu.clear_history"), :id => :debug_clear_history});
+        items.add({:label => view.text("debug.menu.disable"), :id => :debug_disable});
+    } else {
+        items.add({:label => view.text("debug.menu.enable"), :id => :debug_enable});
+    }
+    return items;
+}
 
 //! Delegate base per tutti i menu. Fornisce navigazione condivisa
 //! (UP/DOWN per scorrere, BACK per chiudere). Ogni menu sovrascrive solo onSelect().
@@ -237,14 +249,7 @@ class BodyMetricsCustomMenuDelegate extends BodyMetricsBaseMenuDelegate {
     }
     
     function _openDebugSubmenu() as Void {
-        var debugItems = [] as Array;
-        if (_view.isDebugEnabled()) {
-            debugItems.add({:label => _view.text("debug.menu.populate_history"), :id => :debug_populate_history});
-            debugItems.add({:label => _view.text("debug.menu.clear_history"), :id => :debug_clear_history});
-            debugItems.add({:label => _view.text("debug.menu.disable"), :id => :debug_disable});
-        } else {
-            debugItems.add({:label => _view.text("debug.menu.enable"), :id => :debug_enable});
-        }
+        var debugItems = buildDebugMenuItems(_view);
         var debugMenuView = new BodyMetricsMenuView(_view.text("debug.menu.title"), debugItems);
         WatchUi.pushView(debugMenuView, new BodyMetricsCustomDebugMenuDelegate(debugMenuView, _view), WatchUi.SLIDE_UP);
     }
@@ -367,14 +372,7 @@ class BodyMetricsCustomDebugMenuDelegate extends BodyMetricsBaseMenuDelegate {
     
     function _refreshDebugMenu() as Void {
         // Aggiorna il menu debug per mostrare le nuove opzioni
-        var debugItems = [] as Array;
-        if (_view.isDebugEnabled()) {
-            debugItems.add({:label => _view.text("debug.menu.populate_history"), :id => :debug_populate_history});
-            debugItems.add({:label => _view.text("debug.menu.clear_history"), :id => :debug_clear_history});
-            debugItems.add({:label => _view.text("debug.menu.disable"), :id => :debug_disable});
-        } else {
-            debugItems.add({:label => _view.text("debug.menu.enable"), :id => :debug_enable});
-        }
+        var debugItems = buildDebugMenuItems(_view);
         var newMenuView = new BodyMetricsMenuView(_view.text("debug.menu.title"), debugItems);
         WatchUi.popView(WatchUi.SLIDE_DOWN);
         WatchUi.pushView(newMenuView, new BodyMetricsCustomDebugMenuDelegate(newMenuView, _view), WatchUi.SLIDE_UP);
