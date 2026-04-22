@@ -80,6 +80,7 @@ class BodyMetricsDomain {
     var _garminProfile;
     var _history;
     var _targets;
+    var _calculators;
 
     function initialize() {
         _locale = new BodyMetricsLocale();
@@ -87,6 +88,7 @@ class BodyMetricsDomain {
         _dataProvider = new BodyMetricsDataProvider(_garminProfile);
         _history = new BodyMetricsHistory();
         _targets = new BodyMetricsTargets();
+        _calculators = new BodyMetricsHealthCalculators();
         _hasStoredProfile = false;
         _profile = loadProfile();
         _measurements = _dataProvider.loadMeasurements();
@@ -1008,32 +1010,19 @@ class BodyMetricsDomain {
     }
 
     function representativeAge(profile as Dictionary) as Number {
-        if (profile[:ageBand].equals("18_39")) {
-            return 30;
-        }
-        if (profile[:ageBand].equals("40_59")) {
-            return 50;
-        }
-        return 65;
+        return _calculators.representativeAge(profile);
     }
 
     function calculateBmi(weightKg, heightCm) as Float {
-        var heightM = heightCm.toFloat() / 100.0;
-        return round1Global(weightKg.toFloat() / (heightM * heightM));
+        return _calculators.calculateBmi(weightKg, heightCm);
     }
 
     function calculateBmrReference(profile as Dictionary, weightKg) as Float {
-        var age = representativeAge(profile);
-        var height = profile[:heightCm].toFloat();
-        var base = (10.0 * weightKg.toFloat()) + (6.25 * height) - (5.0 * age.toFloat());
-        if (profile[:sex].equals("female")) {
-            return round1Global(base - 161.0);
-        }
-        return round1Global(base + 5.0);
+        return _calculators.calculateBmrReference(profile, weightKg);
     }
 
     function muscleKgFromMeasurements(measurements as Dictionary) as Float {
-        return round1Global(measurements[:weightKg].toFloat() * (measurements[:musclePct].toFloat() / 100.0));
+        return _calculators.muscleKgFromMeasurements(measurements);
     }
 
     function metricsCount() as Number {

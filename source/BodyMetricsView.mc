@@ -13,6 +13,7 @@ class BodyMetricsView extends WatchUi.View {
     //! DEBUG: Popola la history con dati casuali per test
     function populateHistoryDebug() as Void {
         _domain.populateHistoryDebug();
+        _invalidateTrendCache();
         _cacheTrendData();
         WatchUi.requestUpdate();
     }
@@ -20,6 +21,7 @@ class BodyMetricsView extends WatchUi.View {
     //! DEBUG: Cancella la history
     function clearHistoryDebug() as Void {
         _domain.clearHistoryDebug();
+        _invalidateTrendCache();
         _cacheTrendData();
         WatchUi.requestUpdate();
     }
@@ -28,6 +30,7 @@ class BodyMetricsView extends WatchUi.View {
     function toggleDebugMode() as Boolean {
         if (_debugEnabled) {
             _domain.disableDebugMode();
+            _invalidateTrendCache();
             _cacheTrendData();
             WatchUi.requestUpdate();
         }
@@ -63,6 +66,8 @@ class BodyMetricsView extends WatchUi.View {
     var _trendWindow;
     var _trendDirection;
     var _trendValues;
+    var _trendValueCache as Dictionary;
+    var _trendWindowsCache as Dictionary;
     var _infoScrollY;           // Scroll offset for info screen
     var _infoContentH;           // Total content height for info screen
     var _infoIconCx;             // (i) icon center X for tap detection
@@ -90,6 +95,8 @@ class BodyMetricsView extends WatchUi.View {
         _trendWindow = 0;
         _trendDirection = TREND_FLAT;
         _trendValues = [];
+        _trendValueCache = {};
+        _trendWindowsCache = {};
         _infoScrollY = 0;
         _infoContentH = 0;
         _infoIconCx = -100;
@@ -212,8 +219,6 @@ class BodyMetricsView extends WatchUi.View {
         previousMetric();
     }
 
-
-
     function openSystemInfo() as Void {
         var lines = [
             {:label => text("sysinfo.app"),     :value => "BodyMetrics"},
@@ -283,6 +288,7 @@ class BodyMetricsView extends WatchUi.View {
         _targetIndex = 0;
         _selectedMetric = 0;
         _mode = _domain.hasConfiguredProfile() ? MODE_SUMMARY : MODE_SETUP;
+        _invalidateTrendCache();
         _cacheTrendData();
         showFeedbackBadge(text("menu.reset_done"), 2200);
         WatchUi.requestUpdate();
@@ -435,6 +441,7 @@ class BodyMetricsView extends WatchUi.View {
                 _setupIndex += 1;
             } else {
                 _domain.saveProfile(_profileDraft);
+                _invalidateTrendCache();
                 _mode = MODE_SUMMARY;
                 _selectedMetric = 0;
                 if (_reopenDataMenuAfterExit) {
@@ -453,6 +460,7 @@ class BodyMetricsView extends WatchUi.View {
                 _dataIndex += 1;
             } else {
                 _domain.saveMeasurements(_dataDraft);
+                _invalidateTrendCache();
                 _mode = MODE_SUMMARY;
                 _selectedMetric = 0;
                 if (_reopenDataMenuAfterExit) {
@@ -1416,22 +1424,68 @@ class BodyMetricsView extends WatchUi.View {
 
     // --- Trend Screen ---
 
-    //! Cache trend data for the currently selected metric.
-    function _cacheTrendData() as Void {
-        if (_trendWindow == 0) {
-            _trendWindow = _domain.historyBestWindow(_selectedMetric);
+    function _invalidateTrendCache() as Void {
+        _trendValueCache = {};
+        _trendWindowsCache = {};
+        _trendWindow = 0;
+    }
+
+    function _trendCacheKey(metricIndex as Number, windowDays as Number) as String {
+        return metricIndex.toString() + ":" + windowDays.toString();
+    }
+
+    function _historyValuesCached(metricIndex as Number, windowDays as Number) as Array {
+        var key = _trendCacheKey(metricIndex, windowDays);
+        if (_trendValueCache.hasKey(key)) {
+            return _trendValueCache[key] as Array;
         }
 
-        if (_trendWindow > 0) {
-            var bestWindow = _domain.historyBestWindow(_selectedMetric);
-            if (bestWindow > 0 && _domain.historyValues(_selectedMetric, _trendWindow).size() < 2) {
-                _trendWindow = bestWindow;
+        var values = _domain.historyValues(metricIndex, windowDays);
+        _trendValueCache[key] = values;
+        return values;
+    }
+
+    function _computeTrendDirection(values as Array) as Number {
+        if (values.size() < 2) {
+            return TREND_FLAT;
+        }
+
+        var first = (values[0] as Dictionary)[:val].toFloat();
+        var last = (values[values.size() - 1] as Dictionary)[:val].toFloat();
+        var base = first < 0.0 ? -first : first;
+        if (base < 1.0) { base = 1.0; }
+
+        var change = ((last - first) / base) * 100.0;
+        if (change > 1.0) { return TREND_UP; }
+        if (change < -1.0) { return TREND_DOWN; }
+        return TREND_FLAT;
+    }
+
+    //! Cache trend data for the currently selected metric.
+    function _cacheTrendData() as Void {
+        var metricIndex = _selectedMetric;
+        var availableWindows = _availableTrendWindows();
+
+        if (_trendWindow == 0) {
+            if (availableWindows.size() > 0) {
+                _trendWindow = availableWindows[availableWindows.size() - 1] as Number;
             }
         }
 
         if (_trendWindow > 0) {
-            _trendDirection = _domain.historyTrend(_selectedMetric, _trendWindow);
-            _trendValues = _domain.historyValues(_selectedMetric, _trendWindow);
+            var currentValues = _historyValuesCached(metricIndex, _trendWindow);
+            if (currentValues.size() < 2) {
+                if (availableWindows.size() > 0) {
+                    _trendWindow = availableWindows[availableWindows.size() - 1] as Number;
+                } else {
+                    _trendWindow = 0;
+                }
+            }
+        }
+
+        if (_trendWindow > 0) {
+            _trendValues = _historyValuesCached(metricIndex, _trendWindow);
+            _trendDirection = _computeTrendDirection(_trendValues as Array);
         } else {
             _trendDirection = TREND_FLAT;
             _trendValues = [];
@@ -1460,13 +1514,20 @@ class BodyMetricsView extends WatchUi.View {
     }
 
     function _availableTrendWindows() as Array {
+        var metricKey = _selectedMetric.toString();
+        if (_trendWindowsCache.hasKey(metricKey)) {
+            return _trendWindowsCache[metricKey] as Array;
+        }
+
         var windows = [] as Array;
         for (var i = 0; i < TREND_WINDOWS.size(); i += 1) {
             var candidate = TREND_WINDOWS[i] as Number;
-            if (_domain.historyValues(_selectedMetric, candidate).size() >= 2) {
+            if (_historyValuesCached(_selectedMetric, candidate).size() >= 2) {
                 windows.add(candidate);
             }
         }
+
+        _trendWindowsCache[metricKey] = windows;
         return windows;
     }
 
