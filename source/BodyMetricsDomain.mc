@@ -37,10 +37,10 @@ class BodyMetricsDomain {
         if (refProfile[:sex] == null) { refProfile[:sex] = "male"; }
         if (refProfile[:ageBand] == null) { refProfile[:ageBand] = "40_59"; }
         var bmrBase = calculateBmrReference(refProfile, 78.5).toFloat();
-        _history.populateHistoryDebug(heightCm, bmrBase);
+        _trendUseCase.populateHistoryDebug(heightCm, bmrBase);
         // Aggiorna le misurazioni correnti con l'ultimo entry dello storico,
         // marcandole come inserite manualmente alla data odierna.
-        var last = _history.lastRawEntry();
+        var last = _trendUseCase.lastRawEntry();
         if (last != null) {
             // Format: [ts(0), bmi(1), fat%(2), muscleKg(3), muscle%(4), water%(5), boneKg(6), weightKg(7), bmr(8)]
             // Costruisce _measurements direttamente dall'entry — senza passare per Storage,
@@ -62,12 +62,12 @@ class BodyMetricsDomain {
 
     //! DEBUG: Cancella la history
     function clearHistoryDebug() as Void {
-        _history.clearHistory();
+        _trendUseCase.clearHistoryDebug();
         rebuildMetrics();
     }
 
     function disableDebugMode() as Void {
-        _history.disableDebugHistory();
+        _trendUseCase.disableDebugMode();
         rebuildMetrics();
     }
 
@@ -81,6 +81,13 @@ class BodyMetricsDomain {
     var _history;
     var _targets;
     var _calculators;
+    var _thresholdFactory;
+    var _classificationPolicy;
+    var _profileUseCase;
+    var _measurementsUseCase;
+    var _targetsUseCase;
+    var _trendUseCase;
+    var _resetUserDataUseCase;
 
     function initialize() {
         _locale = new BodyMetricsLocale();
@@ -89,245 +96,128 @@ class BodyMetricsDomain {
         _history = new BodyMetricsHistory();
         _targets = new BodyMetricsTargets();
         _calculators = new BodyMetricsHealthCalculators();
+        _thresholdFactory = new BodyMetricsThresholdFactory();
+        _classificationPolicy = new BodyMetricsClassificationPolicy(_locale);
+        _profileUseCase = new BodyMetricsProfileUseCase(_locale, _garminProfile);
+        _measurementsUseCase = new BodyMetricsMeasurementsUseCase(_locale, _dataProvider, _calculators);
+        _targetsUseCase = new BodyMetricsTargetsUseCase(_locale, _targets);
+        _trendUseCase = new BodyMetricsTrendUseCase(_history);
+        _resetUserDataUseCase = new BodyMetricsResetUserDataUseCase(_profileUseCase, _dataProvider, _targetsUseCase, _history);
         _hasStoredProfile = false;
         _profile = loadProfile();
         _measurements = _dataProvider.loadMeasurements();
         rebuildMetrics();
         // Record snapshot on startup to capture any Garmin data changes
         if (_dataProvider.hasAnyMeasurements()) {
-            _history.recordSnapshot(_metrics as Array);
+            _trendUseCase.recordSnapshot(_metrics as Array);
         }
     }
 
     function defaultProfile() as Dictionary {
-        var garmin = _garminProfile.readProfile() as Dictionary;
-        return {
-            :sex => garmin[:sex] != null ? garmin[:sex] : "male",
-            :ageBand => garmin[:ageBand] != null ? garmin[:ageBand] : "40_59",
-            :bodyProfile => "general",
-            :heightCm => garmin[:heightCm] != null ? garmin[:heightCm] : 178
-        };
+        return _profileUseCase.defaultProfile();
     }
 
     function mergedProfileValues() as Dictionary {
-        var garmin = _garminProfile.readProfile() as Dictionary;
-        var storedSex = Storage.getValue(PROFILE_SEX_KEY);
-        var storedAgeBand = Storage.getValue(PROFILE_AGE_BAND_KEY);
-        var storedBodyProfile = Storage.getValue(PROFILE_BODY_PROFILE_KEY);
-        var storedHeightCm = Storage.getValue(PROFILE_HEIGHT_KEY);
-
-        return {
-            :sex => garmin[:sex] != null ? garmin[:sex] : storedSex,
-            :ageBand => garmin[:ageBand] != null ? garmin[:ageBand] : storedAgeBand,
-            :bodyProfile => storedBodyProfile,
-            :heightCm => garmin[:heightCm] != null ? garmin[:heightCm] : storedHeightCm
-        };
+        return _profileUseCase.mergedProfileValues();
     }
 
     // --- Data provider access ---
 
     function hasStoredMeasurements() as Boolean {
-        return _dataProvider.hasStoredMeasurements();
+        return _measurementsUseCase.hasStoredMeasurements();
     }
 
     function lastUpdateLabel() as String {
-        return _dataProvider.lastUpdateLabel();
+        return _measurementsUseCase.lastUpdateLabel();
     }
 
     function lastUpdateDateLabel() as String {
-        return _dataProvider.lastUpdateDateLabel();
+        return _measurementsUseCase.lastUpdateDateLabel();
     }
 
     function measurementFields() as Array {
-        return _dataProvider.measurementFields(_locale);
+        return _measurementsUseCase.measurementFields();
     }
 
     function measurementFieldCount() as Number {
-        return measurementFields().size();
+        return _measurementsUseCase.measurementFieldCount();
     }
 
     function measurementFieldDefinition(index as Number) as Dictionary {
-        return measurementFields()[index] as Dictionary;
+        return _measurementsUseCase.measurementFieldDefinition(index);
     }
 
     function currentMeasurements() as Dictionary {
-        var draft = {
-            :weightKg => _measurements[:weightKg] != null ? _measurements[:weightKg] : 75.0,
-            :fatPct => _measurements[:fatPct] != null ? _measurements[:fatPct] : 25.0,
-            :musclePct => _measurements[:musclePct] != null ? _measurements[:musclePct] : 38.0,
-            :waterPct => _measurements[:waterPct] != null ? _measurements[:waterPct] : 55.0,
-            :boneKg => _measurements[:boneKg] != null ? _measurements[:boneKg] : 3.5,
-            :bmr => null
-        };
-        return refreshDerivedMeasurementFields(draft);
+        return _measurementsUseCase.currentMeasurements(_measurements, _profile);
     }
 
     function cycleMeasurementField(draft as Dictionary, index as Number, delta as Number) as Dictionary {
-        var field = measurementFieldDefinition(index);
-        if (field.hasKey(:readOnly) && field[:readOnly]) {
-            return refreshDerivedMeasurementFields(draft);
-        }
-        var key = field[:key];
-        var current = draft[key].toFloat();
-        var step = field[:step].toFloat();
-        var next = current + (delta * step);
-        if (next < field[:min].toFloat()) {
-            next = field[:max].toFloat();
-        } else if (next > field[:max].toFloat()) {
-            next = field[:min].toFloat();
-        }
-        draft[key] = round1Global(next);
-        return refreshDerivedMeasurementFields(draft);
+        return _measurementsUseCase.cycleMeasurementField(draft, index, delta, _profile);
     }
 
     function measurementFieldValueLabel(draft as Dictionary, index as Number) as String {
-        var field = measurementFieldDefinition(index);
-        var key = field[:key];
-        if (draft[key] == null) {
-            return _locale.text("hint.unavailable");
-        }
-        var value = draft[key].toFloat();
-        return fmt1Global(value) + " " + field[:unit].toString();
+        return _measurementsUseCase.measurementFieldValueLabel(draft, index);
     }
 
     function saveMeasurements(draft as Dictionary) as Void {
-        _dataProvider.saveMeasurements(draft);
-        _measurements = _dataProvider.loadMeasurements();
+        _measurements = _measurementsUseCase.saveMeasurements(draft);
         rebuildMetrics();
-        _history.recordSnapshot(_metrics as Array);
+        _trendUseCase.recordSnapshot(_metrics as Array);
     }
 
     // --- Personalized targets ---
 
     function targetFieldDefinitions() as Array {
-        return [
-            {:key => :bmi, :metricId => "bmi", :label => _locale.metricLabel("bmi"), :unit => "kg/m2", :min => 15.0, :max => 35.0, :step => 0.1},
-            {:key => :fat_pct, :metricId => "fat_pct", :label => _locale.metricLabel("fat_pct"), :unit => "%", :min => 5.0, :max => 45.0, :step => 0.1},
-            {:key => :muscle_kg, :metricId => "muscle_kg", :label => _locale.metricLabel("muscle_kg"), :unit => "kg", :min => 15.0, :max => 70.0, :step => 0.1},
-            {:key => :muscle_pct, :metricId => "muscle_pct", :label => _locale.metricLabel("muscle_pct"), :unit => "%", :min => 20.0, :max => 65.0, :step => 0.1},
-            {:key => :water_pct, :metricId => "water_pct", :label => _locale.metricLabel("water_pct"), :unit => "%", :min => 40.0, :max => 75.0, :step => 0.1},
-            {:key => :bone_kg, :metricId => "bone_kg", :label => _locale.metricLabel("bone_kg"), :unit => "kg", :min => 1.0, :max => 6.0, :step => 0.1},
-            {:key => :weight, :metricId => "weight", :label => _locale.metricLabel("weight"), :unit => "kg", :min => 40.0, :max => 200.0, :step => 0.1}
-        ];
+        return _targetsUseCase.targetFieldDefinitions();
     }
 
     function targetFieldCount() as Number {
-        return targetFieldDefinitions().size();
+        return _targetsUseCase.targetFieldCount();
     }
 
     function targetFieldDefinition(index as Number) as Dictionary {
-        return targetFieldDefinitions()[index] as Dictionary;
+        return _targetsUseCase.targetFieldDefinition(index);
     }
 
     function currentTargets() as Dictionary {
-        var draft = {};
-        var fields = targetFieldDefinitions();
-        for (var i = 0; i < fields.size(); i += 1) {
-            var field = fields[i] as Dictionary;
-            var metricId = field[:metricId].toString();
-            var metric = metricById(metricId);
-            if (metric != null) {
-                draft[field[:key]] = _targets.getEffectiveTarget(metricId, metric as Dictionary);
-            }
-        }
-        return draft;
+        return _targetsUseCase.currentTargets(_metrics as Array);
     }
 
     function cycleTargetField(draft as Dictionary, index as Number, delta as Number) as Dictionary {
-        var field = targetFieldDefinition(index);
-        var key = field[:key];
-        var current = draft[key] != null ? draft[key].toFloat() : field[:min].toFloat();
-        var step = field[:step].toFloat();
-        var next = current + (delta * step);
-        if (next < field[:min].toFloat()) {
-            next = field[:max].toFloat();
-        } else if (next > field[:max].toFloat()) {
-            next = field[:min].toFloat();
-        }
-        draft[key] = round1Global(next);
-        return draft;
+        return _targetsUseCase.cycleTargetField(draft, index, delta);
     }
 
     function targetFieldValueLabel(draft as Dictionary, index as Number) as String {
-        var field = targetFieldDefinition(index);
-        var key = field[:key];
-        if (draft[key] == null) {
-            return _locale.text("hint.unavailable");
-        }
-        return fmt1Global(draft[key].toFloat()) + " " + field[:unit].toString();
+        return _targetsUseCase.targetFieldValueLabel(draft, index);
     }
 
     function saveTargets(draft as Dictionary) as Void {
-        var fields = targetFieldDefinitions();
-        for (var i = 0; i < fields.size(); i += 1) {
-            var field = fields[i] as Dictionary;
-            var key = field[:key];
-            var metricId = field[:metricId].toString();
-            if (draft[key] != null) {
-                _targets.setUserTarget(metricId, draft[key].toFloat());
-            }
-        }
+        _targetsUseCase.saveTargets(draft);
     }
 
     function resetAllTargets() as Void {
-        var fields = targetFieldDefinitions();
-        for (var i = 0; i < fields.size(); i += 1) {
-            var field = fields[i] as Dictionary;
-            _targets.clearUserTarget(field[:metricId].toString());
-        }
+        _targetsUseCase.resetAllTargets();
     }
 
     function resetAllUserData() as Void {
-        // Profile storage
-        Storage.deleteValue(PROFILE_SEX_KEY);
-        Storage.deleteValue(PROFILE_AGE_BAND_KEY);
-        Storage.deleteValue(PROFILE_BODY_PROFILE_KEY);
-        Storage.deleteValue(PROFILE_HEIGHT_KEY);
-
-        // Measurement storage
-        _dataProvider.clearStoredMeasurements();
-
-        // Targets storage
-        resetAllTargets();
-
-        // History storage (also clears debug flags)
-        _history.clearHistory();
-
-        // Runtime refresh
-        _hasStoredProfile = false;
-        _profile = loadProfile();
-        _measurements = _dataProvider.loadMeasurements();
+        var resetState = _resetUserDataUseCase.resetAllUserData();
+        _hasStoredProfile = resetState[:hasStoredProfile];
+        _profile = resetState[:profile] as Dictionary;
+        _measurements = resetState[:measurements] as Dictionary;
         rebuildMetrics();
     }
 
     function effectiveTargetForMetric(metric as Dictionary) {
-        if (metric == null || !metric.hasKey(:id)) {
-            return null;
-        }
-        return _targets.getEffectiveTarget(metric[:id].toString(), metric);
+        return _targetsUseCase.effectiveTargetForMetric(metric);
     }
 
     function getEffectiveTargetForIndex(metricIndex as Number) {
-        var metric = metricAt(metricIndex);
-        if (!metric[:available]) {
-            return null;
-        }
-        return effectiveTargetForMetric(metric);
+        return _targetsUseCase.getEffectiveTargetForMetric(metricAt(metricIndex));
     }
 
     function getDeltaToTargetForIndex(metricIndex as Number) {
         var metric = metricAt(metricIndex);
-        if (!metric[:available]) {
-            return null;
-        }
-        if (classificationPolicy(metric).equals(POLICY_REFERENCE_ONLY)) {
-            return null;
-        }
-        var target = effectiveTargetForMetric(metric);
-        if (target == null) {
-            return null;
-        }
-        return _targets.deltaToTarget(metric[:value].toFloat(), target.toFloat());
+        return _targetsUseCase.getDeltaToTargetForMetric(metric, classificationPolicy(metric).toString());
     }
 
     function getDeltaPctToTargetForIndex(metricIndex as Number) {
@@ -390,191 +280,68 @@ class BodyMetricsDomain {
     // --- History / Trend API ---
 
     function historyBestWindow(metricIndex as Number) as Number {
-        return _history.bestWindow(metricIndex);
+        return _trendUseCase.historyBestWindow(metricIndex);
     }
 
     function historyValues(metricIndex as Number, windowDays as Number) as Array {
-        return _history.valuesForMetric(metricIndex, windowDays);
+        return _trendUseCase.historyValues(metricIndex, windowDays);
     }
 
     function historyTrend(metricIndex as Number, windowDays as Number) as Number {
-        return _history.computeTrend(metricIndex, windowDays);
+        return _trendUseCase.historyTrend(metricIndex, windowDays);
     }
 
     function refreshDerivedMeasurementFields(draft as Dictionary) as Dictionary {
-        draft[:bmr] = derivedBmrValueForDraft(draft);
-        return draft;
+        return _measurementsUseCase.refreshDerivedMeasurementFields(draft, _profile);
     }
 
     function derivedBmrValueForDraft(draft as Dictionary) {
-        // Nel wizard i dati inseriti sono sempre manuali: calcola BMR se tutti i campi richiesti sono presenti.
-        if (draft[:weightKg] == null || _profile[:heightCm] == null ||
-            _profile[:sex] == null || _profile[:ageBand] == null) {
-            return null;
-        }
-        return calculateBmrReference(_profile, draft[:weightKg]).toFloat();
+        return _measurementsUseCase.derivedBmrValueForDraft(draft, _profile);
     }
 
     function loadProfile() as Dictionary {
-        var merged = mergedProfileValues();
-
-        // The body profile is manual-only, just like body composition values.
-        // Garmin can prefill sex, age band and height, but never this field.
-        _hasStoredProfile = Storage.getValue(PROFILE_BODY_PROFILE_KEY) != null;
-
-        return sanitizeProfile(merged);
+        var loaded = _profileUseCase.loadProfile();
+        _hasStoredProfile = loaded[:hasStoredProfile];
+        return loaded[:profile] as Dictionary;
     }
 
     function sanitizeProfile(profile as Dictionary) as Dictionary {
-        var defaults = defaultProfile();
-        return {
-            :sex => (profile.hasKey(:sex) && profile[:sex] != null) ? profile[:sex] : defaults[:sex],
-            :ageBand => (profile.hasKey(:ageBand) && profile[:ageBand] != null) ? profile[:ageBand] : defaults[:ageBand],
-            :bodyProfile => (profile.hasKey(:bodyProfile) && profile[:bodyProfile] != null) ? profile[:bodyProfile] : defaults[:bodyProfile],
-            :heightCm => (profile.hasKey(:heightCm) && profile[:heightCm] != null) ? profile[:heightCm] : defaults[:heightCm]
-        };
+        return _profileUseCase.sanitizeProfile(profile);
     }
 
     function currentProfile() as Dictionary {
-        var current = sanitizeProfile(_profile);
-        if (Storage.getValue(PROFILE_BODY_PROFILE_KEY) == null) {
-            current[:bodyProfile] = null;
-        }
-        return current;
+        return _profileUseCase.currentProfile(_profile);
     }
 
     function hasConfiguredProfile() as Boolean {
-        return _hasStoredProfile;
+        return _profileUseCase.hasConfiguredProfile();
     }
 
     function saveProfile(profile as Dictionary) as Void {
-        _profile = sanitizeProfile(profile);
-        Storage.setValue(PROFILE_SEX_KEY, _profile[:sex].toString());
-        Storage.setValue(PROFILE_AGE_BAND_KEY, _profile[:ageBand].toString());
-        Storage.setValue(PROFILE_BODY_PROFILE_KEY, _profile[:bodyProfile].toString());
-        Storage.setValue(PROFILE_HEIGHT_KEY, _profile[:heightCm].toNumber());
+        _profile = _profileUseCase.saveProfile(profile);
         _hasStoredProfile = true;
         rebuildMetrics();
-        _history.recordSnapshot(_metrics as Array);
+        _trendUseCase.recordSnapshot(_metrics as Array);
     }
 
     function profileFields() as Array {
-        var garmin = _garminProfile.readProfile() as Dictionary;
-        return [
-            {
-                :key => :sex,
-                :label => _locale.text("field.sex"),
-                :type => "option",
-                :values => ["male", "female"],
-                :labels => [_locale.text("option.sex.male"), _locale.text("option.sex.female")],
-                :readOnly => garmin[:sex] != null,
-                :readOnlyText => _locale.text("data.from_garmin"),
-                :badgeText => _locale.text("data.badge_garmin")
-            },
-            {
-                :key => :ageBand,
-                :label => _locale.text("field.age_band"),
-                :type => "option",
-                :values => ["18_39", "40_59", "60_plus"],
-                :labels => ["18-39", "40-59", "60+"],
-                :readOnly => garmin[:ageBand] != null,
-                :readOnlyText => _locale.text("data.from_garmin"),
-                :badgeText => _locale.text("data.badge_garmin")
-            },
-            {
-                :key => :heightCm,
-                :label => _locale.text("field.height"),
-                :type => "number",
-                :min => 150,
-                :max => 210,
-                :step => 1,
-                :readOnly => garmin[:heightCm] != null,
-                :readOnlyText => _locale.text("data.from_garmin"),
-                :badgeText => _locale.text("data.badge_garmin")
-            },
-            {
-                :key => :bodyProfile,
-                :label => _locale.text("field.profile"),
-                :type => "option",
-                :values => ["general", "endurance", "strength"],
-                :labels => [_locale.text("option.profile.general"), _locale.text("option.profile.endurance"), _locale.text("option.profile.strength")]
-            }
-        ];
+        return _profileUseCase.profileFields();
     }
 
     function profileFieldCount() as Number {
-        return profileFields().size();
+        return _profileUseCase.profileFieldCount();
     }
 
     function profileFieldDefinition(index as Number) as Dictionary {
-        return profileFields()[index] as Dictionary;
+        return _profileUseCase.profileFieldDefinition(index);
     }
 
     function cycleProfileField(profile as Dictionary, index as Number, delta as Number) as Dictionary {
-        var nextProfile = sanitizeProfile(profile);
-        var field = profileFieldDefinition(index);
-        if (field.hasKey(:readOnly) && field[:readOnly]) {
-            return nextProfile;
-        }
-        var key = field[:key];
-
-        if (key == :bodyProfile && (!profile.hasKey(:bodyProfile) || profile[:bodyProfile] == null)) {
-            nextProfile[:bodyProfile] = null;
-        }
-
-        if (field[:type].equals("number")) {
-            var nextValue = nextProfile[:heightCm].toNumber() + (delta * field[:step].toNumber());
-            if (nextValue < field[:min]) {
-                nextValue = field[:max];
-            } else if (nextValue > field[:max]) {
-                nextValue = field[:min];
-            }
-            nextProfile[:heightCm] = nextValue;
-            return nextProfile;
-        }
-
-        var values = field[:values] as Array;
-        var currentIndex = (key == :bodyProfile && nextProfile[key] == null) ? -1 : 0;
-        for (var i = 0; i < values.size(); i += 1) {
-            if (nextProfile[key] != null && values[i].equals(nextProfile[key])) {
-                currentIndex = i;
-                break;
-            }
-        }
-
-        currentIndex = (currentIndex + delta + values.size()) % values.size();
-        if (key == :sex) {
-            nextProfile[:sex] = values[currentIndex];
-        } else if (key == :ageBand) {
-            nextProfile[:ageBand] = values[currentIndex];
-        } else if (key == :bodyProfile) {
-            nextProfile[:bodyProfile] = values[currentIndex];
-        }
-        return nextProfile;
+        return _profileUseCase.cycleProfileField(profile, index, delta);
     }
 
     function profileFieldValueLabel(profile as Dictionary, index as Number) as String {
-        var safeProfile = sanitizeProfile(profile);
-        var field = profileFieldDefinition(index);
-        var key = field[:key];
-
-        if (key == :bodyProfile && (!profile.hasKey(:bodyProfile) || profile[:bodyProfile] == null)) {
-            return "N/A";
-        }
-
-        if (field[:type].equals("number")) {
-            return safeProfile[key].toString() + " cm";
-        }
-
-        var values = field[:values] as Array;
-        var labels = field[:labels] as Array;
-        for (var i = 0; i < values.size(); i += 1) {
-            if (values[i].equals(safeProfile[key])) {
-                return labels[i].toString();
-            }
-        }
-
-        return safeProfile[key].toString();
+        return _profileUseCase.profileFieldValueLabel(profile, index);
     }
 
     function rebuildMetrics() as Void {
@@ -798,215 +565,43 @@ class BodyMetricsDomain {
     }
 
     function bmiTargetRange(profile as Dictionary) as Dictionary {
-        var sex = profile[:sex].toString();
-        var bodyProfile = profile[:bodyProfile].toString();
-        var greenMin = 20.0;
-        var greenMax = 24.9;
-
-        if (sex.equals("female")) {
-            greenMin = 19.0;
-            greenMax = 24.4;
-        }
-
-        if (bodyProfile.equals("endurance")) {
-            greenMin = sex.equals("female") ? 18.5 : 19.0;
-            greenMax = sex.equals("female") ? 23.5 : 23.9;
-        } else if (bodyProfile.equals("strength")) {
-            greenMin = sex.equals("female") ? 20.0 : 21.0;
-            greenMax = sex.equals("female") ? 26.0 : 27.0;
-        }
-
-        if (profile[:ageBand].equals("40_59")) {
-            greenMax += 0.5;
-        } else if (profile[:ageBand].equals("60_plus")) {
-            greenMax += 1.0;
-        }
-
-        return buildTargetThresholds(greenMin, greenMax, 1.5, 3.0, 2.0, 4.5);
+        return _thresholdFactory.bmiTargetRange(profile);
     }
 
     function fatPctRange(profile as Dictionary) as Dictionary {
-        var sex = profile[:sex].toString();
-        var ageBand = profile[:ageBand].toString();
-        var bodyProfile = profile[:bodyProfile].toString();
-        var greenMin;
-        var greenMax;
-
-        if (sex.equals("female")) {
-            if (ageBand.equals("18_39")) {
-                greenMin = 20.0;
-                greenMax = 31.0;
-            } else if (ageBand.equals("40_59")) {
-                greenMin = 21.0;
-                greenMax = 33.0;
-            } else {
-                greenMin = 22.0;
-                greenMax = 35.0;
-            }
-        } else {
-            if (ageBand.equals("18_39")) {
-                greenMin = 10.0;
-                greenMax = 20.0;
-            } else if (ageBand.equals("40_59")) {
-                greenMin = 11.0;
-                greenMax = 22.0;
-            } else {
-                greenMin = 13.0;
-                greenMax = 25.0;
-            }
-        }
-
-        if (bodyProfile.equals("endurance")) {
-            greenMin -= 2.0;
-            greenMax -= 2.0;
-        }
-
-        return buildTargetThresholds(greenMin, greenMax, 2.0, 4.0, 3.0, 8.0);
+        return _thresholdFactory.fatPctRange(profile);
     }
 
     function muscleKgRange(profile as Dictionary) as Dictionary {
-        var sex = profile[:sex].toString();
-        var bodyProfile = profile[:bodyProfile].toString();
-        var greenMin;
-        var greenMax;
-
-        if (sex.equals("female")) {
-            if (bodyProfile.equals("endurance")) {
-                greenMin = 26.0;
-                greenMax = 34.0;
-            } else if (bodyProfile.equals("strength")) {
-                greenMin = 29.0;
-                greenMax = 40.0;
-            } else {
-                greenMin = 27.0;
-                greenMax = 36.0;
-            }
-        } else {
-            if (bodyProfile.equals("endurance")) {
-                greenMin = 33.0;
-                greenMax = 44.0;
-            } else if (bodyProfile.equals("strength")) {
-                greenMin = 38.0;
-                greenMax = 52.0;
-            } else {
-                greenMin = 35.0;
-                greenMax = 46.0;
-            }
-        }
-
-        if (profile[:ageBand].equals("60_plus")) {
-            greenMin -= 2.0;
-            greenMax -= 2.0;
-        }
-
-        return buildLowThresholds(greenMin, greenMax, 3.0, 7.0);
+        return _thresholdFactory.muscleKgRange(profile);
     }
 
     function musclePctRange(profile as Dictionary) as Dictionary {
-        var sex = profile[:sex].toString();
-        var bodyProfile = profile[:bodyProfile].toString();
-        var greenMin;
-        var greenMax;
-
-        if (sex.equals("female")) {
-            if (bodyProfile.equals("endurance")) {
-                greenMin = 33.0;
-                greenMax = 43.0;
-            } else if (bodyProfile.equals("strength")) {
-                greenMin = 36.0;
-                greenMax = 46.0;
-            } else {
-                greenMin = 34.0;
-                greenMax = 44.0;
-            }
-        } else {
-            if (bodyProfile.equals("endurance")) {
-                greenMin = 39.0;
-                greenMax = 49.0;
-            } else if (bodyProfile.equals("strength")) {
-                greenMin = 42.0;
-                greenMax = 53.0;
-            } else {
-                greenMin = 40.0;
-                greenMax = 50.0;
-            }
-        }
-
-        if (profile[:ageBand].equals("60_plus")) {
-            greenMin -= 2.0;
-            greenMax -= 2.0;
-        }
-
-        return buildLowThresholds(greenMin, greenMax, 3.0, 6.0);
+        return _thresholdFactory.musclePctRange(profile);
     }
 
     function waterPctRange(profile as Dictionary) as Dictionary {
-        var greenMin = profile[:sex].equals("female") ? 50.0 : 55.0;
-        var greenMax = profile[:sex].equals("female") ? 60.0 : 65.0;
-        return buildLowThresholds(greenMin, greenMax, 3.0, 6.0);
+        return _thresholdFactory.waterPctRange(profile);
     }
 
     function boneKgRange(profile as Dictionary) as Dictionary {
-        var greenMin = profile[:sex].equals("female") ? 2.6 : 3.3;
-        var greenMax = profile[:sex].equals("female") ? 3.4 : 4.2;
-        return buildLowThresholds(greenMin, greenMax, 0.3, 0.7);
+        return _thresholdFactory.boneKgRange(profile);
     }
 
     function weightTargetRange(profile as Dictionary, bmiRange as Dictionary) as Dictionary {
-        var heightM = profile[:heightCm].toFloat() / 100.0;
-        var heightSquared = heightM * heightM;
-
-        return buildTargetMetricThresholds(
-            round1Global(bmiRange[:greenMin].toFloat() * heightSquared),
-            round1Global(bmiRange[:greenMax].toFloat() * heightSquared),
-            round1Global(bmiRange[:yellowLowMin].toFloat() * heightSquared),
-            round1Global(bmiRange[:yellowLowMax].toFloat() * heightSquared),
-            round1Global(bmiRange[:yellowHighMin].toFloat() * heightSquared),
-            round1Global(bmiRange[:yellowHighMax].toFloat() * heightSquared),
-            round1Global(bmiRange[:orangeLowMin].toFloat() * heightSquared),
-            round1Global(bmiRange[:orangeLowMax].toFloat() * heightSquared),
-            round1Global(bmiRange[:orangeHighMin].toFloat() * heightSquared),
-            round1Global(bmiRange[:orangeHighMax].toFloat() * heightSquared)
-        );
+        return _thresholdFactory.weightTargetRange(profile, bmiRange);
     }
 
     function buildTargetThresholds(greenMin as Float, greenMax as Float, lowStepYellow as Float, lowStepOrange as Float, highStepYellow as Float, highStepOrange as Float) as Dictionary {
-        return buildTargetMetricThresholds(
-            round1Global(greenMin),
-            round1Global(greenMax),
-            round1Global(greenMin - lowStepYellow),
-            round1Global(greenMin),
-            round1Global(greenMax),
-            round1Global(greenMax + highStepYellow),
-            round1Global(greenMin - lowStepOrange),
-            round1Global(greenMin - lowStepYellow),
-            round1Global(greenMax + highStepYellow),
-            round1Global(greenMax + highStepOrange)
-        );
+        return _thresholdFactory.buildTargetThresholds(greenMin, greenMax, lowStepYellow, lowStepOrange, highStepYellow, highStepOrange);
     }
 
     function buildTargetMetricThresholds(greenMin, greenMax, yellowLowMin, yellowLowMax, yellowHighMin, yellowHighMax, orangeLowMin, orangeLowMax, orangeHighMin, orangeHighMax) as Dictionary {
-        return {
-            :greenMin => greenMin,
-            :greenMax => greenMax,
-            :yellowLowMin => yellowLowMin,
-            :yellowLowMax => yellowLowMax,
-            :yellowHighMin => yellowHighMin,
-            :yellowHighMax => yellowHighMax,
-            :orangeLowMin => orangeLowMin,
-            :orangeLowMax => orangeLowMax,
-            :orangeHighMin => orangeHighMin,
-            :orangeHighMax => orangeHighMax
-        };
+        return _thresholdFactory.buildTargetMetricThresholds(greenMin, greenMax, yellowLowMin, yellowLowMax, yellowHighMin, yellowHighMax, orangeLowMin, orangeLowMax, orangeHighMin, orangeHighMax);
     }
 
     function buildLowThresholds(greenMin as Float, greenMax as Float, yellowStep as Float, orangeStep as Float) as Dictionary {
-        return {
-            :greenMin => round1Global(greenMin),
-            :greenMax => round1Global(greenMax),
-            :yellowMin => round1Global(greenMin - yellowStep),
-            :orangeMin => round1Global(greenMin - orangeStep)
-        };
+        return _thresholdFactory.buildLowThresholds(greenMin, greenMax, yellowStep, orangeStep);
     }
 
     function representativeAge(profile as Dictionary) as Number {
@@ -1048,6 +643,11 @@ class BodyMetricsDomain {
 
     function languageLabel(language as String) as String {
         return _locale.languageLabel(language);
+    }
+
+    //! Development helper: returns i18n missing-key report vs English.
+    function validateLocaleCatalogDebug() as Dictionary {
+        return _locale.validateCatalogMissingKeys();
     }
 
     function metricAt(index as Number) as Dictionary {
@@ -1149,253 +749,64 @@ class BodyMetricsDomain {
     }
 
     function classify(metric as Dictionary) {
-        if (metric.hasKey(:available) && !metric[:available]) {
-            return ZONE_GREEN;
-        }
-        var value = metric[:value];
-        var policy = classificationPolicy(metric);
-
-        if (policy.equals(POLICY_LOW_ONLY)) {
-            return classifyLowOnly(metric, value);
-        }
-
-        if (policy.equals(POLICY_REFERENCE_ONLY)) {
-            return classifyReferenceOnly(metric, value);
-        }
-
-        return classifyTargetRange(metric, value);
+        return _classificationPolicy.classify(metric);
     }
 
     function classificationPolicy(metric as Dictionary) {
-        if (metric.hasKey(:policy)) {
-            return metric[:policy];
-        }
-        return POLICY_TARGET_RANGE;
+        return _classificationPolicy.classificationPolicy(metric);
     }
 
     function classifyTargetRange(metric as Dictionary, value) {
-        var yellowLowMin = thresholdOr(metric, :yellowLowMin, :yellowMin);
-        var yellowLowMax = thresholdOr(metric, :yellowLowMax, :greenMin);
-        var yellowHighMin = thresholdOr(metric, :yellowHighMin, :greenMax);
-        var yellowHighMax = thresholdOr(metric, :yellowHighMax, :yellowMax);
-        var orangeLowMin = thresholdOr(metric, :orangeLowMin, :orangeMin);
-        var orangeLowMax = thresholdOr(metric, :orangeLowMax, :yellowMin);
-        var orangeHighMin = thresholdOr(metric, :orangeHighMin, :yellowMax);
-        var orangeHighMax = thresholdOr(metric, :orangeHighMax, :orangeMax);
-
-        if (inRange(value, metric[:greenMin], metric[:greenMax])) {
-            return ZONE_GREEN;
-        }
-
-        if (inRange(value, yellowLowMin, yellowLowMax) || inRange(value, yellowHighMin, yellowHighMax)) {
-            return ZONE_YELLOW;
-        }
-
-        if (inRange(value, orangeLowMin, orangeLowMax) || inRange(value, orangeHighMin, orangeHighMax)) {
-            return ZONE_ORANGE;
-        }
-
-        return ZONE_RED;
+        return _classificationPolicy.classifyTargetRange(metric, value);
     }
 
     function classifyLowOnly(metric as Dictionary, value) {
-        if (value >= metric[:greenMin]) {
-            return ZONE_GREEN;
-        }
-
-        if (value >= metric[:yellowMin]) {
-            return ZONE_YELLOW;
-        }
-
-        if (value >= metric[:orangeMin]) {
-            return ZONE_ORANGE;
-        }
-
-        return ZONE_RED;
+        return _classificationPolicy.classifyLowOnly(metric, value);
     }
 
     function classifyReferenceOnly(metric as Dictionary, value) {
-        var deltaPct = referenceDeltaPct(metric, value);
-        if (deltaPct <= metric[:toleranceGoodPct].toFloat()) {
-            return ZONE_GREEN;
-        }
-        if (deltaPct <= metric[:toleranceMildPct].toFloat()) {
-            return ZONE_YELLOW;
-        }
-        return ZONE_ORANGE;
+        return _classificationPolicy.classifyReferenceOnly(metric, value);
     }
 
     function referenceDeltaPct(metric as Dictionary, value) as Float {
-        var reference = metric[:referenceValue].toFloat();
-        if (reference == 0.0) {
-            return 0.0;
-        }
-        var delta = (value.toFloat() - reference) / reference;
-        if (delta < 0.0) {
-            delta = -delta;
-        }
-        return delta * 100.0;
+        return _classificationPolicy.referenceDeltaPct(metric, value);
     }
 
     function thresholdOr(metric as Dictionary, key, fallbackKey) {
-        if (metric.hasKey(key)) {
-            return metric[key];
-        }
-
-        if (metric.hasKey(fallbackKey)) {
-            return metric[fallbackKey];
-        }
-
-        return null;
+        return _classificationPolicy._thresholdOr(metric, key, fallbackKey);
     }
 
     function inRange(value, minValue, maxValue) {
-        if (minValue == null || maxValue == null) {
-            return false;
-        }
-        return value >= minValue && value <= maxValue;
+        return _classificationPolicy._inRange(value, minValue, maxValue);
     }
 
     function zoneRangeText(metric as Dictionary) as String {
-        var value = metric[:value];
-        var zone = classify(metric);
-        var policy = classificationPolicy(metric);
-
-        if (policy.equals(POLICY_LOW_ONLY)) {
-            return zoneRangeTextLowOnly(metric, zone);
-        }
-
-        if (policy.equals(POLICY_REFERENCE_ONLY)) {
-            return zoneRangeTextReferenceOnly(metric);
-        }
-
-        return zoneRangeTextTarget(metric, zone, value);
+        return _classificationPolicy.zoneRangeText(metric);
     }
 
     function idealRangeText(metric as Dictionary) as String {
-        var policy = classificationPolicy(metric);
-
-        if (policy.equals(POLICY_LOW_ONLY)) {
-            return fmtThreshold(metric[:greenMin]) + "-" + fmtThreshold(metric[:greenMax]);
-        }
-
-        if (policy.equals(POLICY_REFERENCE_ONLY)) {
-            return zoneRangeTextReferenceOnly(metric);
-        }
-
-        var greenMin = thresholdOr(metric, :greenMin, :yellowLowMax);
-        var greenMax = thresholdOr(metric, :greenMax, :yellowHighMin);
-        return fmtThreshold(greenMin) + "-" + fmtThreshold(greenMax);
+        return _classificationPolicy.idealRangeText(metric);
     }
 
     function zoneRangeTextTarget(metric as Dictionary, zone as Number, value) as String {
-        var greenMin = thresholdOr(metric, :greenMin, :yellowLowMax);
-        var greenMax = thresholdOr(metric, :greenMax, :yellowHighMin);
-        var yellowLowMin = thresholdOr(metric, :yellowLowMin, :yellowMin);
-        var yellowLowMax = thresholdOr(metric, :yellowLowMax, :greenMin);
-        var yellowHighMin = thresholdOr(metric, :yellowHighMin, :greenMax);
-        var yellowHighMax = thresholdOr(metric, :yellowHighMax, :yellowMax);
-        var orangeLowMin = thresholdOr(metric, :orangeLowMin, :orangeMin);
-        var orangeLowMax = thresholdOr(metric, :orangeLowMax, :yellowLowMin);
-        var orangeHighMin = thresholdOr(metric, :orangeHighMin, :yellowHighMax);
-        var orangeHighMax = thresholdOr(metric, :orangeHighMax, :orangeMax);
-
-        if (zone == ZONE_GREEN) {
-            return fmtThreshold(greenMin) + "-" + fmtThreshold(greenMax);
-        }
-
-        if (zone == ZONE_YELLOW) {
-            if (value < greenMin) {
-                return fmtThreshold(yellowLowMin) + "-" + fmtThreshold(yellowLowMax);
-            }
-            return fmtThreshold(yellowHighMin) + "-" + fmtThreshold(yellowHighMax);
-        }
-
-        if (zone == ZONE_ORANGE) {
-            if (value < greenMin) {
-                return fmtThreshold(orangeLowMin) + "-" + fmtThreshold(orangeLowMax);
-            }
-            return fmtThreshold(orangeHighMin) + "-" + fmtThreshold(orangeHighMax);
-        }
-
-        if (orangeLowMin != null && value < orangeLowMin) {
-            return "< " + fmtThreshold(orangeLowMin);
-        }
-        return "> " + fmtThreshold(orangeHighMax);
+        return _classificationPolicy.zoneRangeTextTarget(metric, zone, value);
     }
 
     function zoneRangeTextLowOnly(metric as Dictionary, zone as Number) as String {
-        if (zone == ZONE_GREEN) {
-            return fmtThreshold(metric[:greenMin]) + "-" + fmtThreshold(metric[:greenMax]);
-        }
-
-        if (zone == ZONE_YELLOW) {
-            return fmtThreshold(metric[:yellowMin]) + "-" + fmtThreshold(metric[:greenMin]);
-        }
-
-        if (zone == ZONE_ORANGE) {
-            return fmtThreshold(metric[:orangeMin]) + "-" + fmtThreshold(metric[:yellowMin]);
-        }
-
-        return "< " + fmtThreshold(metric[:orangeMin]);
+        return _classificationPolicy.zoneRangeTextLowOnly(metric, zone);
     }
 
     function zoneRangeTextReferenceOnly(metric as Dictionary) as String {
-        return _locale.text("reference.prefix") + " " + fmtThreshold(metric[:referenceValue]) + " (+/-" + fmtThreshold(metric[:toleranceGoodPct]) + "%)";
+        return _classificationPolicy.zoneRangeTextReferenceOnly(metric);
     }
 
     function fmtThreshold(value) as String {
-        if (value == null) {
-            return "--";
-        }
-        return fmt1Global(value.toFloat());
+        return _classificationPolicy._fmtThreshold(value);
     }
 
     //! Hint testuale per la zona semantica corrente (usato nella UI summary/detail).
     function semanticZoneHint(metric as Dictionary) as String {
-        var zone = classify(metric);
-        var policy = classificationPolicy(metric);
-        var value = metric[:value];
-
-        if (policy.equals(POLICY_LOW_ONLY)) {
-            if (zone == ZONE_GREEN) {
-                return _locale.text("hint.low_only.green");
-            }
-            if (zone == ZONE_YELLOW) {
-                return _locale.text("hint.low_only.yellow");
-            }
-            if (zone == ZONE_ORANGE) {
-                return _locale.text("hint.low_only.orange");
-            }
-            return _locale.text("hint.low_only.red");
-        }
-
-        if (policy.equals(POLICY_REFERENCE_ONLY)) {
-            if (zone == ZONE_GREEN) {
-                return _locale.text("hint.reference.green");
-            }
-            if (value.toFloat() < metric[:referenceValue].toFloat()) {
-                return _locale.text("hint.reference.below");
-            }
-            return _locale.text("hint.reference.above");
-        }
-
-        if (zone == ZONE_GREEN) {
-            return _locale.text("hint.target.green");
-        }
-        if (zone == ZONE_YELLOW) {
-            if (value < metric[:greenMin]) {
-                return _locale.text("hint.target.yellow_low");
-            }
-            return _locale.text("hint.target.yellow_high");
-        }
-        if (zone == ZONE_ORANGE) {
-            return _locale.text("hint.target.orange");
-        }
-        if (value < metric[:greenMin]) {
-            return _locale.text("hint.target.red_low");
-        }
-        return _locale.text("hint.target.red_high");
+        return _classificationPolicy.semanticZoneHint(metric);
     }
 
     function zoneColor(metric as Dictionary, zone as Number) {

@@ -165,6 +165,7 @@ function buildDebugMenuItems(view as BodyMetricsView) as Array {
     if (view.isDebugEnabled()) {
         items.add({:label => view.text("debug.menu.populate_history"), :id => :debug_populate_history});
         items.add({:label => view.text("debug.menu.clear_history"), :id => :debug_clear_history});
+        items.add({:label => "Validate locale", :id => :debug_validate_locale});
         items.add({:label => view.text("debug.menu.disable"), :id => :debug_disable});
     } else {
         items.add({:label => view.text("debug.menu.enable"), :id => :debug_enable});
@@ -358,6 +359,8 @@ class BodyMetricsCustomDebugMenuDelegate extends BodyMetricsBaseMenuDelegate {
             _view.clearHistoryDebug();
             // Torna al menu parent (main menu)
             WatchUi.popView(WatchUi.SLIDE_DOWN);
+        } else if (id == :debug_validate_locale) {
+            _view.validateLocaleDebug();
         } else if (id == :debug_disable) {
             _view.toggleDebugMode();
             // Dopo disabilitare debug, ritorna al menu principale

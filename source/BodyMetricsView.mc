@@ -26,6 +26,29 @@ class BodyMetricsView extends WatchUi.View {
         WatchUi.requestUpdate();
     }
 
+    //! DEBUG: Validate locale completeness against English keys.
+    function validateLocaleDebug() as Void {
+        var report = _domain.validateLocaleCatalogDebug() as Dictionary;
+        var totalMissing = report[:totalMissing].toNumber();
+        var counts = report[:counts] as Dictionary;
+
+        var itMissing = counts["it"].toNumber();
+        var frMissing = counts["fr"].toNumber();
+        var esMissing = counts["es"].toNumber();
+
+        System.println("[BodyMetrics][i18n] Missing keys vs en: total="
+            + totalMissing.toString()
+            + " (it=" + itMissing.toString()
+            + ", fr=" + frMissing.toString()
+            + ", es=" + esMissing.toString() + ")");
+
+        if (totalMissing == 0) {
+            showFeedbackBadge("Locale OK", 2200);
+        } else {
+            showFeedbackBadge("Locale -" + totalMissing.toString(), 2600);
+        }
+    }
+
     //! DEBUG: Toggle debug mode on/off
     function toggleDebugMode() as Boolean {
         if (_debugEnabled) {
@@ -66,8 +89,11 @@ class BodyMetricsView extends WatchUi.View {
     var _trendWindow;
     var _trendDirection;
     var _trendValues;
-    var _trendValueCache as Dictionary;
-    var _trendWindowsCache as Dictionary;
+    var _trendCacheService;
+    var _trendRenderer;
+    var _wizardRenderer;
+    var _summaryDetailRenderer;
+    var _infoTargetDeltaRenderer;
     var _infoScrollY;           // Scroll offset for info screen
     var _infoContentH;           // Total content height for info screen
     var _infoIconCx;             // (i) icon center X for tap detection
@@ -95,8 +121,11 @@ class BodyMetricsView extends WatchUi.View {
         _trendWindow = 0;
         _trendDirection = TREND_FLAT;
         _trendValues = [];
-        _trendValueCache = {};
-        _trendWindowsCache = {};
+        _trendCacheService = new BodyMetricsTrendCacheService(TREND_WINDOWS);
+        _trendRenderer = new BodyMetricsTrendRenderer();
+        _wizardRenderer = new BodyMetricsWizardRenderer();
+        _summaryDetailRenderer = new BodyMetricsSummaryDetailRenderer();
+        _infoTargetDeltaRenderer = new BodyMetricsInfoTargetDeltaRenderer();
         _infoScrollY = 0;
         _infoContentH = 0;
         _infoIconCx = -100;
@@ -588,104 +617,36 @@ class BodyMetricsView extends WatchUi.View {
     }
 
     function drawSetup(dc as Dc) as Void {
-        var field = _domain.profileFieldDefinition(_setupIndex) as Dictionary;
-        drawWizardScreen(dc, _setupIndex, _domain.profileFieldCount(), field,
-            _domain.profileFieldValueLabel(_profileDraft, _setupIndex),
-            _domain.hasConfiguredProfile() ? text("setup.edit_profile") : text("setup.configure_profile"),
-            text("setup.select_save"), text("setup.select_next"));
+        _wizardRenderer.drawSetup(dc, {
+            :domain => _domain,
+            :setupIndex => _setupIndex,
+            :profileDraft => _profileDraft,
+            :titleText => _domain.hasConfiguredProfile() ? text("setup.edit_profile") : text("setup.configure_profile"),
+            :saveHint => text("setup.select_save"),
+            :nextHint => text("setup.select_next")
+        });
     }
 
     function drawDataEntry(dc as Dc) as Void {
-        var field = _domain.measurementFieldDefinition(_dataIndex) as Dictionary;
-        drawWizardScreen(dc, _dataIndex, _domain.measurementFieldCount(), field,
-            _domain.measurementFieldValueLabel(_dataDraft, _dataIndex),
-            text("data.title"),
-            text("data.select_save"), text("data.select_next"));
+        _wizardRenderer.drawDataEntry(dc, {
+            :domain => _domain,
+            :dataIndex => _dataIndex,
+            :dataDraft => _dataDraft,
+            :titleText => text("data.title"),
+            :saveHint => text("data.select_save"),
+            :nextHint => text("data.select_next")
+        });
     }
 
     function drawTargetEditor(dc as Dc) as Void {
-        var field = _domain.targetFieldDefinition(_targetIndex) as Dictionary;
-        drawWizardScreen(dc, _targetIndex, _domain.targetFieldCount(), field,
-            _domain.targetFieldValueLabel(_targetDraft, _targetIndex),
-            text("target.title"),
-            text("target.select_save"), text("target.select_next"));
-    }
-
-    //! Shared wizard screen for both profile setup and data entry modes.
-    //! Draws progress dots, field label, value with arrows, and footer hint.
-    //! For readonly fields, appends minimal footer with source text (Garmin/Calcolato).
-    function drawWizardScreen(dc as Dc, stepIndex as Number, totalSteps as Number,
-        field as Dictionary, valueText as String, titleText as String,
-        saveHint as String, nextHint as String) as Void {
-        var w = dc.getWidth();
-        var h = dc.getHeight();
-        var cx = w / 2;
-        var cy = h / 2;
-
-        var hSmall = dc.getFontHeight(Graphics.FONT_SMALL);
-        var gap = pct(h, 2);
-
-        var isReadOnly = field.hasKey(:readOnly) && field[:readOnly];
-
-        var fieldLabelLayout = fitTextBlock(dc, field[:label].toString(), Graphics.FONT_XTINY, Graphics.FONT_XTINY, pct(w, 72));
-        var titleLayout = fitTextBlock(dc, titleText, Graphics.FONT_XTINY, Graphics.FONT_XTINY, pct(w, 72));
-        var footerText = isReadOnly ? field[:readOnlyText].toString() : (stepIndex == totalSteps - 1 ? saveHint : nextHint);
-        var footerLayout = fitTextBlock(dc, footerText, Graphics.FONT_XTINY, Graphics.FONT_XTINY, pct(w, 76));
-
-        // Central content: label + value, centered vertically
-        var centralH = fieldLabelLayout[:height] + gap + hSmall;
-        var labelY = cy - centralH / 2;
-        var valueY = labelY + fieldLabelLayout[:height] + gap;
-
-        // Field label
-        drawCenteredTextBlock(dc, cx, labelY, fieldLabelLayout, isReadOnly ? COLOR_ACCENT : Graphics.COLOR_LT_GRAY);
-
-        // Field value (uniform FONT_SMALL for all wizard screens)
-        dc.setColor(isReadOnly ? COLOR_ACCENT : Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        var valueFont = Graphics.FONT_SMALL;
-        dc.drawText(cx, valueY, valueFont, valueText,
-            Graphics.TEXT_JUSTIFY_CENTER);
-
-        // Progress dots
-        var dotsY = pct(h, 16);
-        var dotSpacing = pct(w, 5);
-        if (dotSpacing < 14) { dotSpacing = 14; }
-        var activeR = pct(w, 1);
-        if (activeR < 4) { activeR = 4; }
-        var inactiveR = activeR - 1;
-        if (inactiveR < 2) { inactiveR = 2; }
-        var dotsStartX = cx - ((totalSteps - 1) * dotSpacing) / 2;
-
-        for (var i = 0; i < totalSteps; i++) {
-            var dotX = dotsStartX + i * dotSpacing;
-            if (i < stepIndex) {
-                dc.setColor(COLOR_ACCENT, Graphics.COLOR_TRANSPARENT);
-                dc.fillCircle(dotX, dotsY, activeR);
-            } else if (i == stepIndex) {
-                dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-                dc.fillCircle(dotX, dotsY, activeR);
-            } else {
-                dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
-                dc.fillCircle(dotX, dotsY, inactiveR);
-            }
-        }
-
-        // Title below dots
-        var titleY = dotsY + activeR + gap + 2;
-        drawCenteredTextBlock(dc, cx, titleY, titleLayout, COLOR_ACCENT);
-
-        // Arrows for editable fields
-        if (!isReadOnly) {
-            var arrowY = valueY + dc.getFontHeight(valueFont) / 2;
-            var arrowX = pct(w, 12);
-            dc.setColor(COLOR_ACCENT, Graphics.COLOR_TRANSPARENT);
-            drawTriangle(dc, arrowX, arrowY, pct(w, 2), true);
-            drawTriangle(dc, w - arrowX, arrowY, pct(w, 2), false);
-        }
-
-        // Footer action hint
-        var footerY = h - pct(h, 16) - footerLayout[:height];
-        drawCenteredTextBlock(dc, cx, footerY, footerLayout, Graphics.COLOR_LT_GRAY);
+        _wizardRenderer.drawTargetEditor(dc, {
+            :domain => _domain,
+            :targetIndex => _targetIndex,
+            :targetDraft => _targetDraft,
+            :titleText => text("target.title"),
+            :saveHint => text("target.select_save"),
+            :nextHint => text("target.select_next")
+        });
     }
 
     function manualDateText(metric as Dictionary) as String {
@@ -699,718 +660,59 @@ class BodyMetricsView extends WatchUi.View {
         return "";
     }
 
-    function drawTriangle(dc as Dc, cx as Number, cy as Number, size as Number, pointUp as Boolean) as Void {
-        if (size < 4) { size = 4; }
-        var half = size / 2;
-        if (pointUp) {
-            dc.fillPolygon([[cx, cy - half], [cx - half, cy + half], [cx + half, cy + half]]);
-        } else {
-            dc.fillPolygon([[cx, cy + half], [cx - half, cy - half], [cx + half, cy - half]]);
-        }
-    }
-
     // --- Summary Screen (fully responsive) ---
 
     function drawSummary(dc as Dc) as Void {
-        var w = dc.getWidth();
-        var h = dc.getHeight();
-        var cx = w / 2;
-        var cy = h / 2;
         var metric = _domain.metricAt(_selectedMetric) as Dictionary;
-        var available = metric[:available];
-        var zone = available ? _domain.classify(metric) : ZONE_GREEN;
+        var icon = _summaryDetailRenderer.drawSummary(dc, {
+            :domain => _domain,
+            :selectedMetric => _selectedMetric,
+            :animPhase => _animPhase,
+            :hintUnavailableText => text("hint.unavailable"),
+            :dateText => manualDateText(metric)
+        }) as Dictionary;
 
-        var policy = _domain.classificationPolicy(metric);
-
-        // Zone arc at perimeter
-        if (available) {
-            drawZoneArc(dc, cx, cy, cx - pct(w, 2), metric, zone, policy);
-        }
-
-        // Font heights for flow layout
-        var hNumMild = dc.getFontHeight(Graphics.FONT_NUMBER_MILD);
-        var hXtiny = dc.getFontHeight(Graphics.FONT_XTINY);
-        var pad = pct(h, 1);
-        if (pad < 2) { pad = 2; }
-
-        // Safe zones
-        var topSafe = pct(h, 15);
-        var bottomSafe = h - pct(h, 8);
-
-        // Metric label font (auto-shrink if too wide)
-        var labelText = _domain.metricLabel(_selectedMetric);
-        var labelFont = Graphics.FONT_TINY;
-        var labelSafeW = _availableWidthAtY(w, h, topSafe, dc.getFontHeight(labelFont)) - pct(w, 10);
-        var iconExtraW = 22; // icon diameter (14) + gap (8)
-        if (dc.getTextWidthInPixels(labelText, labelFont) + iconExtraW > labelSafeW) {
-            labelFont = Graphics.FONT_XTINY;
-        }
-        var hLabelFont = dc.getFontHeight(labelFont);
-
-        // Calculate total content height to center vertically
-        var dotsH = pct(h, 4);
-        // label + value + unit + hint + dots
-        var totalH = hLabelFont + pad + hNumMild + pad + hXtiny + pad + hXtiny + dotsH;
-        var labelY = cy - totalH / 2;
-        if (labelY < topSafe) { labelY = topSafe; }
-
-        // Metric label
-        dc.setColor(available ? _domain.zoneColor(metric, zone) : Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, labelY, labelFont, labelText,
-            Graphics.TEXT_JUSTIFY_CENTER);
-
-        // (i) info icon next to label
-        drawInfoIcon(dc, cx, labelY, labelText, labelFont);
-
-        // Manual update date sits directly under the metric name, like the old badge row.
-        var dateText = manualDateText(metric);
-        var dateH = 0;
-        if (dateText != null && dateText.length() > 0) {
-            dateH = dc.getFontHeight(Graphics.FONT_XTINY);
-            var dateY = labelY + hLabelFont + pct(h, 1);
-            dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(cx, dateY, Graphics.FONT_XTINY, dateText, Graphics.TEXT_JUSTIFY_CENTER);
-        }
-
-        // Hero value
-        var valueY = labelY + hLabelFont + dateH + pad;
-        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, valueY, Graphics.FONT_NUMBER_MILD,
-            formatValue(metric),
-            Graphics.TEXT_JUSTIFY_CENTER);
-
-        // Unit (XTINY for compact layout)
-        var unitY = valueY + hNumMild + pad;
-        dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, unitY, Graphics.FONT_XTINY,
-            metric[:unit].toString(),
-            Graphics.TEXT_JUSTIFY_CENTER);
-
-        // Semantic zone hint (colored)
-        var hintY = unitY + hXtiny + pad;
-        var hintText = available ? _domain.semanticZoneHint(metric) : text("hint.unavailable");
-        var hintLayout = fitTextBlock(dc, hintText, Graphics.FONT_XTINY, Graphics.FONT_XTINY, pct(w, 72));
-        var dotsY = hintY + hintLayout[:height] + pct(h, 3);
-
-        // Overflow check: ensure bottom content fits in safe zone
-        var overflow = dotsY - bottomSafe;
-        if (overflow > 0) {
-            hintY -= overflow;
-            dotsY -= overflow;
-        }
-
-        if (available) {
-            drawCenteredTextBlock(dc, cx, hintY, hintLayout, _domain.zoneColor(metric, zone));
-        } else {
-            drawCenteredTextBlock(dc, cx, hintY, hintLayout, Graphics.COLOR_DK_GRAY);
-        }
-
-        // Page dots
-        drawPageDots(dc, cx, dotsY, w, _domain.priorityMetricIndex());
+        _infoIconCx = icon[:iconX].toNumber();
+        _infoIconCy = icon[:iconY].toNumber();
+        _infoIconR = icon[:iconR].toNumber();
     }
 
     function drawInfo(dc as Dc) as Void {
-        var w = dc.getWidth();
-        var h = dc.getHeight();
-        var cx = w / 2;
-        var metric = _domain.metricAt(_selectedMetric) as Dictionary;
-        var info = _domain.metricInfo(_selectedMetric) as Dictionary;
-        var available = metric[:available];
-        var zone = available ? _domain.classify(metric) : ZONE_GREEN;
+        var state = _infoTargetDeltaRenderer.drawInfo(dc, {
+            :domain => _domain,
+            :selectedMetric => _selectedMetric,
+            :infoScrollY => _infoScrollY
+        }) as Dictionary;
 
-        var font = Graphics.FONT_XTINY;
-        var lineH = dc.getFontHeight(font);
-        var topMargin = pct(h, 10);
-        var titleFont = Graphics.FONT_TINY;
-        var contentTop = topMargin + dc.getFontHeight(titleFont) + pct(h, 2);
-        var visibleH = h - contentTop - pct(h, 15);
-        var visibleBottom = contentTop + visibleH;
-        // Use narrowest available width (at top/bottom edges of visible area)
-        var wTop = _availableWidthAtY(w, h, contentTop, lineH) - pct(w, 14);
-        var wBot = _availableWidthAtY(w, h, visibleBottom - lineH, lineH) - pct(w, 14);
-        var safeW = wTop < wBot ? wTop : wBot;
-        var textLeft = pct(w, 11);
-        var itemW = safeW;
-        var accentColor = COLOR_ACCENT;
-
-        // Fixed title at top
-        dc.setColor(available ? _domain.zoneColor(metric, zone) : accentColor, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, topMargin, titleFont, _domain.metricLabel(_selectedMetric), Graphics.TEXT_JUSTIFY_CENTER);
-
-        // Prepare all content lines: [{:text, :type}]
-        // :type => :heading, :body, :rangeLabel, :rangeValue, :empty
-        var allLines = [] as Array;
-
-        // --- Section 1: Description (plain wrapped text) ---
-        var descLines = wrapText(dc, info[:description].toString(), font, safeW);
-        for (var b = 0; b < descLines.size(); b += 1) {
-            allLines.add({:text => descLines[b].toString(), :type => :body});
-        }
-
-        // --- Section 2: Ranges (structured list) ---
-        allLines.add({:text => "", :type => :empty});
-        var rangeLines = info[:rangeLines] as Array;
-        for (var r = 0; r < rangeLines.size(); r += 1) {
-            var item = rangeLines[r] as Dictionary;
-            var lbl = item[:label].toString();
-            var val = item[:value].toString();
-            if (lbl.equals("") && val.equals("")) {
-                allLines.add({:text => "", :type => :empty});
-            } else {
-                if (!lbl.equals("")) {
-                    var labelWrapped = wrapText(dc, lbl, font, itemW);
-                    for (var li = 0; li < labelWrapped.size(); li += 1) {
-                        allLines.add({:text => labelWrapped[li].toString(), :type => :rangeLabel});
-                    }
-                }
-                if (!val.equals("")) {
-                    var valueWrapped = wrapText(dc, val, font, itemW);
-                    for (var vi = 0; vi < valueWrapped.size(); vi += 1) {
-                        allLines.add({:text => valueWrapped[vi].toString(), :type => :rangeValue});
-                    }
-                }
-                allLines.add({:text => "", :type => :empty});
-            }
-        }
-
-        // Calculate total content height and clamp scroll
-        _infoContentH = allLines.size() * lineH;
-        var maxScroll = _infoContentH - visibleH;
-        if (maxScroll < 0) { maxScroll = 0; }
-        if (_infoScrollY > maxScroll) { _infoScrollY = maxScroll; }
-        if (_infoScrollY < 0) { _infoScrollY = 0; }
-
-        // Draw scrollable content with clipping
-        dc.setClip(0, contentTop, w, visibleH);
-        var y = contentTop - _infoScrollY;
-        for (var i = 0; i < allLines.size(); i += 1) {
-            var line = allLines[i] as Dictionary;
-            var lineType = line[:type];
-            if (y + lineH > contentTop - lineH && y < contentTop + visibleH + lineH) {
-                if (lineType == :heading) {
-                    dc.setColor(accentColor, Graphics.COLOR_TRANSPARENT);
-                    dc.drawText(cx, y, font, line[:text].toString(), Graphics.TEXT_JUSTIFY_CENTER);
-                } else if (lineType == :body) {
-                    dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
-                    dc.drawText(cx, y, font, line[:text].toString(), Graphics.TEXT_JUSTIFY_CENTER);
-                } else if (lineType == :rangeLabel) {
-                    dc.setColor(accentColor, Graphics.COLOR_TRANSPARENT);
-                    dc.drawText(textLeft, y, font, line[:text].toString(), Graphics.TEXT_JUSTIFY_LEFT);
-                } else if (lineType == :rangeValue) {
-                    dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
-                    dc.drawText(textLeft, y, font, line[:text].toString(), Graphics.TEXT_JUSTIFY_LEFT);
-                }
-                // :empty lines are just spacers
-            }
-            y += lineH;
-        }
-        dc.clearClip();
-
-        // Scroll indicator (small bar on right)
-        if (maxScroll > 0) {
-            var trackH = visibleH - 8;
-            var trackY = contentTop + 4;
-            var thumbH = trackH * visibleH / _infoContentH;
-            if (thumbH < 8) { thumbH = 8; }
-            var thumbY = trackY + (_infoScrollY * (trackH - thumbH) / maxScroll);
-            var trackX = w - pct(w, 5);
-            dc.setColor(0x333333, Graphics.COLOR_TRANSPARENT);
-            dc.fillRectangle(trackX, trackY, 3, trackH);
-            dc.setColor(accentColor, Graphics.COLOR_TRANSPARENT);
-            dc.fillRectangle(trackX, thumbY, 3, thumbH);
-        }
+        _infoScrollY = state[:infoScrollY].toNumber();
+        _infoContentH = state[:infoContentH].toNumber();
     }
 
     // --- Detail Screen (fully responsive) ---
 
     function drawDetail(dc as Dc) as Void {
-        var w = dc.getWidth();
-        var h = dc.getHeight();
-        var cx = w / 2;
-        var cy = h / 2;
-        var metric = _domain.metricAt(_selectedMetric) as Dictionary;
-        var available = metric[:available];
-        var zone = available ? _domain.classify(metric) : ZONE_GREEN;
-        var policy = _domain.classificationPolicy(metric);
-        var showIdealRange = available && zone != ZONE_GREEN;
-
-        var hLarge = dc.getFontHeight(Graphics.FONT_LARGE);
-        var pad = pct(h, 1);
-        if (pad < 3) { pad = 3; }
-        var barH = pct(h, 4);
-        if (barH < 16) { barH = 16; }
-
-        // Safe zones
-        var topSafe = pct(h, 11);
-        var bottomSafe = h - pct(h, 9);
-
-        // Metric label in zone color (auto-shrink if too wide)
-        var labelFont = Graphics.FONT_SMALL;
-        var labelText = _domain.metricLabel(_selectedMetric);
-        var safeW = _availableWidthAtY(w, h, topSafe, dc.getFontHeight(labelFont)) - pct(w, 10);
-        if (dc.getTextWidthInPixels(labelText, labelFont) > safeW) {
-            labelFont = Graphics.FONT_TINY;
-        }
-        var hLabel = dc.getFontHeight(labelFont);
-
-        // Calculate total content height to center vertically
-        var detailSafeW = pct(w, 74);
-        var hintText = available ? _domain.semanticZoneHint(metric) : text("hint.unavailable");
-        var hintLayout = fitTextBlock(dc, hintText, Graphics.FONT_XTINY, Graphics.FONT_XTINY, detailSafeW);
-        var rangeLayout = available ? fitTextBlock(dc, _domain.zoneRangeText(metric), Graphics.FONT_XTINY, Graphics.FONT_XTINY, detailSafeW) : null;
-        var idealLayout = showIdealRange ? fitTextBlock(dc, text("detail.ideal") + _domain.idealRangeText(metric), Graphics.FONT_XTINY, Graphics.FONT_XTINY, detailSafeW) : null;
-
-        var totalH = hLabel + pad + hLarge + pad + barH + pad + hintLayout[:height];
-        if (available) {
-            totalH += 2 + rangeLayout[:height];
-        }
-        if (showIdealRange) {
-            totalH += 2 + idealLayout[:height];
-        }
-        var labelY = cy - totalH / 2;
-        if (labelY < topSafe) { labelY = topSafe; }
-
-        dc.setColor(available ? _domain.zoneColor(metric, zone) : Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, labelY, labelFont, labelText,
-            Graphics.TEXT_JUSTIFY_CENTER);
-
-        // Value + unit
-        var valueY = labelY + hLabel + pad;
-        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, valueY, Graphics.FONT_LARGE,
-            formatValue(metric) + " " + metric[:unit].toString(),
-            Graphics.TEXT_JUSTIFY_CENTER);
-
-        // Zone bar
-        var barY = valueY + hLarge + pad;
-        var barX = pct(w, 14);
-        var barW = pct(w, 72);
-
-        // Zone hint and lower content
-        var hintY = barY + barH + pad;
-        var rangeY = hintY + hintLayout[:height] + 2;
-        var idealY = rangeY + (available ? rangeLayout[:height] : 0) + 2;
-        var afterRangeY = available ? (rangeY + rangeLayout[:height]) : (hintY + hintLayout[:height]);
-        var afterIdealY = showIdealRange ? (idealY + idealLayout[:height]) : afterRangeY;
-        var dotsY = afterIdealY + pct(h, 3);
-
-        // Overflow check: push everything up if bottom content exceeds safe zone
-        var contentBottom = dotsY;
-        var overflow = contentBottom - bottomSafe;
-        if (overflow > 0) {
-            labelY -= overflow;
-            if (labelY < topSafe) { labelY = topSafe; }
-            valueY = labelY + hLabel + pad;
-            barY = valueY + hLarge + pad;
-            hintY = barY + barH + pad;
-            rangeY = hintY + hintLayout[:height] + 2;
-            idealY = rangeY + (available ? rangeLayout[:height] : 0) + 2;
-            afterRangeY = available ? (rangeY + rangeLayout[:height]) : (hintY + hintLayout[:height]);
-            afterIdealY = showIdealRange ? (idealY + idealLayout[:height]) : afterRangeY;
-            dotsY = afterIdealY + pct(h, 3);
-        }
-
-        if (available) {
-            drawDetailZoneBar(dc, barX, barY, barW, barH, metric, zone, policy);
-
-            drawCenteredTextBlock(dc, cx, hintY, hintLayout, _domain.zoneColor(metric, zone));
-            drawCenteredTextBlock(dc, cx, rangeY, rangeLayout, Graphics.COLOR_DK_GRAY);
-
-            if (showIdealRange) {
-                drawCenteredTextBlock(dc, cx, idealY, idealLayout, Graphics.COLOR_LT_GRAY);
-            }
-        } else {
-            drawCenteredTextBlock(dc, cx, hintY, hintLayout, Graphics.COLOR_DK_GRAY);
-        }
-
-        drawPageDots(dc, cx, dotsY, w, -1);
+        _summaryDetailRenderer.drawDetail(dc, {
+            :domain => _domain,
+            :selectedMetric => _selectedMetric,
+            :hintUnavailableText => text("hint.unavailable"),
+            :detailIdealPrefix => text("detail.ideal")
+        });
     }
 
     // --- Target Delta Screen ---
 
     function drawTargetDelta(dc as Dc) as Void {
-        var w = dc.getWidth();
-        var h = dc.getHeight();
-        var cx = w / 2;
-        var metric = _domain.metricAt(_selectedMetric) as Dictionary;
-        var available = metric[:available];
-        var policy = _domain.classificationPolicy(metric);
-        var zone = available ? _domain.classify(metric) : ZONE_GREEN;
-
-        var topSafe = pct(h, 10);
-        var bottomSafe = h - pct(h, 10);
-        var contentW = pct(w, 80);
-        var gap = 2;
-        var sectionGap = 5;
-
-        var effectiveTarget = _domain.getEffectiveTargetForIndex(_selectedMetric);
-        var deltaAbs = _domain.getDeltaToTargetForIndex(_selectedMetric);
-        var deltaPct = _domain.getDeltaPctToTargetForIndex(_selectedMetric);
-        var showData = available && !policy.equals(POLICY_REFERENCE_ONLY) &&
-            effectiveTarget != null && deltaAbs != null && deltaPct != null;
-
-        var currentText = text("target.current") + ": " + fmt1Global(metric[:value].toFloat()) + " " + metric[:unit].toString();
-        var targetText = showData
-            ? text("target.label") + ": " + fmt1Global(effectiveTarget.toFloat()) + " " + metric[:unit].toString()
-            : text("hint.unavailable");
-        var deltaText = showData
-            ? text("target.delta_abs") + ": " + formatDeltaValue(deltaAbs.toFloat(), metric[:unit].toString())
-            : text("hint.unavailable");
-
-        var titleFont = Graphics.FONT_TINY;
-        var metricText = _domain.metricLabel(_selectedMetric);
-        if (dc.getTextWidthInPixels(metricText, Graphics.FONT_TINY) > contentW ||
-            dc.getTextWidthInPixels(text("target.view.title"), Graphics.FONT_TINY) > contentW) {
-            titleFont = Graphics.FONT_XTINY;
-        }
-
-        var titleFit = fitSingleLineText(dc, text("target.view.title"), titleFont, titleFont, contentW);
-        var metricFit = fitSingleLineText(dc, metricText, titleFont, titleFont, contentW);
-        var currentFit = fitSingleLineText(dc, currentText, Graphics.FONT_XTINY, Graphics.FONT_XTINY, contentW);
-        var targetFit = fitSingleLineText(dc, targetText, Graphics.FONT_XTINY, Graphics.FONT_XTINY, contentW);
-        var deltaFit = fitSingleLineText(dc, deltaText, Graphics.FONT_XTINY, Graphics.FONT_XTINY, contentW);
-        var disclaimerFit = fitSingleLineText(dc, showData ? text("target.disclaimer") : text("target.unavailable"), Graphics.FONT_XTINY, Graphics.FONT_XTINY, contentW);
-
-        var titleLineH = dc.getFontHeight(titleFont);
-        var lineH = dc.getFontHeight(Graphics.FONT_XTINY);
-        var graphH = pct(h, 12);
-        if (graphH < 20) { graphH = 20; }
-
-        var totalH = titleLineH + gap + titleLineH + sectionGap + lineH;
-        if (showData) {
-            totalH += lineH + gap + lineH + sectionGap + graphH + gap;
-        } else {
-            // Empty central area in unavailable state.
-            totalH += graphH + sectionGap;
-        }
-        var y = (h - totalH) / 2;
-        if (y < topSafe) { y = topSafe; }
-
-        drawSingleLineCentered(dc, cx, y, titleFit, COLOR_ACCENT);
-        y += titleLineH + gap;
-
-        drawSingleLineCentered(dc, cx, y, metricFit, available ? _domain.zoneColor(metric, zone) : Graphics.COLOR_DK_GRAY);
-        y += titleLineH + sectionGap;
-
-        if (showData) {
-            drawSingleLineCentered(dc, cx, y, currentFit, Graphics.COLOR_LT_GRAY);
-            y += lineH + gap;
-
-            drawSingleLineCentered(dc, cx, y, targetFit, COLOR_ACCENT);
-            y += lineH + gap;
-
-            var deltaColor = deltaColorByPct(deltaPct.toFloat());
-            drawSingleLineCentered(dc, cx, y, deltaFit, deltaColor);
-            y += lineH + sectionGap;
-
-            drawTargetDeltaGraph(dc, cx, y, contentW, graphH, deltaPct.toFloat(), true);
-            y += graphH + gap;
-        } else {
-            y += graphH + sectionGap;
-        }
-
-        if (y > bottomSafe - lineH) {
-            y = bottomSafe - lineH;
-        }
-        drawSingleLineCentered(dc, cx, y, disclaimerFit, Graphics.COLOR_DK_GRAY);
-
-        drawPageDots(dc, cx, bottomSafe + 1, w, -1);
-    }
-
-    function drawTargetDeltaGraph(dc as Dc, cx as Number, y as Number, width as Number, height as Number,
-        deltaPct as Float, hasData as Boolean) as Void {
-        var barX = cx - width / 2;
-        var barY = y + height / 2 - 3;
-        var barH = 6;
-        var centerX = cx;
-
-        dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
-        dc.fillRectangle(barX, barY, width, barH);
-
-        dc.setColor(COLOR_ACCENT_DIM, Graphics.COLOR_TRANSPARENT);
-        dc.drawLine(centerX, barY - 6, centerX, barY + barH + 6);
-
-        if (!hasData) {
-            dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
-            dc.fillCircle(centerX, barY + barH / 2, 4);
-            return;
-        }
-
-        var ratio = deltaPct / 30.0;
-        if (ratio > 1.0) { ratio = 1.0; }
-        if (ratio < -1.0) { ratio = -1.0; }
-
-        var currentX = centerX + (ratio * (width / 2 - 6));
-        var startX = centerX;
-        var fillX = startX < currentX ? startX : currentX;
-        var fillW = startX < currentX ? (currentX - startX) : (startX - currentX);
-        if (fillW < 2) { fillW = 2; }
-
-        var color = deltaColorByPct(deltaPct);
-        dc.setColor(color, Graphics.COLOR_TRANSPARENT);
-        dc.fillRectangle(fillX, barY, fillW, barH);
-
-        dc.setColor(COLOR_ACCENT, Graphics.COLOR_TRANSPARENT);
-        dc.fillCircle(centerX, barY + barH / 2, 4);
-        dc.setColor(color, Graphics.COLOR_TRANSPARENT);
-        dc.fillCircle(currentX, barY + barH / 2, 5);
-        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.fillCircle(currentX, barY + barH / 2, 2);
-    }
-
-    // --- Drawing Helpers ---
-
-    function targetRangeDisplayIndex(metric as Dictionary, zone as Number) as Number {
-        if (zone == ZONE_GREEN) {
-            return 3;
-        }
-
-        var isLowSide = metric[:value] < metric[:greenMin];
-
-        if (zone == ZONE_YELLOW) {
-            return isLowSide ? 2 : 4;
-        }
-
-        if (zone == ZONE_ORANGE) {
-            return isLowSide ? 1 : 5;
-        }
-
-        return isLowSide ? 0 : 6;
-    }
-
-    function drawZoneArc(dc as Dc, cx as Number, cy as Number, r as Number, metric as Dictionary, activeZone as Number, policy) as Void {
-        var arcStarts;
-        var arcEnds;
-        var bright;
-        var dim;
-        var displayZone = activeZone;
-
-        if (policy.equals(POLICY_LOW_ONLY)) {
-            arcStarts = [240, 165, 90, 15];
-            arcEnds   = [165, 90, 15, 300];
-            bright = [Graphics.COLOR_RED, Graphics.COLOR_ORANGE, Graphics.COLOR_YELLOW, Graphics.COLOR_GREEN];
-            dim    = [0x330000, 0x331A00, 0x333300, 0x003300];
-            displayZone = 3 - activeZone;
-        } else if (policy.equals(POLICY_REFERENCE_ONLY)) {
-            arcStarts = [240, 165, 90, 15];
-            arcEnds   = [165, 90, 15, 300];
-            bright = [COLOR_ACCENT_DIM, 0x336699, 0x4D99CC, COLOR_ACCENT];
-            dim    = [0x112233, 0x19334D, 0x204966, 0x2A607F];
-        } else {
-            // POLICY_TARGET_RANGE
-            arcStarts = [240, 205, 170, 135, 100, 65, 30];
-            arcEnds   = [205, 170, 135, 100, 65, 30, 355];
-            bright = [Graphics.COLOR_RED, Graphics.COLOR_ORANGE, Graphics.COLOR_YELLOW, Graphics.COLOR_GREEN, Graphics.COLOR_YELLOW, Graphics.COLOR_ORANGE, Graphics.COLOR_RED];
-            dim    = [0x330000, 0x331A00, 0x333300, 0x003300, 0x333300, 0x331A00, 0x330000];
-            displayZone = targetRangeDisplayIndex(metric, activeZone);
-        }
-
-        var thickPen = pct(cx * 2, 2);
-        if (thickPen < 4) { thickPen = 4; }
-        var glowExtra = (_animPhase == 1) ? 3 : 0;
-
-        dc.setPenWidth(thickPen + 14 + glowExtra);
-        dc.setColor(dim[displayZone], Graphics.COLOR_TRANSPARENT);
-        dc.drawArc(cx, cy, r, Graphics.ARC_CLOCKWISE, arcStarts[displayZone], arcEnds[displayZone]);
-
-        for (var i = 0; i < bright.size(); i++) {
-            if (i == displayZone) {
-                dc.setPenWidth(thickPen + 6 + glowExtra);
-                dc.setColor(bright[i], Graphics.COLOR_TRANSPARENT);
-            } else {
-                dc.setPenWidth(thickPen);
-                dc.setColor(dim[i], Graphics.COLOR_TRANSPARENT);
-            }
-            dc.drawArc(cx, cy, r, Graphics.ARC_CLOCKWISE, arcStarts[i], arcEnds[i]);
-        }
-        dc.setPenWidth(1);
-    }
-
-    function drawPageDots(dc as Dc, cx as Number, y as Number, screenW as Number, priorityIndex as Number) as Void {
-        var count = _domain.metricsCount();
-        var spacing = pct(screenW, 4);
-        if (spacing < 10) { spacing = 10; }
-        var activeR = pct(screenW, 1);
-        if (activeR < 3) { activeR = 3; }
-        var inactiveR = activeR - 2;
-        if (inactiveR < 2) { inactiveR = 2; }
-        var startX = cx - ((count - 1) * spacing) / 2;
-
-        for (var i = 0; i < count; i++) {
-            var dotX = startX + i * spacing;
-            if (i == _selectedMetric) {
-                dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-                dc.fillCircle(dotX, y, activeR);
-            } else {
-                if (priorityIndex == i) {
-                    dc.setColor(Graphics.COLOR_ORANGE, Graphics.COLOR_TRANSPARENT);
-                } else {
-                    dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
-                }
-                dc.fillCircle(dotX, y, inactiveR);
-            }
-        }
-    }
-
-    function formatDeltaValue(value as Float, unit as String) as String {
-        var sign = value >= 0.0 ? "+" : "";
-        return sign + fmt1Global(value) + " " + unit;
-    }
-
-    function fitSingleLineText(dc as Dc, value as String, primaryFont, fallbackFont, maxWidth as Number) as Dictionary {
-        var font = primaryFont;
-        if (dc.getTextWidthInPixels(value, font) > maxWidth) {
-            font = fallbackFont;
-        }
-        return {:font => font, :text => value};
-    }
-
-    function drawSingleLineCentered(dc as Dc, cx as Number, y as Number, layout as Dictionary, color as Number) as Void {
-        dc.setColor(color, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, y, layout[:font], layout[:text].toString(), Graphics.TEXT_JUSTIFY_CENTER);
-    }
-
-    function deltaColorByPct(deltaPct as Float) {
-        var absDelta = deltaPct;
-        if (absDelta < 0.0) {
-            absDelta = -absDelta;
-        }
-        if (absDelta < 5.0) {
-            return Graphics.COLOR_GREEN;
-        }
-        if (absDelta < 10.0) {
-            return Graphics.COLOR_YELLOW;
-        }
-        if (absDelta < 20.0) {
-            return Graphics.COLOR_ORANGE;
-        }
-        return Graphics.COLOR_RED;
-    }
-
-    //! Draw a small ⓘ icon to the right of the metric label (tap target for info view)
-    function drawInfoIcon(dc as Dc, cx as Number, labelY as Number, labelText as String, labelFont) as Void {
-        var labelW = dc.getTextWidthInPixels(labelText, labelFont);
-        var labelH = dc.getFontHeight(labelFont);
-        var r = 7;
-        var iconX = cx + labelW / 2 + r + 4;
-        var iconY = labelY + labelH / 2;
-
-        // Store position for tap detection
-        _infoIconCx = iconX;
-        _infoIconCy = iconY;
-        _infoIconR = r;
-
-        // Draw circle
-        dc.setColor(COLOR_ACCENT, Graphics.COLOR_TRANSPARENT);
-        dc.drawCircle(iconX, iconY, r);
-
-        // Draw geometric "i": dot (2px circle) + stem (2px wide rect)
-        var dotR = 1;
-        var dotY = iconY - r / 2;
-        dc.fillCircle(iconX, dotY, dotR);
-
-        var stemW = 2;
-        var stemH = r - 2;
-        var stemY = dotY + dotR + 2;
-        dc.fillRectangle(iconX - stemW / 2, stemY, stemW, stemH);
-    }
-
-    function wrapText(dc as Dc, value as String, font, maxWidth as Number) as Array {
-        return wrapTextGlobal(dc, value, font, maxWidth);
-    }
-
-    function fitTextBlock(dc as Dc, value as String, primaryFont, fallbackFont, maxWidth as Number) as Dictionary {
-        var font = primaryFont;
-        var lines = wrapText(dc, value, font, maxWidth);
-        if (maxTextWidth(dc, lines, font) > maxWidth || lines.size() > 2) {
-            font = fallbackFont;
-            lines = wrapText(dc, value, font, maxWidth);
-        }
-        return {
-            :font => font,
-            :lines => lines,
-            :lineHeight => dc.getFontHeight(font),
-            :height => lines.size() * dc.getFontHeight(font)
-        };
-    }
-
-    function maxTextWidth(dc as Dc, lines as Array, font) as Number {
-        var maxWidth = 0;
-        for (var i = 0; i < lines.size(); i += 1) {
-            var lineWidth = dc.getTextWidthInPixels(lines[i].toString(), font);
-            if (lineWidth > maxWidth) {
-                maxWidth = lineWidth;
-            }
-        }
-        return maxWidth;
-    }
-
-    function drawCenteredTextBlock(dc as Dc, cx as Number, startY as Number, layout as Dictionary, color as Number) as Void {
-        var lines = layout[:lines] as Array;
-        var font = layout[:font];
-        var lineHeight = layout[:lineHeight];
-        dc.setColor(color, Graphics.COLOR_TRANSPARENT);
-        for (var i = 0; i < lines.size(); i += 1) {
-            dc.drawText(cx, startY + i * lineHeight, font, lines[i].toString(), Graphics.TEXT_JUSTIFY_CENTER);
-        }
-    }
-
-    function drawDetailZoneBar(dc as Dc, x as Number, y as Number, w as Number, h as Number, metric as Dictionary, zone as Number, policy) as Void {
-        var colors = [Graphics.COLOR_GREEN, Graphics.COLOR_YELLOW, Graphics.COLOR_ORANGE, Graphics.COLOR_RED];
-        var highlights = [0x88FF88, 0xFFFF88, 0xFFBB66, 0xFF8888];
-        var displayZone = zone;
-        var segCount = 4;
-
-        if (policy.equals(POLICY_LOW_ONLY)) {
-            colors = [Graphics.COLOR_RED, Graphics.COLOR_ORANGE, Graphics.COLOR_YELLOW, Graphics.COLOR_GREEN];
-            highlights = [0xFF8888, 0xFFBB66, 0xFFFF88, 0x88FF88];
-            displayZone = 3 - zone;
-        } else if (policy.equals(POLICY_REFERENCE_ONLY)) {
-            colors = [COLOR_ACCENT_DIM, 0x336699, 0x4D99CC, COLOR_ACCENT];
-            highlights = [0x335577, 0x4477AA, 0x66AAD9, 0x88DDFF];
-        } else {
-            // POLICY_TARGET_RANGE
-            colors = [Graphics.COLOR_RED, Graphics.COLOR_ORANGE, Graphics.COLOR_YELLOW, Graphics.COLOR_GREEN, Graphics.COLOR_YELLOW, Graphics.COLOR_ORANGE, Graphics.COLOR_RED];
-            highlights = [0xFF8888, 0xFFBB66, 0xFFFF88, 0x88FF88, 0xFFFF88, 0xFFBB66, 0xFF8888];
-            displayZone = targetRangeDisplayIndex(metric, zone);
-            segCount = 7;
-        }
-
-        var segW = w / segCount;
-        var barR = h / 2;
-
-        dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_DK_GRAY);
-        dc.fillCircle(x + barR, y + barR, barR);
-        dc.fillCircle(x + w - barR, y + barR, barR);
-        dc.fillRectangle(x + barR, y, w - barR * 2, h);
-
-        for (var i = 0; i < segCount; i++) {
-            var sx = x + segW * i;
-            var sw = (i < segCount - 1) ? segW + 1 : segW;
-            dc.setColor(colors[i], colors[i]);
-            dc.fillRectangle(sx, y, sw, h);
-            dc.setColor(highlights[i], highlights[i]);
-            dc.fillRectangle(sx, y, sw, h / 4);
-        }
-
-        dc.setColor(colors[0], colors[0]);
-        dc.fillCircle(x + barR, y + barR, barR);
-        dc.setColor(colors[segCount - 1], colors[segCount - 1]);
-        dc.fillCircle(x + w - barR, y + barR, barR);
-
-        var markerX = x + displayZone * segW + segW / 2;
-        var markerY = y + h / 2;
-        var outerR = h / 2 + 4;
-        dc.setColor(colors[displayZone], colors[displayZone]);
-        dc.fillCircle(markerX, markerY, outerR + 2);
-        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_WHITE);
-        dc.fillCircle(markerX, markerY, outerR);
-        dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
-        dc.fillCircle(markerX, markerY, outerR - 3);
-        dc.setColor(colors[displayZone], colors[displayZone]);
-        dc.fillCircle(markerX, markerY, 4);
-        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_WHITE);
-        dc.fillCircle(markerX, markerY, 2);
+        _infoTargetDeltaRenderer.drawTargetDelta(dc, {
+            :domain => _domain,
+            :selectedMetric => _selectedMetric,
+            :targetViewTitleText => text("target.view.title"),
+            :targetCurrentText => text("target.current"),
+            :targetLabelText => text("target.label"),
+            :targetDeltaAbsText => text("target.delta_abs"),
+            :targetDisclaimerText => text("target.disclaimer"),
+            :targetUnavailableText => text("target.unavailable"),
+            :hintUnavailableText => text("hint.unavailable")
+        });
     }
 
     // --- Formatting ---
@@ -1425,428 +727,53 @@ class BodyMetricsView extends WatchUi.View {
     // --- Trend Screen ---
 
     function _invalidateTrendCache() as Void {
-        _trendValueCache = {};
-        _trendWindowsCache = {};
+        _trendCacheService.invalidate();
         _trendWindow = 0;
-    }
-
-    function _trendCacheKey(metricIndex as Number, windowDays as Number) as String {
-        return metricIndex.toString() + ":" + windowDays.toString();
-    }
-
-    function _historyValuesCached(metricIndex as Number, windowDays as Number) as Array {
-        var key = _trendCacheKey(metricIndex, windowDays);
-        if (_trendValueCache.hasKey(key)) {
-            return _trendValueCache[key] as Array;
-        }
-
-        var values = _domain.historyValues(metricIndex, windowDays);
-        _trendValueCache[key] = values;
-        return values;
-    }
-
-    function _computeTrendDirection(values as Array) as Number {
-        if (values.size() < 2) {
-            return TREND_FLAT;
-        }
-
-        var first = (values[0] as Dictionary)[:val].toFloat();
-        var last = (values[values.size() - 1] as Dictionary)[:val].toFloat();
-        var base = first < 0.0 ? -first : first;
-        if (base < 1.0) { base = 1.0; }
-
-        var change = ((last - first) / base) * 100.0;
-        if (change > 1.0) { return TREND_UP; }
-        if (change < -1.0) { return TREND_DOWN; }
-        return TREND_FLAT;
     }
 
     //! Cache trend data for the currently selected metric.
     function _cacheTrendData() as Void {
-        var metricIndex = _selectedMetric;
-        var availableWindows = _availableTrendWindows();
-
-        if (_trendWindow == 0) {
-            if (availableWindows.size() > 0) {
-                _trendWindow = availableWindows[availableWindows.size() - 1] as Number;
-            }
-        }
-
-        if (_trendWindow > 0) {
-            var currentValues = _historyValuesCached(metricIndex, _trendWindow);
-            if (currentValues.size() < 2) {
-                if (availableWindows.size() > 0) {
-                    _trendWindow = availableWindows[availableWindows.size() - 1] as Number;
-                } else {
-                    _trendWindow = 0;
-                }
-            }
-        }
-
-        if (_trendWindow > 0) {
-            _trendValues = _historyValuesCached(metricIndex, _trendWindow);
-            _trendDirection = _computeTrendDirection(_trendValues as Array);
-        } else {
-            _trendDirection = TREND_FLAT;
-            _trendValues = [];
-        }
+        var trendState = _trendCacheService.cacheTrendData(_domain, _selectedMetric, _trendWindow);
+        _trendWindow = trendState[:window].toNumber();
+        _trendValues = trendState[:values] as Array;
+        _trendDirection = trendState[:direction].toNumber();
     }
 
     function _cycleTrendWindow(delta as Number) as Void {
-        var currentIndex = 0;
-        var windows = _availableTrendWindows();
-        if (windows.size() == 0) {
-            _trendWindow = 0;
-            _cacheTrendData();
-            return;
-        }
-
-        for (var i = 0; i < windows.size(); i += 1) {
-            if ((windows[i] as Number) == _trendWindow) {
-                currentIndex = i;
-                break;
-            }
-        }
-
-        currentIndex = (currentIndex + delta + windows.size()) % windows.size();
-        _trendWindow = windows[currentIndex] as Number;
-        _cacheTrendData();
+        var trendState = _trendCacheService.cycleTrendWindow(_domain, _selectedMetric, _trendWindow, delta);
+        _trendWindow = trendState[:window].toNumber();
+        _trendValues = trendState[:values] as Array;
+        _trendDirection = trendState[:direction].toNumber();
     }
 
     function _availableTrendWindows() as Array {
-        var metricKey = _selectedMetric.toString();
-        if (_trendWindowsCache.hasKey(metricKey)) {
-            return _trendWindowsCache[metricKey] as Array;
-        }
-
-        var windows = [] as Array;
-        for (var i = 0; i < TREND_WINDOWS.size(); i += 1) {
-            var candidate = TREND_WINDOWS[i] as Number;
-            if (_historyValuesCached(_selectedMetric, candidate).size() >= 2) {
-                windows.add(candidate);
-            }
-        }
-
-        _trendWindowsCache[metricKey] = windows;
-        return windows;
+        return _trendCacheService.availableTrendWindows(_domain, _selectedMetric);
     }
 
     //! Draw the trend/history screen with mini chart, trend indicator, and window label.
     function drawTrend(dc as Dc) as Void {
-        var w = dc.getWidth();
-        var h = dc.getHeight();
-        var cx = w / 2;
         var metric = _domain.metricAt(_selectedMetric) as Dictionary;
-        var available = metric[:available];
-        var zone = available ? _domain.classify(metric) : ZONE_GREEN;
-
-        var hXtiny = dc.getFontHeight(Graphics.FONT_XTINY);
-        var pad = pct(h, 2);
-        if (pad < 3) { pad = 3; }
-
-        // Combined title: "Andamento BMI" on one row in metric color
-        var topY = pct(h, 10);
-        var labelText = _domain.metricLabel(_selectedMetric);
-        var labelFont = Graphics.FONT_TINY;
-        var labelSafeW = _availableWidthAtY(w, h, topY, dc.getFontHeight(labelFont)) - pct(w, 10);
-        if (dc.getTextWidthInPixels(labelText, labelFont) > labelSafeW) {
-            labelFont = Graphics.FONT_XTINY;
-        }
-        var labelH = dc.getFontHeight(labelFont);
-        dc.setColor(available ? _domain.zoneColor(metric, zone) : Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, topY, labelFont, labelText, Graphics.TEXT_JUSTIFY_CENTER);
-
-        // Current value + unit (round-screen-aware safe width)
-        var valueY = topY + labelH + 2;
-        var valueFont = Graphics.FONT_SMALL;
-        var valueText = formatValue(metric) + " " + metric[:unit].toString();
-        var valueSafeW = _availableWidthAtY(w, h, valueY, dc.getFontHeight(valueFont)) - pct(w, 10);
-        if (dc.getTextWidthInPixels(valueText, valueFont) > valueSafeW) {
-            valueFont = Graphics.FONT_TINY;
-        }
-        var valueH = dc.getFontHeight(valueFont);
-        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, valueY, valueFont,
-            valueText,
-            Graphics.TEXT_JUSTIFY_CENTER);
-
-        if (_trendWindow == 0 || (_trendValues as Array).size() < 2) {
-            // No history data - show message
-            var noDataLayout = fitTextBlock(dc, text("trend.no_data"), Graphics.FONT_XTINY, Graphics.FONT_XTINY, pct(w, 72));
-            drawCenteredTextBlock(dc, cx, (h / 2) - (noDataLayout[:height] / 2), noDataLayout, Graphics.COLOR_DK_GRAY);
-        } else {
-            var compactLayout = (_trendWindow >= 90 || w < 240);
-            var bounds = _trendValueBounds(_trendValues as Array);
-            var axisLabels = _trendAxisLabels(bounds, compactLayout);
-            var axisLabelW = _maxTextWidth(dc, axisLabels, Graphics.FONT_XTINY);
-
-            // Compute bottom positions first for round-screen-aware label width
-            var windowY = h - pct(h, 10);
-            var trendY = windowY - hXtiny - pad;
-            var windowLabelMaxW = _availableWidthAtY(w, h, windowY, hXtiny) * 0.66;
-            var hardCap = pct(w, 72);
-            if (windowLabelMaxW > hardCap) {
-                windowLabelMaxW = hardCap;
-            }
-            var windowLabel = _trendWindowLabel(dc, Graphics.FONT_XTINY, windowLabelMaxW);
-
-            // Mini chart
-            var chartX = pct(w, 11) + axisLabelW;
-            var chartRightPad = pct(w, 8);
-            var chartY = valueY + valueH + pad + 2;
-            var chartH = trendY - chartY - pad;
-            var minChartH = pct(h, 22);
-            if (minChartH < 34) { minChartH = 34; }
-            if (chartH < minChartH) {
-                chartH = minChartH;
-                chartY = trendY - pad - chartH;
-            }
-            var chartW = w - chartX - chartRightPad;
-            var lineColor = available ? _domain.zoneColor(metric, zone) : Graphics.COLOR_DK_GRAY;
-            drawMiniChart(dc, chartX, chartY, chartW, chartH, _trendValues as Array, lineColor,
-                bounds, axisLabels, compactLayout);
-
-            // Trend label + arrow
-            var trendLabel = "";
-            if (_trendDirection == TREND_UP) {
-                trendLabel = text("trend.up");
-            } else if (_trendDirection == TREND_DOWN) {
-                trendLabel = text("trend.down");
-            } else {
-                trendLabel = text("trend.flat");
-            }
-
-            var arrowSize = pct(w, 2);
-            if (arrowSize < 5) { arrowSize = 5; }
-            var labelW = dc.getTextWidthInPixels(trendLabel, Graphics.FONT_XTINY);
-            var arrowX = cx - labelW / 2 - arrowSize - 4;
-            var arrowY = trendY + hXtiny / 2;
-
-            var arrowColor = _trendArrowColor(_selectedMetric, _trendDirection);
-            if (_trendDirection == TREND_UP) {
-                dc.setColor(arrowColor, Graphics.COLOR_TRANSPARENT);
-                drawTriangle(dc, arrowX, arrowY, arrowSize, true);
-            } else if (_trendDirection == TREND_DOWN) {
-                dc.setColor(arrowColor, Graphics.COLOR_TRANSPARENT);
-                drawTriangle(dc, arrowX, arrowY, arrowSize, false);
-            } else {
-                dc.setColor(Graphics.COLOR_YELLOW, Graphics.COLOR_TRANSPARENT);
-                dc.fillRectangle(arrowX - arrowSize / 2, arrowY - 1, arrowSize, 3);
-            }
-
-            var trendFont = Graphics.FONT_XTINY;
-            var trendTextMaxW = _availableWidthAtY(w, h, trendY, dc.getFontHeight(trendFont)) * 0.66;
-            var trendHardCap = pct(w, 72);
-            if (trendTextMaxW > trendHardCap) {
-                trendTextMaxW = trendHardCap;
-            }
-            var trendLayout = fitSingleLineText(dc, trendLabel, trendFont, trendFont, trendTextMaxW);
-
-            dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(cx, trendY, trendLayout[:font], trendLayout[:text].toString(), Graphics.TEXT_JUSTIFY_CENTER);
-
-            dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(cx, windowY, Graphics.FONT_XTINY,
-                windowLabel,
-                Graphics.TEXT_JUSTIFY_CENTER);
-
-        }
-
-        // Vertical scroll dots (window indicator) on the left edge
-        drawVerticalScrollDots(dc, pct(w, 8), h / 2, h);
-    }
-
-    //! Draw a mini line chart within the given bounding box.
-    function drawMiniChart(dc as Dc, x as Number, y as Number, w as Number, h as Number,
-        values as Array, lineColor, bounds as Dictionary, axisLabels as Array, compactLayout as Boolean) as Void {
-        if (values.size() < 2) { return; }
-
-        var minV = bounds[:minV].toFloat();
-        var range = bounds[:range].toFloat();
-
-        // Time range
-        var tsMin = (values[0] as Dictionary)[:ts].toNumber();
-        var tsMax = (values[values.size() - 1] as Dictionary)[:ts].toNumber();
-        var tsRange = tsMax - tsMin;
-        if (tsRange < 1) { tsRange = 1; }
-
-        // Plot area padding to prevent the line from visually becoming the x-axis.
-        var plotPadX = compactLayout ? 2 : 3;
-        var plotPadY = compactLayout ? 4 : 3;
-        var plotX = x + plotPadX;
-        var plotY = y + plotPadY;
-        var plotW = w - plotPadX * 2;
-        var plotH = h - plotPadY * 2;
-        if (plotW < 10 || plotH < 10) { return; }
-
-        // Map to pixel coordinates
-        var pts = new [values.size()];
-        for (var i = 0; i < values.size(); i++) {
-            var entry = values[i] as Dictionary;
-            var px = plotX + ((entry[:ts].toNumber() - tsMin) * plotW / tsRange);
-            var fpy = (entry[:val].toFloat() - minV) * plotH.toFloat() / range;
-            var py = plotY + plotH - fpy.toNumber();
-            pts[i] = [px, py];
-        }
-
-        // Subtle horizontal grid lines (top and middle only)
-        dc.setColor(0x333333, Graphics.COLOR_TRANSPARENT);
-        dc.drawLine(plotX, plotY, plotX + plotW, plotY);
-        dc.drawLine(plotX, plotY + plotH / 2, plotX + plotW, plotY + plotH / 2);
-
-        // Y-axis numeric references (aligned with plot area, not chart box)
-        var axisFont = Graphics.FONT_XTINY;
-        var axisX = x - 4;
-        var axisColor = 0x777777;
-        var axisH = dc.getFontHeight(axisFont);
-        dc.setColor(axisColor, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(axisX, plotY - axisH / 2, axisFont,
-            axisLabels[0] as String, Graphics.TEXT_JUSTIFY_RIGHT);
-        if (axisLabels[1] != null) {
-            dc.drawText(axisX, plotY + plotH / 2 - axisH / 2, axisFont,
-                axisLabels[1] as String, Graphics.TEXT_JUSTIFY_RIGHT);
-        }
-        dc.drawText(axisX, plotY + plotH - axisH / 2, axisFont,
-            axisLabels[2] as String, Graphics.TEXT_JUSTIFY_RIGHT);
-
-        // Connecting lines
-        dc.setPenWidth(compactLayout ? 1 : 2);
-        dc.setColor(lineColor, Graphics.COLOR_TRANSPARENT);
-        for (var i = 0; i < pts.size() - 1; i++) {
-            var p1 = pts[i] as Array;
-            var p2 = pts[i + 1] as Array;
-            dc.drawLine(p1[0], p1[1], p2[0], p2[1]);
-        }
-        dc.setPenWidth(1);
-
-        // Data point dots (last point larger)
-        var dotStep = values.size() / 24;
-        if (dotStep < 1) { dotStep = 1; }
-        for (var i = 0; i < pts.size(); i++) {
-            if (i != pts.size() - 1 && (i % dotStep) != 0) {
-                continue;
-            }
-            var p = pts[i] as Array;
-            var dotR = (i == pts.size() - 1) ? 4 : (compactLayout ? 1 : 2);
-            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-            dc.fillCircle(p[0], p[1], dotR);
-        }
-    }
-
-    //! Draw vertical scroll dots (Garmin-style page indicator for UP/DOWN scrolling).
-    //! Shows only the currently available trend windows for the selected metric.
-    function drawVerticalScrollDots(dc as Dc, x as Number, cy as Number, screenH as Number) as Void {
-        var windows = _availableTrendWindows();
-        var count = windows.size();
-        if (count == 0) { return; }
-
-        var spacing = pct(screenH, 4);
-        if (spacing < 8) { spacing = 8; }
-        var activeR = 4;
-        var inactiveR = 2;
-        var startY = cy - ((count - 1) * spacing) / 2;
-
-        var currentIndex = 0;
-        for (var i = 0; i < windows.size(); i += 1) {
-            if ((windows[i] as Number) == _trendWindow) {
-                currentIndex = i;
-                break;
-            }
-        }
-
-        for (var i = 0; i < count; i++) {
-            var dotY = startY + i * spacing;
-            if (i == currentIndex) {
-                dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-                dc.fillCircle(x, dotY, activeR);
-            } else {
-                dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
-                dc.fillCircle(x, dotY, inactiveR);
-            }
-        }
-    }
-
-    //! Returns the appropriate color for a trend arrow based on metric and direction.
-    //! For "lower is better" metrics (BMI, fat%, weight): DOWN=green, UP=red.
-    //! For "higher is better" metrics (muscle%, muscleKg, water%, bone, BMR): UP=green, DOWN=red.
-    function _trendArrowColor(metricIndex as Number, direction as Number) as Number {
-        // Metrics where LOWER is better: BMI(0), fat%(1), weight(6)
-        // Metrics where HIGHER is better: muscleKg(2), muscle%(3), water%(4), bone(5), BMR(7)
-        var lowerIsBetter = (metricIndex == 0 || metricIndex == 1 || metricIndex == 6);
-
-        if (direction == TREND_UP) {
-            return lowerIsBetter ? Graphics.COLOR_RED : Graphics.COLOR_GREEN;
-        } else if (direction == TREND_DOWN) {
-            return lowerIsBetter ? Graphics.COLOR_GREEN : Graphics.COLOR_RED;
-        }
-        return Graphics.COLOR_YELLOW;
-    }
-
-    function _trendValueBounds(values as Array) as Dictionary {
-        var minV = (values[0] as Dictionary)[:val].toFloat();
-        var maxV = minV;
-        for (var i = 1; i < values.size(); i++) {
-            var v = (values[i] as Dictionary)[:val].toFloat();
-            if (v < minV) { minV = v; }
-            if (v > maxV) { maxV = v; }
-        }
-
-        var range = maxV - minV;
-        if (range < 0.01) { range = 1.0; }
-        var vPad = range * 0.15;
-        minV = minV - vPad;
-        maxV = maxV + vPad;
-        range = maxV - minV;
-
-        return {
-            :minV => minV,
-            :maxV => maxV,
-            :midV => minV + range / 2.0,
-            :range => range
-        };
-    }
-
-    function _trendAxisLabels(bounds as Dictionary, compactLayout as Boolean) as Array {
-        var range = bounds[:range].toFloat();
-        var topLabel = _formatAxisValue(bounds[:maxV].toFloat(), range, compactLayout);
-        var midLabel = compactLayout ? null : _formatAxisValue(bounds[:midV].toFloat(), range, compactLayout);
-        var bottomLabel = _formatAxisValue(bounds[:minV].toFloat(), range, compactLayout);
-        return [topLabel, midLabel, bottomLabel];
-    }
-
-    function _maxTextWidth(dc as Dc, values as Array, font) as Number {
-        var maxWidth = 0;
-        for (var i = 0; i < values.size(); i++) {
-            var value = values[i];
-            if (value == null) { continue; }
-            var width = dc.getTextWidthInPixels(value as String, font);
-            if (width > maxWidth) {
-                maxWidth = width;
-            }
-        }
-        return maxWidth;
+        _trendRenderer.draw(dc, {
+            :domain => _domain,
+            :selectedMetric => _selectedMetric,
+            :trendWindow => _trendWindow,
+            :trendValues => _trendValues,
+            :trendDirection => _trendDirection,
+            :availableWindows => _availableTrendWindows(),
+            :currentValueText => formatValue(metric) + " " + metric[:unit].toString(),
+            :trendNoDataText => text("trend.no_data"),
+            :trendUpText => text("trend.up"),
+            :trendDownText => text("trend.down"),
+            :trendFlatText => text("trend.flat"),
+            :trendLastPrefix => text("trend.last_prefix"),
+            :trendLastSuffix => text("trend.last_suffix"),
+            :trendLastSuffixShort => text("trend.last_suffix_short")
+        });
     }
 
     //! Compute the usable horizontal width at a given Y on a round screen.
     function _availableWidthAtY(screenW as Number, screenH as Number, textY as Number, textH as Number) as Number {
         return availableWidthAtYGlobal(screenW, screenH, textY, textH);
-    }
-
-    function _trendWindowLabel(dc as Dc, font, maxWidth as Number) as String {
-        var fullLabel = text("trend.last_prefix") + " " + _trendWindow.toString() + " " + text("trend.last_suffix");
-        if (dc.getTextWidthInPixels(fullLabel, font) <= maxWidth) {
-            return fullLabel;
-        }
-
-        var compactLabel = _trendWindow.toString() + " " + text("trend.last_suffix_short");
-        if (dc.getTextWidthInPixels(compactLabel, font) <= maxWidth) {
-            return compactLabel;
-        }
-        return _trendWindow.toString();
-    }
-
-    function _formatAxisValue(value as Float, range as Float, compactLayout as Boolean) as String {
-        return fmt1Global(value);
     }
 
 }
@@ -1855,56 +782,3 @@ class BodyMetricsView extends WatchUi.View {
 const COLOR_ACCENT = 0x66CCFF;
 const COLOR_ACCENT_DIM = 0x224466;
 const COLOR_BADGE_BG = 0x335C99;
-
-//! Percentage of a total value.
-function pct(total as Number, percent as Number) as Number {
-    return total * percent / 100;
-}
-
-//! Compute the usable horizontal width at a given Y on a round screen.
-//! Uses the most constrained edge (top or bottom of text) to avoid clipping.
-function availableWidthAtYGlobal(screenW as Number, screenH as Number, textY as Number, textH as Number) as Number {
-    var r = screenW < screenH ? screenW / 2 : screenH / 2;
-    var cy = screenH / 2;
-    var dyTop = textY - cy;
-    if (dyTop < 0) { dyTop = -dyTop; }
-    var dyBottom = (textY + textH) - cy;
-    if (dyBottom < 0) { dyBottom = -dyBottom; }
-    var dy = dyTop > dyBottom ? dyTop : dyBottom;
-    if (dy >= r) { return 24; }
-    return (Math.sqrt((r * r - dy * dy).toFloat()).toNumber()) * 2;
-}
-
-//! Word-wrap text to fit within maxWidth pixels.
-function wrapTextGlobal(dc as Dc, value as String, font, maxWidth as Number) as Array {
-    var words = splitWordsGlobal(value);
-    var lines = [] as Array;
-    var current = "";
-    for (var i = 0; i < words.size(); i += 1) {
-        var word = words[i].toString();
-        var candidate = current.equals("") ? word : current + " " + word;
-        if (!current.equals("") && dc.getTextWidthInPixels(candidate, font) > maxWidth) {
-            lines.add(current);
-            current = word;
-        } else {
-            current = candidate;
-        }
-    }
-    if (!current.equals("")) { lines.add(current); }
-    return lines;
-}
-
-//! Split a string into words by spaces.
-function splitWordsGlobal(value as String) as Array {
-    var words = [] as Array;
-    var start = 0;
-    var length = value.length();
-    for (var i = 0; i < length; i += 1) {
-        if (value.substring(i, i + 1).equals(" ")) {
-            if (i > start) { words.add(value.substring(start, i)); }
-            start = i + 1;
-        }
-    }
-    if (start < length) { words.add(value.substring(start, length)); }
-    return words;
-}
