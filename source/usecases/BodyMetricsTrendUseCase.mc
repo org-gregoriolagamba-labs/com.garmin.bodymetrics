@@ -40,4 +40,12 @@ class BodyMetricsTrendUseCase {
     function historyTrend(metricIndex as Number, windowDays as Number) as Number {
         return _history.computeTrend(metricIndex, windowDays);
     }
+
+    function hasHistoryEntries() as Boolean {
+        return _history.hasEntries();
+    }
+
+    function removeLastHistoryEntry() as Void {
+        _history.removeLastEntry();
+    }
 }

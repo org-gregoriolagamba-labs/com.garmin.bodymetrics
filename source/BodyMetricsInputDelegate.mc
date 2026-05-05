@@ -101,15 +101,7 @@ class BodyMetricsInputDelegate extends WatchUi.InputDelegate {
 
     function _openMenu() as Boolean {
         if (_view.canOpenMenu()) {
-            var items = [] as Array;
-            items.add({:label => _view.text("menu.cat.data"), :id => :data_management});
-            items.add({:label => _view.text("menu.cat.options"), :id => :options});
-            items.add({:label => _view.text("menu.cat.info"), :id => :information});
-            if (DEBUG) {
-                items.add({:label => _view.text("debug.menu.title"), :id => :debug});
-            }
-            var menuView = new BodyMetricsMenuView(_view.text("menu.title"), items);
-            WatchUi.pushView(menuView, new BodyMetricsCustomMenuDelegate(menuView, _view), WatchUi.SLIDE_UP);
+            _view.openMenu();
         }
         return true;
     }

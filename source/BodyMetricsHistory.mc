@@ -229,6 +229,30 @@ class BodyMetricsHistory {
         return entry;
     }
 
+    //! Returns true if there is at least one recorded entry.
+    function hasEntries() as Boolean {
+        return _loadEntries().size() > 0;
+    }
+
+    //! Removes the most recent history entry and persists the change.
+    //! No-op if the history is empty.
+    function removeLastEntry() as Void {
+        var entries = _loadEntries();
+        if (entries.size() == 0) {
+            return;
+        }
+        var trimmed = [] as Array;
+        for (var i = 0; i < entries.size() - 1; i++) {
+            trimmed.add(entries[i]);
+        }
+        if (trimmed.size() == 0) {
+            Storage.deleteValue(HISTORY_KEY);
+        } else {
+            Storage.setValue(HISTORY_KEY, trimmed);
+        }
+        _invalidateCache();
+    }
+
     hidden function _loadEntries() as Array {
         if (_cachedEntries != null) {
             return _cachedEntries;

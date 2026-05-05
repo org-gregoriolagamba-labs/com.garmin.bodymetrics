@@ -89,9 +89,27 @@ class BodyMetricsDataProvider {
         Storage.setValue(MEAS_SOURCE_KEY, SOURCE_MANUAL);
     }
 
+    //! Clears a single measurement field from persistent storage by its draft key.
+    //! Read-only/derived fields (musclePct, bmr) are silently ignored.
+    function clearMeasurementFieldByKey(fieldKey as Symbol) as Void {
+        if (fieldKey == :weightKg) {
+            Storage.deleteValue(MEAS_WEIGHT_KEY);
+            Storage.deleteValue(MEAS_SYNC_TIMESTAMP_KEY);
+            Storage.deleteValue(MEAS_SOURCE_KEY);
+        } else if (fieldKey == :fatPct) {
+            Storage.deleteValue(MEAS_FAT_KEY);
+        } else if (fieldKey == :muscleKg) {
+            Storage.deleteValue(MEAS_MUSCLE_KG_KEY);
+        } else if (fieldKey == :waterPct) {
+            Storage.deleteValue(MEAS_WATER_KEY);
+        } else if (fieldKey == :boneKg) {
+            Storage.deleteValue(MEAS_BONE_KEY);
+        }
+        // :musclePct and :bmr are derived — no storage key to delete
+    }
+
     //! Clears all persisted measurement values and related metadata.
-    function clearStoredMeasurements() as Void {
-        Storage.deleteValue(MEAS_WEIGHT_KEY);
+    function clearStoredMeasurements() as Void {        Storage.deleteValue(MEAS_WEIGHT_KEY);
         Storage.deleteValue(MEAS_FAT_KEY);
         Storage.deleteValue(MEAS_MUSCLE_KG_KEY);
         Storage.deleteValue(MEAS_MUSCLE_KEY);  // legacy key cleanup

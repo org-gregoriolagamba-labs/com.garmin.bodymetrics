@@ -158,14 +158,14 @@ class BodyMetricsMenuView extends WatchUi.View {
 
 //! Toggle globale per abilitare funzioni di debug nel menu.
 //! Impostare a false prima della build di release.
-const DEBUG = false;
+const DEBUG = true;
 
 function buildDebugMenuItems(view as BodyMetricsView) as Array {
     var items = [] as Array;
     if (view.isDebugEnabled()) {
         items.add({:label => view.text("debug.menu.populate_history"), :id => :debug_populate_history});
         items.add({:label => view.text("debug.menu.clear_history"), :id => :debug_clear_history});
-        items.add({:label => "Validate locale", :id => :debug_validate_locale});
+        items.add({:label => view.text("debug.menu.validate_locale"), :id => :debug_validate_locale});
         items.add({:label => view.text("debug.menu.disable"), :id => :debug_disable});
     } else {
         items.add({:label => view.text("debug.menu.enable"), :id => :debug_enable});
@@ -278,17 +278,99 @@ class BodyMetricsDataMenuDelegate extends BodyMetricsBaseMenuDelegate {
             _view.requestDataMenuOnExit();
             _view.openProfileSetup();
         } else if (id == :data) {
+            var dataItems = [] as Array;
+            dataItems.add({:label => _view.text("menu.data_entry"), :id => :data_entry});
+            dataItems.add({:label => _view.text("menu.data_clear"), :id => :data_clear});
+            var dataView = new BodyMetricsMenuView(_view.text("menu.data"), dataItems);
+            WatchUi.pushView(dataView, new BodyMetricsDataEntryMenuDelegate(dataView, _view, _popCount + 1), WatchUi.SLIDE_UP);
+        } else if (id == :targets) {
+            var targetsItems = [] as Array;
+            targetsItems.add({:label => _view.text("menu.targets_set"), :id => :targets_set});
+            targetsItems.add({:label => _view.text("menu.targets_reset_all"), :id => :targets_reset_all});
+            var targetsView = new BodyMetricsMenuView(_view.text("menu.targets"), targetsItems);
+            WatchUi.pushView(targetsView, new BodyMetricsTargetsMenuDelegate(targetsView, _view, _popCount + 1), WatchUi.SLIDE_UP);
+        }
+        return true;
+    }
+}
+
+//! Delegate per il sotto-menu Rilevazioni (Inserisci, Cancella).
+class BodyMetricsDataEntryMenuDelegate extends BodyMetricsBaseMenuDelegate {
+
+    var _popCount as Number;
+
+    function initialize(menuView as BodyMetricsMenuView, view as BodyMetricsView, popCount as Number) {
+        BodyMetricsBaseMenuDelegate.initialize(menuView, view);
+        _popCount = popCount;
+    }
+
+    function onSelect() as Boolean {
+        var id = _menuView.selectedId();
+        if (id == :data_entry) {
             for (var i = 0; i < _popCount; i++) {
                 WatchUi.popView(WatchUi.SLIDE_DOWN);
             }
             _view.requestDataMenuOnExit();
             _view.openDataEntry();
-        } else if (id == :targets) {
+        } else if (id == :data_clear) {
+            for (var i = 0; i < _popCount; i++) {
+                WatchUi.popView(WatchUi.SLIDE_DOWN);
+            }
+            _view.clearMeasurementsWithFeedback();
+        }
+        return true;
+    }
+}
+
+//! Delegate per il menu contestuale del singolo campo wizard (rilevazione o obiettivo).
+//! :mode = :data  → offre "Cancella campo"
+//! :mode = :target → offre "Ripristina default"
+class BodyMetricsFieldContextMenuDelegate extends BodyMetricsBaseMenuDelegate {
+
+    var _fieldMode as Symbol;
+
+    function initialize(menuView as BodyMetricsMenuView, view as BodyMetricsView, fieldMode as Symbol) {
+        BodyMetricsBaseMenuDelegate.initialize(menuView, view);
+        _fieldMode = fieldMode;
+    }
+
+    function onSelect() as Boolean {
+        var id = _menuView.selectedId();
+        WatchUi.popView(WatchUi.SLIDE_DOWN);
+        if (id == :field_clear) {
+            _view.clearCurrentMeasurementField();
+        } else if (id == :target_reset_field) {
+            _view.clearCurrentTargetField();
+        } else if (id == :history_remove_last) {
+            _view.removeLastHistoryEntryWithFeedback();
+        }
+        return true;
+    }
+}
+
+//! Delegate per il sotto-menu obiettivi (Imposta, Cancella tutto).
+class BodyMetricsTargetsMenuDelegate extends BodyMetricsBaseMenuDelegate {
+
+    var _popCount as Number;
+
+    function initialize(menuView as BodyMetricsMenuView, view as BodyMetricsView, popCount as Number) {
+        BodyMetricsBaseMenuDelegate.initialize(menuView, view);
+        _popCount = popCount;
+    }
+
+    function onSelect() as Boolean {
+        var id = _menuView.selectedId();
+        if (id == :targets_set) {
             for (var i = 0; i < _popCount; i++) {
                 WatchUi.popView(WatchUi.SLIDE_DOWN);
             }
             _view.requestDataMenuOnExit();
             _view.openTargetEditor();
+        } else if (id == :targets_reset_all) {
+            for (var i = 0; i < _popCount; i++) {
+                WatchUi.popView(WatchUi.SLIDE_DOWN);
+            }
+            _view.clearTargetsWithFeedback();
         }
         return true;
     }
@@ -352,22 +434,27 @@ class BodyMetricsCustomDebugMenuDelegate extends BodyMetricsBaseMenuDelegate {
         var id = _menuView.selectedId();
         
         if (id == :debug_populate_history) {
+            // Pop debug submenu + main menu → torna alla view principale
+            WatchUi.popView(WatchUi.SLIDE_DOWN);
+            WatchUi.popView(WatchUi.SLIDE_DOWN);
             _view.populateHistoryDebug();
-            // Torna al menu parent (main menu)
-            WatchUi.popView(WatchUi.SLIDE_DOWN);
         } else if (id == :debug_clear_history) {
-            _view.clearHistoryDebug();
-            // Torna al menu parent (main menu)
+            // Pop debug submenu + main menu → torna alla view principale
             WatchUi.popView(WatchUi.SLIDE_DOWN);
+            WatchUi.popView(WatchUi.SLIDE_DOWN);
+            _view.clearHistoryDebug();
         } else if (id == :debug_validate_locale) {
+            // Pop debug submenu + main menu → badge visibile sulla view principale
+            WatchUi.popView(WatchUi.SLIDE_DOWN);
+            WatchUi.popView(WatchUi.SLIDE_DOWN);
             _view.validateLocaleDebug();
         } else if (id == :debug_disable) {
             _view.toggleDebugMode();
-            // Dopo disabilitare debug, ritorna al menu principale
+            // Torna al menu principale (1 pop: esce solo dal debug submenu)
             WatchUi.popView(WatchUi.SLIDE_DOWN);
         } else if (id == :debug_enable) {
             _view.toggleDebugMode();
-            // Dopo abilitare debug, rimani nella stessa pagina menu
+            // Rimani nel debug submenu aggiornato
             _refreshDebugMenu();
         }
         return true;

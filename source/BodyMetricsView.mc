@@ -15,6 +15,7 @@ class BodyMetricsView extends WatchUi.View {
         _domain.populateHistoryDebug();
         _invalidateTrendCache();
         _cacheTrendData();
+        showFeedbackBadge(text("debug.history_populated"), 2000);
         WatchUi.requestUpdate();
     }
 
@@ -23,6 +24,7 @@ class BodyMetricsView extends WatchUi.View {
         _domain.clearHistoryDebug();
         _invalidateTrendCache();
         _cacheTrendData();
+        showFeedbackBadge(text("debug.history_cleared"), 2000);
         WatchUi.requestUpdate();
     }
 
@@ -263,6 +265,67 @@ class BodyMetricsView extends WatchUi.View {
         return true;
     }
 
+    //! Routes the MENU key: contextual field menu in wizard modes, main menu otherwise.
+    function openMenu() as Void {
+        if (_mode == MODE_DATA) {
+            if (!_domain.isMeasurementFieldReadOnly(_dataIndex)) {
+                var items = [{:label => text("menu.field_clear"), :id => :field_clear}];
+                var ctxView = new BodyMetricsMenuView(text("menu.field_options"), items);
+                WatchUi.pushView(ctxView, new BodyMetricsFieldContextMenuDelegate(ctxView, self, :data), WatchUi.SLIDE_UP);
+            }
+            return;
+        }
+        if (_mode == MODE_TARGET) {
+            var items = [{:label => text("menu.target_reset_field"), :id => :target_reset_field}];
+            var ctxView = new BodyMetricsMenuView(text("menu.field_options"), items);
+            WatchUi.pushView(ctxView, new BodyMetricsFieldContextMenuDelegate(ctxView, self, :target), WatchUi.SLIDE_UP);
+            return;
+        }
+        if (_mode == MODE_TREND && _domain.hasHistoryEntries()) {
+            var items = [{:label => text("menu.history_remove_last"), :id => :history_remove_last}];
+            var ctxView = new BodyMetricsMenuView(text("menu.field_options"), items);
+            WatchUi.pushView(ctxView, new BodyMetricsFieldContextMenuDelegate(ctxView, self, :trend), WatchUi.SLIDE_UP);
+            return;
+        }
+        _openMainMenu();
+    }
+
+    function _openMainMenu() as Void {
+        var items = [] as Array;
+        items.add({:label => text("menu.cat.data"), :id => :data_management});
+        items.add({:label => text("menu.cat.options"), :id => :options});
+        items.add({:label => text("menu.cat.info"), :id => :information});
+        if (DEBUG) {
+            items.add({:label => text("debug.menu.title"), :id => :debug});
+        }
+        var menuView = new BodyMetricsMenuView(text("menu.title"), items);
+        WatchUi.pushView(menuView, new BodyMetricsCustomMenuDelegate(menuView, self), WatchUi.SLIDE_UP);
+    }
+
+    function clearCurrentMeasurementField() as Void {
+        _domain.clearMeasurementField(_dataIndex);
+        _dataDraft = _domain.currentMeasurements();
+        _invalidateTrendCache();
+        _cacheTrendData();
+        showFeedbackBadge(text("menu.field_cleared"), 2000);
+        WatchUi.requestUpdate();
+    }
+
+    function clearCurrentTargetField() as Void {
+        _domain.clearTargetField(_targetIndex);
+        _targetDraft = _domain.currentTargets();
+        showFeedbackBadge(text("menu.target_field_reset"), 2000);
+        WatchUi.requestUpdate();
+    }
+
+    function removeLastHistoryEntryWithFeedback() as Void {
+        _domain.removeLastHistoryEntry();
+        _invalidateTrendCache();
+        _cacheTrendData();
+        showFeedbackBadge(text("menu.history_entry_removed"), 2000);
+        WatchUi.requestUpdate();
+    }
+
     //! Check if a screen tap hits the (i) info icon
     function isInfoIconTap(x as Number, y as Number) as Boolean {
         if (_mode != MODE_SUMMARY) { return false; }
@@ -307,6 +370,24 @@ class BodyMetricsView extends WatchUi.View {
         WatchUi.requestUpdate();
     }
 
+    function clearMeasurementsWithFeedback() as Void {
+        _domain.clearMeasurements();
+        _dataDraft = _domain.currentMeasurements();
+        _dataIndex = 0;
+        _invalidateTrendCache();
+        _cacheTrendData();
+        showFeedbackBadge(text("menu.data_cleared"), 2200);
+        WatchUi.requestUpdate();
+    }
+
+    function clearTargetsWithFeedback() as Void {
+        _domain.resetAllTargets();
+        _targetDraft = _domain.currentTargets();
+        _targetIndex = 0;
+        showFeedbackBadge(text("menu.targets_cleared"), 2200);
+        WatchUi.requestUpdate();
+    }
+
     function resetAllDataWithFeedback() as Void {
         _domain.resetAllUserData();
         _profileDraft = _domain.currentProfile();
@@ -342,13 +423,13 @@ class BodyMetricsView extends WatchUi.View {
         var w = dc.getWidth();
         var h = dc.getHeight();
         var font = Graphics.FONT_XTINY;
-        var padX = 8;
-        var padY = 3;
+        var padX = 10;
+        var padY = 4;
         var textW = dc.getTextWidthInPixels(_feedbackBadgeText, font);
         var badgeW = textW + (padX * 2);
         var badgeH = dc.getFontHeight(font) + (padY * 2);
         var x = (w - badgeW) / 2;
-        var y = h - pct(h, 16);
+        var y = (h - badgeH) / 2;
 
         dc.setColor(0x2A5A2A, 0x2A5A2A);
         dc.fillRoundedRectangle(x, y, badgeW, badgeH, badgeH / 2);

@@ -67,6 +67,14 @@ class BodyMetricsDomain {
         rebuildMetrics();
     }
 
+    function hasHistoryEntries() as Boolean {
+        return _trendUseCase.hasHistoryEntries();
+    }
+
+    function removeLastHistoryEntry() as Void {
+        _trendUseCase.removeLastHistoryEntry();
+    }
+
     function disableDebugMode() as Void {
         _trendUseCase.disableDebugMode();
         rebuildMetrics();
@@ -194,6 +202,31 @@ class BodyMetricsDomain {
 
     function saveTargets(draft as Dictionary) as Void {
         _targetsUseCase.saveTargets(draft);
+    }
+
+    function clearMeasurements() as Void {
+        _dataProvider.clearStoredMeasurements();
+        _measurements = _dataProvider.loadMeasurements();
+        rebuildMetrics();
+    }
+
+    function clearMeasurementField(fieldIndex as Number) as Void {
+        var field = _measurementsUseCase.measurementFieldDefinition(fieldIndex);
+        if (field.hasKey(:readOnly) && field[:readOnly]) {
+            return;
+        }
+        _dataProvider.clearMeasurementFieldByKey(field[:key]);
+        _measurements = _dataProvider.loadMeasurements();
+        rebuildMetrics();
+    }
+
+    function isMeasurementFieldReadOnly(fieldIndex as Number) as Boolean {
+        var field = _measurementsUseCase.measurementFieldDefinition(fieldIndex);
+        return field.hasKey(:readOnly) && field[:readOnly];
+    }
+
+    function clearTargetField(fieldIndex as Number) as Void {
+        _targetsUseCase.clearTargetField(fieldIndex);
     }
 
     function resetAllTargets() as Void {

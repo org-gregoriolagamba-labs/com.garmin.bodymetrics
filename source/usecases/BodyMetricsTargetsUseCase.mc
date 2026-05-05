@@ -88,6 +88,11 @@ class BodyMetricsTargetsUseCase {
         }
     }
 
+    function clearTargetField(fieldIndex as Number) as Void {
+        var field = targetFieldDefinition(fieldIndex);
+        _targets.clearUserTarget(field[:metricId].toString());
+    }
+
     function effectiveTargetForMetric(metric as Dictionary) {
         if (metric == null || !metric.hasKey(:id)) {
             return null;
