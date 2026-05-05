@@ -16,7 +16,6 @@ class BodyMetricsTargetsUseCase {
             {:key => :bmi, :metricId => "bmi", :label => _locale.metricLabel("bmi"), :unit => "kg/m2", :min => 15.0, :max => 35.0, :step => 0.1},
             {:key => :fat_pct, :metricId => "fat_pct", :label => _locale.metricLabel("fat_pct"), :unit => "%", :min => 5.0, :max => 45.0, :step => 0.1},
             {:key => :muscle_kg, :metricId => "muscle_kg", :label => _locale.metricLabel("muscle_kg"), :unit => "kg", :min => 15.0, :max => 70.0, :step => 0.1},
-            {:key => :muscle_pct, :metricId => "muscle_pct", :label => _locale.metricLabel("muscle_pct"), :unit => "%", :min => 20.0, :max => 65.0, :step => 0.1},
             {:key => :water_pct, :metricId => "water_pct", :label => _locale.metricLabel("water_pct"), :unit => "%", :min => 40.0, :max => 75.0, :step => 0.1},
             {:key => :bone_kg, :metricId => "bone_kg", :label => _locale.metricLabel("bone_kg"), :unit => "kg", :min => 1.0, :max => 6.0, :step => 0.1},
             {:key => :weight, :metricId => "weight", :label => _locale.metricLabel("weight"), :unit => "kg", :min => 40.0, :max => 200.0, :step => 0.1}

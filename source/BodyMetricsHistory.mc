@@ -3,14 +3,14 @@ import Toybox.Lang;
 import Toybox.Time;
 
 //! Persistent timeseries storage for body metrics trend analysis.
-//! Each daily snapshot: [timestamp, bmi, fat%, muscleKg, muscle%, water%, boneKg, weight, bmr].
-//! Metric indices 0-7 match the order in BodyMetricsDomain.buildMetrics().
+//! Each daily snapshot: [timestamp, bmi, fat%, muscleKg, muscle%, water%, boneKg, weight, bmr, potenza].
+//! Metric indices 0-8 match the order in BodyMetricsDomain.buildMetrics().
 
 const HISTORY_KEY = "bm.hist";
 const HISTORY_DEBUG_BACKUP_KEY = "bm.hist.debug.backup";
 const HISTORY_DEBUG_ACTIVE_KEY = "bm.hist.debug.active";
 const HISTORY_MAX_ENTRIES = 90;
-const HISTORY_FIELDS = 9; // timestamp + 8 metrics
+const HISTORY_FIELDS = 10; // timestamp + 9 metrics
 
 const TREND_UP = 1;
 const TREND_FLAT = 0;
@@ -212,7 +212,7 @@ class BodyMetricsHistory {
     }
 
     //! Returns the most recent raw history entry array, or null if no entries.
-    //! Format: [ts, bmi, fat%, muscleKg, muscle%, water%, boneKg, weightKg, bmr]
+    //! Format: [ts, bmi, fat%, muscleKg, muscle%, water%, boneKg, weightKg, bmr, potenza]
     function lastRawEntry() as Array? {
         var entries = _loadEntries();
         if (entries.size() == 0) { return null; }
@@ -222,7 +222,7 @@ class BodyMetricsHistory {
     hidden function _buildEntry(ts as Number, metrics as Array) as Array {
         var entry = new [HISTORY_FIELDS];
         entry[0] = ts;
-        for (var i = 0; i < 8 && i < metrics.size(); i++) {
+        for (var i = 0; i < 9 && i < metrics.size(); i++) {
             var m = metrics[i] as Dictionary;
             entry[i + 1] = m[:available] ? round1Global(m[:value].toFloat()) : null;
         }

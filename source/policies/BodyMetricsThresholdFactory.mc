@@ -163,6 +163,46 @@ class BodyMetricsThresholdFactory {
         return buildLowThresholds(greenMin, greenMax, 0.3, 0.7);
     }
 
+    //! Estimated muscle power range in watts: Potenza (W) = muscle_kg × 35.
+    //! Thresholds derived from muscleKgRange × 35, using POLICY_LOW_ONLY (more = better).
+    function potenzaRange(profile as Dictionary) as Dictionary {
+        var sex = profile[:sex].toString();
+        var bodyProfile = profile[:bodyProfile].toString();
+        var greenMin;
+        var greenMax;
+
+        if (sex.equals("female")) {
+            if (bodyProfile.equals("endurance")) {
+                greenMin = 26.0 * 35.0;
+                greenMax = 34.0 * 35.0;
+            } else if (bodyProfile.equals("strength")) {
+                greenMin = 29.0 * 35.0;
+                greenMax = 40.0 * 35.0;
+            } else {
+                greenMin = 27.0 * 35.0;
+                greenMax = 36.0 * 35.0;
+            }
+        } else {
+            if (bodyProfile.equals("endurance")) {
+                greenMin = 33.0 * 35.0;
+                greenMax = 44.0 * 35.0;
+            } else if (bodyProfile.equals("strength")) {
+                greenMin = 38.0 * 35.0;
+                greenMax = 52.0 * 35.0;
+            } else {
+                greenMin = 35.0 * 35.0;
+                greenMax = 46.0 * 35.0;
+            }
+        }
+
+        if (profile[:ageBand].equals("60_plus")) {
+            greenMin -= 2.0 * 35.0;
+            greenMax -= 2.0 * 35.0;
+        }
+
+        return buildLowThresholds(greenMin, greenMax, 3.0 * 35.0, 7.0 * 35.0);
+    }
+
     function weightTargetRange(profile as Dictionary, bmiRange as Dictionary) as Dictionary {
         var heightM = profile[:heightCm].toFloat() / 100.0;
         var heightSquared = heightM * heightM;

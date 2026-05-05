@@ -41,7 +41,8 @@ class BodyMetricsMeasurementsUseCase {
         var draft = {
             :weightKg => measurements[:weightKg] != null ? measurements[:weightKg] : 75.0,
             :fatPct => measurements[:fatPct] != null ? measurements[:fatPct] : 25.0,
-            :musclePct => measurements[:musclePct] != null ? measurements[:musclePct] : 38.0,
+            :muscleKg => measurements[:muscleKg] != null ? measurements[:muscleKg] : 30.0,
+            :musclePct => null,
             :waterPct => measurements[:waterPct] != null ? measurements[:waterPct] : 55.0,
             :boneKg => measurements[:boneKg] != null ? measurements[:boneKg] : 3.5,
             :bmr => null
@@ -86,7 +87,17 @@ class BodyMetricsMeasurementsUseCase {
 
     function refreshDerivedMeasurementFields(draft as Dictionary, profile as Dictionary) as Dictionary {
         draft[:bmr] = derivedBmrValueForDraft(draft, profile);
+        draft[:musclePct] = derivedMusclePctForDraft(draft);
         return draft;
+    }
+
+    function derivedMusclePctForDraft(draft as Dictionary) {
+        var muscleKg = draft[:muscleKg];
+        var weightKg = draft[:weightKg];
+        if (muscleKg == null || weightKg == null || weightKg.toFloat() <= 0.0) {
+            return null;
+        }
+        return _round1(muscleKg.toFloat() / weightKg.toFloat() * 100.0);
     }
 
     function derivedBmrValueForDraft(draft as Dictionary, profile as Dictionary) {

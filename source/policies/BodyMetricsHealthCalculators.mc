@@ -38,6 +38,22 @@ class BodyMetricsHealthCalculators {
         return _round1(measurements[:weightKg].toFloat() * (measurements[:musclePct].toFloat() / 100.0));
     }
 
+    //! Derive muscle % from directly entered muscle mass (kg) and weight (kg).
+    //! muscle_pct = muscle_kg / weight_kg * 100
+    function calculateMusclePct(muscleKg as Float, weightKg as Float) as Float {
+        if (weightKg <= 0.0) { return 0.0; }
+        return _round1(muscleKg / weightKg * 100.0);
+    }
+
+    //! Estimated muscle power output in watts.
+    //! Formula: Potenza (W) = muscle_kg × 35
+    //! Based on specific power of mixed skeletal muscle (~35 W/kg) referenced in
+    //! exercise physiology literature (McArdle, Katch & Katch, Exercise Physiology, 8th ed.;
+    //! Fitts & Widrick, 1996, "Muscle mechanics: adaptations with exercise-training").
+    function calculatePotenza(muscleKg as Float) as Float {
+        return _round1(muscleKg * 35.0);
+    }
+
     hidden function _round1(v as Float) as Float {
         return Math.round(v * 10.0).toFloat() / 10.0;
     }

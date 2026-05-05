@@ -6,7 +6,8 @@ import Toybox.Time.Gregorian;
 //! Storage keys for persisted measurements
 const MEAS_WEIGHT_KEY = "bodyMetrics.meas.weightKg";
 const MEAS_FAT_KEY = "bodyMetrics.meas.fatPct";
-const MEAS_MUSCLE_KEY = "bodyMetrics.meas.musclePct";
+const MEAS_MUSCLE_KEY = "bodyMetrics.meas.musclePct";  // legacy key (pre-v2): no longer written, kept for cleanup
+const MEAS_MUSCLE_KG_KEY = "bodyMetrics.meas.muscleKg";
 const MEAS_WATER_KEY = "bodyMetrics.meas.waterPct";
 const MEAS_BONE_KEY = "bodyMetrics.meas.boneKg";
 const MEAS_TIMESTAMP_KEY = "bodyMetrics.meas.timestamp";
@@ -51,14 +52,21 @@ class BodyMetricsDataProvider {
 
         // Body composition: only from manual entry (Storage)
         var fatVal = Storage.getValue(MEAS_FAT_KEY);
-        var muscleVal = Storage.getValue(MEAS_MUSCLE_KEY);
+        var muscleKgVal = Storage.getValue(MEAS_MUSCLE_KG_KEY);
         var waterVal = Storage.getValue(MEAS_WATER_KEY);
         var boneVal = Storage.getValue(MEAS_BONE_KEY);
+
+        // muscle_pct is derived from muscleKg / weightKg (Garmin Index provides kg, not %)
+        var musclePctDerived = null;
+        if (muscleKgVal != null && weightKg != null && weightKg > 0.0) {
+            musclePctDerived = Math.round(muscleKgVal.toFloat() / weightKg.toFloat() * 1000.0).toFloat() / 10.0;
+        }
 
         return {
             :weightKg => weightKg,
             :fatPct => fatVal != null ? fatVal.toFloat() : null,
-            :musclePct => muscleVal != null ? muscleVal.toFloat() : null,
+            :muscleKg => muscleKgVal != null ? muscleKgVal.toFloat() : null,
+            :musclePct => musclePctDerived,
             :waterPct => waterVal != null ? waterVal.toFloat() : null,
             :boneKg => boneVal != null ? boneVal.toFloat() : null,
             :bmr => null,
@@ -72,7 +80,8 @@ class BodyMetricsDataProvider {
     function saveMeasurements(measurements as Dictionary) as Void {
         Storage.setValue(MEAS_WEIGHT_KEY, measurements[:weightKg].toFloat());
         Storage.setValue(MEAS_FAT_KEY, measurements[:fatPct].toFloat());
-        Storage.setValue(MEAS_MUSCLE_KEY, measurements[:musclePct].toFloat());
+        Storage.setValue(MEAS_MUSCLE_KG_KEY, measurements[:muscleKg].toFloat());
+        Storage.deleteValue(MEAS_MUSCLE_KEY);  // remove legacy musclePct key if present
         Storage.setValue(MEAS_WATER_KEY, measurements[:waterPct].toFloat());
         Storage.setValue(MEAS_BONE_KEY, measurements[:boneKg].toFloat());
         Storage.setValue(MEAS_TIMESTAMP_KEY, Time.now().value());
@@ -84,7 +93,8 @@ class BodyMetricsDataProvider {
     function clearStoredMeasurements() as Void {
         Storage.deleteValue(MEAS_WEIGHT_KEY);
         Storage.deleteValue(MEAS_FAT_KEY);
-        Storage.deleteValue(MEAS_MUSCLE_KEY);
+        Storage.deleteValue(MEAS_MUSCLE_KG_KEY);
+        Storage.deleteValue(MEAS_MUSCLE_KEY);  // legacy key cleanup
         Storage.deleteValue(MEAS_WATER_KEY);
         Storage.deleteValue(MEAS_BONE_KEY);
         Storage.deleteValue(MEAS_TIMESTAMP_KEY);
@@ -149,7 +159,8 @@ class BodyMetricsDataProvider {
         return [
             {:key => :weightKg, :label => locale.text("data.weight"), :unit => "kg", :min => 30.0, :max => 250.0, :step => 0.1, :decimals => 1, :readOnly => weightReadOnly, :readOnlyText => locale.text("data.from_garmin"), :badgeText => locale.text("data.badge_garmin")},
             {:key => :fatPct, :label => locale.text("data.fat_pct"), :unit => "%", :min => 3.0, :max => 60.0, :step => 0.1, :decimals => 1},
-            {:key => :musclePct, :label => locale.text("data.muscle_pct"), :unit => "%", :min => 15.0, :max => 70.0, :step => 0.1, :decimals => 1},
+            {:key => :muscleKg, :label => locale.text("data.muscle_kg"), :unit => "kg", :min => 10.0, :max => 80.0, :step => 0.1, :decimals => 1},
+            {:key => :musclePct, :label => locale.text("data.muscle_pct"), :unit => "%", :min => 10.0, :max => 80.0, :step => 0.1, :decimals => 1, :readOnly => true, :readOnlyText => locale.text("data.read_only"), :badgeText => locale.text("data.badge_auto")},
             {:key => :waterPct, :label => locale.text("data.water_pct"), :unit => "%", :min => 25.0, :max => 80.0, :step => 0.1, :decimals => 1},
             {:key => :boneKg, :label => locale.text("data.bone_kg"), :unit => "kg", :min => 1.0, :max => 8.0, :step => 0.1, :decimals => 1},
             {:key => :bmr, :label => locale.text("data.bmr"), :unit => "kcal", :min => 800.0, :max => 4000.0, :step => 10.0, :decimals => 1, :readOnly => true, :readOnlyText => locale.text("data.read_only"), :badgeText => locale.text("data.badge_auto")}

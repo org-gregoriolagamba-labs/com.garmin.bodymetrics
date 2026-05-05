@@ -42,13 +42,14 @@ class BodyMetricsDomain {
         // marcandole come inserite manualmente alla data odierna.
         var last = _trendUseCase.lastRawEntry();
         if (last != null) {
-            // Format: [ts(0), bmi(1), fat%(2), muscleKg(3), muscle%(4), water%(5), boneKg(6), weightKg(7), bmr(8)]
+            // Format: [ts(0), bmi(1), fat%(2), muscleKg(3), muscle%(4), water%(5), boneKg(6), weightKg(7), bmr(8), potenza(9)]
             // Costruisce _measurements direttamente dall'entry — senza passare per Storage,
             // così il peso Garmin non sovrascrive il valore debug (solo in memoria, non persiste).
             var entry = last as Array;
             _measurements = {
                 :weightKg     => entry[7] != null ? (entry[7] as Float).toFloat() : null,
                 :fatPct       => entry[2] != null ? (entry[2] as Float).toFloat() : null,
+                :muscleKg     => entry[3] != null ? (entry[3] as Float).toFloat() : null,
                 :musclePct    => entry[4] != null ? (entry[4] as Float).toFloat() : null,
                 :waterPct     => entry[5] != null ? (entry[5] as Float).toFloat() : null,
                 :boneKg       => entry[6] != null ? (entry[6] as Float).toFloat() : null,
@@ -403,25 +404,22 @@ class BodyMetricsDomain {
             metrics.add(unavailableMetric("fat_pct", "Grasso %", "%"));
         }
 
-        // Muscle kg - calcolata da weight * musclePct/100: fonte dipende da entrambe le sorgenti.
-        // CG se weight è Garmin e body comp è Garmin; CM se entrambe manuali o miste.
-        if (measurements[:weightKg] != null && measurements[:musclePct] != null) {
-            var muscleKgSrc = (weightIsGarmin && bodySrc != null && bodySrc.equals(SOURCE_MANUAL))
-                ? SOURCE_CALC_MANUAL
-                : (weightIsGarmin ? SOURCE_CALC_GARMIN : SOURCE_CALC_MANUAL);
+        // Muscle kg - entered directly by user (Garmin Index Smart Scale provides kg).
+        // Source is manual body comp input.
+        if (measurements[:muscleKg] != null) {
             var m = buildLowOnlyMetric(
-                "muscle_kg", "Massa muscolare", "kg", muscleKgFromMeasurements(measurements),
+                "muscle_kg", "Massa muscolare", "kg", measurements[:muscleKg],
                 muscleKgBand[:greenMin], muscleKgBand[:greenMax],
                 muscleKgBand[:yellowMin], muscleKgBand[:orangeMin]
             );
             m[:available] = true;
-            m[:source] = muscleKgSrc;
+            m[:source] = bodySrc;
             metrics.add(m);
         } else {
             metrics.add(unavailableMetric("muscle_kg", "Massa muscolare", "kg"));
         }
 
-        // Muscle% - requires musclePct
+        // Muscle% - derived from muscle_kg / weight_kg (no longer entered manually).
         if (measurements[:musclePct] != null) {
             var m = buildLowOnlyMetric(
                 "muscle_pct", "Muscoli %", "%", measurements[:musclePct],
@@ -429,7 +427,7 @@ class BodyMetricsDomain {
                 musclePctBand[:yellowMin], musclePctBand[:orangeMin]
             );
             m[:available] = true;
-            m[:source] = bodySrc;
+            m[:source] = SOURCE_CALC_MANUAL;
             metrics.add(m);
         } else {
             metrics.add(unavailableMetric("muscle_pct", "Muscoli %", "%"));
@@ -496,6 +494,23 @@ class BodyMetricsDomain {
             metrics.add(m);
         } else {
             metrics.add(unavailableMetric("bmr", "BMR", "kcal"));
+        }
+
+        // Potenza muscolare stimata (W) = muscle_kg × 35.
+        // Basata sulla potenza specifica del muscolo scheletrico misto (~35 W/kg)
+        // (McArdle, Katch & Katch, Exercise Physiology, 8th ed.; Fitts & Widrick, 1996).
+        var potenzaBand = potenzaRange(profile);
+        if (measurements[:muscleKg] != null) {
+            var m = buildLowOnlyMetric(
+                "potenza", "Potenza musc.", "W", calculatePotenza(measurements[:muscleKg].toFloat()),
+                potenzaBand[:greenMin], potenzaBand[:greenMax],
+                potenzaBand[:yellowMin], potenzaBand[:orangeMin]
+            );
+            m[:available] = true;
+            m[:source] = bodySrc;
+            metrics.add(m);
+        } else {
+            metrics.add(unavailableMetric("potenza", "Potenza musc.", "W"));
         }
 
         return metrics;
@@ -620,6 +635,14 @@ class BodyMetricsDomain {
         return _calculators.muscleKgFromMeasurements(measurements);
     }
 
+    function calculatePotenza(muscleKg as Float) as Float {
+        return _calculators.calculatePotenza(muscleKg);
+    }
+
+    function potenzaRange(profile as Dictionary) as Dictionary {
+        return _thresholdFactory.potenzaRange(profile);
+    }
+
     function metricsCount() as Number {
         return _metrics.size();
     }
@@ -728,7 +751,7 @@ class BodyMetricsDomain {
                 _locale.text("info.factor.height");
         }
 
-        if (metricId.equals("fat_pct") || metricId.equals("muscle_kg") || metricId.equals("muscle_pct")) {
+        if (metricId.equals("fat_pct") || metricId.equals("muscle_kg") || metricId.equals("muscle_pct") || metricId.equals("potenza")) {
             return _locale.text("info.factor.sex") + ", " +
                 _locale.text("info.factor.age") + ", " +
                 _locale.text("info.factor.training");
