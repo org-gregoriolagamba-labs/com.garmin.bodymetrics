@@ -140,21 +140,6 @@ class BodyMetricsDataProvider {
         return Storage.getValue(MEAS_TIMESTAMP_KEY);
     }
 
-    //! Formats the last update time as "dd/mm HH:MM" or null if no data.
-    function lastUpdateLabel() as String {
-        var ts = lastUpdateTimestamp();
-        if (ts == null) {
-            return "--";
-        }
-        var moment = new Time.Moment(ts);
-        var info = Gregorian.info(moment, Time.FORMAT_SHORT);
-        var day = info.day.toNumber();
-        var month = info.month.toNumber();
-        var hour = info.hour.toNumber();
-        var min = info.min.toNumber();
-        return pad2(day) + "/" + pad2(month) + " " + pad2(hour) + ":" + pad2(min);
-    }
-
     //! Formats the last update date as "dd/mm/yyyy" or null if no data.
     function lastUpdateDateLabel() as String {
         var ts = lastUpdateTimestamp();

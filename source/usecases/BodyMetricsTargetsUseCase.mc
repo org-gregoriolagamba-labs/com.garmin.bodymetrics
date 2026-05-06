@@ -47,13 +47,16 @@ class BodyMetricsTargetsUseCase {
     function cycleTargetField(draft as Dictionary, index as Number, delta as Number) as Dictionary {
         var field = targetFieldDefinition(index);
         var key = field[:key];
-        var current = draft[key] != null ? draft[key].toFloat() : field[:min].toFloat();
+        var minVal = field[:min].toFloat();
+        var rawCurrent = draft[key] != null ? draft[key].toFloat() : 0.0;
+        var current = rawCurrent >= minVal ? rawCurrent : minVal;
+        var maxVal = field[:max].toFloat();
         var step = field[:step].toFloat();
         var next = current + (delta * step);
-        if (next < field[:min].toFloat()) {
-            next = field[:max].toFloat();
-        } else if (next > field[:max].toFloat()) {
-            next = field[:min].toFloat();
+        if (next < minVal) {
+            next = maxVal;
+        } else if (next > maxVal) {
+            next = minVal;
         }
         draft[key] = _round1(next);
         return draft;

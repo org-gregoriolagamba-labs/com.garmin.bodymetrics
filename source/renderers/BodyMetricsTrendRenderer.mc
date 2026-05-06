@@ -19,10 +19,12 @@ class BodyMetricsTrendRenderer {
         var selectedMetric = model[:selectedMetric].toNumber();
         var trendWindow = model[:trendWindow].toNumber();
         var trendValues = model[:trendValues] as Array;
+        var trendSampleCount = model[:trendSampleCount].toNumber();
         var trendDirection = model[:trendDirection].toNumber();
         var availableWindows = model[:availableWindows] as Array;
 
         var trendNoDataText = model[:trendNoDataText].toString();
+        var trendSingleEntryText = model[:trendSingleEntryText].toString();
         var trendUpText = model[:trendUpText].toString();
         var trendDownText = model[:trendDownText].toString();
         var trendFlatText = model[:trendFlatText].toString();
@@ -66,7 +68,8 @@ class BodyMetricsTrendRenderer {
         dc.drawText(cx, valueY, valueFont, currentValueText, Graphics.TEXT_JUSTIFY_CENTER);
 
         if (trendWindow == 0 || trendValues.size() < 2) {
-            var noDataLayout = fitTextBlockGlobal(dc, trendNoDataText, Graphics.FONT_XTINY, Graphics.FONT_XTINY, _pct(w, 72));
+            var emptyStateText = trendSampleCount == 1 ? trendSingleEntryText : trendNoDataText;
+            var noDataLayout = fitTextBlockGlobal(dc, emptyStateText, Graphics.FONT_XTINY, Graphics.FONT_XTINY, _pct(w, 72));
             drawCenteredTextBlockGlobal(dc, cx, (h / 2) - (noDataLayout[:height] / 2), noDataLayout, Graphics.COLOR_DK_GRAY);
         } else {
             var compactLayout = (trendWindow >= 90 || w < 240);

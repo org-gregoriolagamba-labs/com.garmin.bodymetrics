@@ -84,7 +84,8 @@ class BodyMetricsHistory {
             seed += 1;
             bmr = _driftValue(bmrBase, -0.12 * effDrift, 3.0, seed);  // parte dal BMR reale del profilo
             seed += 1;
-            var entry = [ts, bmi, fat, muscleKg, musclePct, water, bone, weight, bmr];
+            var potenza = round1Global(muscleKg * 35.0);
+            var entry = [ts, bmi, fat, muscleKg, musclePct, water, bone, weight, bmr, potenza];
             entries.add(entry);
         }
         Storage.setValue(HISTORY_KEY, entries);

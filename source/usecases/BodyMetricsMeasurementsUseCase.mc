@@ -13,14 +13,6 @@ class BodyMetricsMeasurementsUseCase {
         _calculators = calculators;
     }
 
-    function hasStoredMeasurements() as Boolean {
-        return _dataProvider.hasStoredMeasurements();
-    }
-
-    function lastUpdateLabel() as String {
-        return _dataProvider.lastUpdateLabel();
-    }
-
     function lastUpdateDateLabel() as String {
         return _dataProvider.lastUpdateDateLabel();
     }

@@ -364,10 +364,15 @@ class BodyMetricsView extends WatchUi.View {
         _reopenDataMenuAfterExit = true;
     }
 
-    function resetAllTargets() as Void {
-        _domain.resetAllTargets();
-        _targetDraft = _domain.currentTargets();
+    function _resumeAfterWizardExit() as Boolean {
+        if (_reopenDataMenuAfterExit) {
+            _reopenDataMenuAfterExit = false;
+            WatchUi.requestUpdate();
+            openDataMenu();
+            return true;
+        }
         WatchUi.requestUpdate();
+        return false;
     }
 
     function clearMeasurementsWithFeedback() as Void {
@@ -554,12 +559,7 @@ class BodyMetricsView extends WatchUi.View {
                 _invalidateTrendCache();
                 _mode = MODE_SUMMARY;
                 _selectedMetric = 0;
-                if (_reopenDataMenuAfterExit) {
-                    _reopenDataMenuAfterExit = false;
-                    WatchUi.requestUpdate();
-                    openDataMenu();
-                    return;
-                }
+                if (_resumeAfterWizardExit()) { return; }
             }
             WatchUi.requestUpdate();
             return;
@@ -573,12 +573,7 @@ class BodyMetricsView extends WatchUi.View {
                 _invalidateTrendCache();
                 _mode = MODE_SUMMARY;
                 _selectedMetric = 0;
-                if (_reopenDataMenuAfterExit) {
-                    _reopenDataMenuAfterExit = false;
-                    WatchUi.requestUpdate();
-                    openDataMenu();
-                    return;
-                }
+                if (_resumeAfterWizardExit()) { return; }
             }
             WatchUi.requestUpdate();
             return;
@@ -591,12 +586,7 @@ class BodyMetricsView extends WatchUi.View {
                 _domain.saveTargets(_targetDraft);
                 _mode = MODE_SUMMARY;
                 _selectedMetric = 0;
-                if (_reopenDataMenuAfterExit) {
-                    _reopenDataMenuAfterExit = false;
-                    WatchUi.requestUpdate();
-                    openDataMenu();
-                    return;
-                }
+                if (_resumeAfterWizardExit()) { return; }
             }
             WatchUi.requestUpdate();
             return;
@@ -627,12 +617,7 @@ class BodyMetricsView extends WatchUi.View {
                 _setupIndex -= 1;
             } else if (_domain.hasConfiguredProfile()) {
                 _mode = MODE_SUMMARY;
-                if (_reopenDataMenuAfterExit) {
-                    _reopenDataMenuAfterExit = false;
-                    WatchUi.requestUpdate();
-                    openDataMenu();
-                    return true;
-                }
+                if (_resumeAfterWizardExit()) { return true; }
             }
             WatchUi.requestUpdate();
             return true;
@@ -643,12 +628,7 @@ class BodyMetricsView extends WatchUi.View {
                 _dataIndex -= 1;
             } else {
                 _mode = MODE_SUMMARY;
-                if (_reopenDataMenuAfterExit) {
-                    _reopenDataMenuAfterExit = false;
-                    WatchUi.requestUpdate();
-                    openDataMenu();
-                    return true;
-                }
+                if (_resumeAfterWizardExit()) { return true; }
             }
             WatchUi.requestUpdate();
             return true;
@@ -659,12 +639,7 @@ class BodyMetricsView extends WatchUi.View {
                 _targetIndex -= 1;
             } else {
                 _mode = MODE_SUMMARY;
-                if (_reopenDataMenuAfterExit) {
-                    _reopenDataMenuAfterExit = false;
-                    WatchUi.requestUpdate();
-                    openDataMenu();
-                    return true;
-                }
+                if (_resumeAfterWizardExit()) { return true; }
             }
             WatchUi.requestUpdate();
             return true;
@@ -815,20 +790,26 @@ class BodyMetricsView extends WatchUi.View {
     //! Cache trend data for the currently selected metric.
     function _cacheTrendData() as Void {
         var trendState = _trendCacheService.cacheTrendData(_domain, _selectedMetric, _trendWindow);
-        _trendWindow = trendState[:window].toNumber();
-        _trendValues = trendState[:values] as Array;
-        _trendDirection = trendState[:direction].toNumber();
+        _applyTrendState(trendState as Dictionary);
     }
 
     function _cycleTrendWindow(delta as Number) as Void {
         var trendState = _trendCacheService.cycleTrendWindow(_domain, _selectedMetric, _trendWindow, delta);
-        _trendWindow = trendState[:window].toNumber();
-        _trendValues = trendState[:values] as Array;
-        _trendDirection = trendState[:direction].toNumber();
+        _applyTrendState(trendState as Dictionary);
     }
 
     function _availableTrendWindows() as Array {
         return _trendCacheService.availableTrendWindows(_domain, _selectedMetric);
+    }
+
+    function _trendSampleCount() as Number {
+        return _domain.historyValues(_selectedMetric, 365).size();
+    }
+
+    hidden function _applyTrendState(trendState as Dictionary) as Void {
+        _trendWindow = trendState[:window].toNumber();
+        _trendValues = trendState[:values] as Array;
+        _trendDirection = trendState[:direction].toNumber();
     }
 
     //! Draw the trend/history screen with mini chart, trend indicator, and window label.
@@ -839,10 +820,12 @@ class BodyMetricsView extends WatchUi.View {
             :selectedMetric => _selectedMetric,
             :trendWindow => _trendWindow,
             :trendValues => _trendValues,
+            :trendSampleCount => _trendSampleCount(),
             :trendDirection => _trendDirection,
             :availableWindows => _availableTrendWindows(),
             :currentValueText => formatValue(metric) + " " + metric[:unit].toString(),
             :trendNoDataText => text("trend.no_data"),
+            :trendSingleEntryText => text("trend.single_entry"),
             :trendUpText => text("trend.up"),
             :trendDownText => text("trend.down"),
             :trendFlatText => text("trend.flat"),

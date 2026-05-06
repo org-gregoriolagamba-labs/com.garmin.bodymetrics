@@ -22,9 +22,13 @@ class BodyMetricsResetUserDataUseCase {
         _history.clearHistory();
 
         var loaded = _profileUseCase.loadProfile();
+        return _buildResetState(loaded as Dictionary);
+    }
+
+    hidden function _buildResetState(loaded as Dictionary) as Dictionary {
         return {
-            :hasStoredProfile => loaded[:hasStoredProfile],
-            :profile => loaded[:profile],
+            :hasStoredProfile => loaded[:hasStoredProfile] as Boolean,
+            :profile => loaded[:profile] as Dictionary,
             :measurements => _dataProvider.loadMeasurements()
         };
     }

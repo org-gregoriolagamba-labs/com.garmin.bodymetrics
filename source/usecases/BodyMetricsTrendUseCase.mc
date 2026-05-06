@@ -29,16 +29,8 @@ class BodyMetricsTrendUseCase {
         _history.recordSnapshot(metrics);
     }
 
-    function historyBestWindow(metricIndex as Number) as Number {
-        return _history.bestWindow(metricIndex);
-    }
-
     function historyValues(metricIndex as Number, windowDays as Number) as Array {
         return _history.valuesForMetric(metricIndex, windowDays);
-    }
-
-    function historyTrend(metricIndex as Number, windowDays as Number) as Number {
-        return _history.computeTrend(metricIndex, windowDays);
     }
 
     function hasHistoryEntries() as Boolean {

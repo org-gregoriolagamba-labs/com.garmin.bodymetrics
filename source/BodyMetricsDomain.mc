@@ -64,7 +64,7 @@ class BodyMetricsDomain {
     //! DEBUG: Cancella la history
     function clearHistoryDebug() as Void {
         _trendUseCase.clearHistoryDebug();
-        rebuildMetrics();
+        _reloadMeasurementsAndRebuildMetrics();
     }
 
     function hasHistoryEntries() as Boolean {
@@ -77,7 +77,7 @@ class BodyMetricsDomain {
 
     function disableDebugMode() as Void {
         _trendUseCase.disableDebugMode();
-        rebuildMetrics();
+        _reloadMeasurementsAndRebuildMetrics();
     }
 
     var _metrics as Array = [];
@@ -122,23 +122,7 @@ class BodyMetricsDomain {
         }
     }
 
-    function defaultProfile() as Dictionary {
-        return _profileUseCase.defaultProfile();
-    }
-
-    function mergedProfileValues() as Dictionary {
-        return _profileUseCase.mergedProfileValues();
-    }
-
     // --- Data provider access ---
-
-    function hasStoredMeasurements() as Boolean {
-        return _measurementsUseCase.hasStoredMeasurements();
-    }
-
-    function lastUpdateLabel() as String {
-        return _measurementsUseCase.lastUpdateLabel();
-    }
 
     function lastUpdateDateLabel() as String {
         return _measurementsUseCase.lastUpdateDateLabel();
@@ -206,23 +190,21 @@ class BodyMetricsDomain {
 
     function clearMeasurements() as Void {
         _dataProvider.clearStoredMeasurements();
-        _measurements = _dataProvider.loadMeasurements();
-        rebuildMetrics();
+        _reloadMeasurementsAndRebuildMetrics();
     }
 
     function clearMeasurementField(fieldIndex as Number) as Void {
         var field = _measurementsUseCase.measurementFieldDefinition(fieldIndex);
-        if (field.hasKey(:readOnly) && field[:readOnly]) {
+        if (_measurementFieldIsReadOnly(field as Dictionary)) {
             return;
         }
-        _dataProvider.clearMeasurementFieldByKey(field[:key]);
-        _measurements = _dataProvider.loadMeasurements();
-        rebuildMetrics();
+        _dataProvider.clearMeasurementFieldByKey(_measurementFieldKey(field as Dictionary));
+        _reloadMeasurementsAndRebuildMetrics();
     }
 
     function isMeasurementFieldReadOnly(fieldIndex as Number) as Boolean {
         var field = _measurementsUseCase.measurementFieldDefinition(fieldIndex);
-        return field.hasKey(:readOnly) && field[:readOnly];
+        return _measurementFieldIsReadOnly(field as Dictionary);
     }
 
     function clearTargetField(fieldIndex as Number) as Void {
@@ -235,9 +217,9 @@ class BodyMetricsDomain {
 
     function resetAllUserData() as Void {
         var resetState = _resetUserDataUseCase.resetAllUserData();
-        _hasStoredProfile = resetState[:hasStoredProfile];
-        _profile = resetState[:profile] as Dictionary;
-        _measurements = resetState[:measurements] as Dictionary;
+        _hasStoredProfile = _resetStateHasStoredProfile(resetState as Dictionary);
+        _profile = _resetStateProfile(resetState as Dictionary);
+        _measurements = _resetStateMeasurements(resetState as Dictionary);
         rebuildMetrics();
     }
 
@@ -313,16 +295,8 @@ class BodyMetricsDomain {
 
     // --- History / Trend API ---
 
-    function historyBestWindow(metricIndex as Number) as Number {
-        return _trendUseCase.historyBestWindow(metricIndex);
-    }
-
     function historyValues(metricIndex as Number, windowDays as Number) as Array {
         return _trendUseCase.historyValues(metricIndex, windowDays);
-    }
-
-    function historyTrend(metricIndex as Number, windowDays as Number) as Number {
-        return _trendUseCase.historyTrend(metricIndex, windowDays);
     }
 
     function refreshDerivedMeasurementFields(draft as Dictionary) as Dictionary {
@@ -335,8 +309,8 @@ class BodyMetricsDomain {
 
     function loadProfile() as Dictionary {
         var loaded = _profileUseCase.loadProfile();
-        _hasStoredProfile = loaded[:hasStoredProfile];
-        return loaded[:profile] as Dictionary;
+        _hasStoredProfile = _loadedProfileHasStoredProfile(loaded as Dictionary);
+        return _loadedProfile(loaded as Dictionary);
     }
 
     function sanitizeProfile(profile as Dictionary) as Dictionary {
@@ -376,6 +350,39 @@ class BodyMetricsDomain {
 
     function profileFieldValueLabel(profile as Dictionary, index as Number) as String {
         return _profileUseCase.profileFieldValueLabel(profile, index);
+    }
+
+    hidden function _reloadMeasurementsAndRebuildMetrics() as Void {
+        _measurements = _dataProvider.loadMeasurements();
+        rebuildMetrics();
+    }
+
+    hidden function _measurementFieldIsReadOnly(field as Dictionary) as Boolean {
+        return field.hasKey(:readOnly) && field[:readOnly];
+    }
+
+    hidden function _measurementFieldKey(field as Dictionary) as Symbol {
+        return field[:key] as Symbol;
+    }
+
+    hidden function _resetStateHasStoredProfile(resetState as Dictionary) as Boolean {
+        return resetState[:hasStoredProfile] as Boolean;
+    }
+
+    hidden function _resetStateProfile(resetState as Dictionary) as Dictionary {
+        return resetState[:profile] as Dictionary;
+    }
+
+    hidden function _resetStateMeasurements(resetState as Dictionary) as Dictionary {
+        return resetState[:measurements] as Dictionary;
+    }
+
+    hidden function _loadedProfileHasStoredProfile(loaded as Dictionary) as Boolean {
+        return loaded[:hasStoredProfile] as Boolean;
+    }
+
+    hidden function _loadedProfile(loaded as Dictionary) as Dictionary {
+        return loaded[:profile] as Dictionary;
     }
 
     function rebuildMetrics() as Void {
