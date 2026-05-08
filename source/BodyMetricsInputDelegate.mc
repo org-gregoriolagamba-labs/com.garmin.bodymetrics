@@ -9,6 +9,7 @@ class BodyMetricsInputDelegate extends WatchUi.InputDelegate {
     var _view;
     var _selectDownTime as Number;
     var _lastKeyReleaseTime as Number;
+    var _backDownSeen as Boolean;
     const LONG_PRESS_MS = 800;
     const DOUBLE_TAP_WINDOW_MS = 600;
 
@@ -17,6 +18,7 @@ class BodyMetricsInputDelegate extends WatchUi.InputDelegate {
         _view = view;
         _selectDownTime = 0;
         _lastKeyReleaseTime = 0;
+        _backDownSeen = false;
     }
 
     function onTap(evt as WatchUi.ClickEvent) as Boolean {
@@ -78,6 +80,40 @@ class BodyMetricsInputDelegate extends WatchUi.InputDelegate {
             return true;
         }
         if (key == WatchUi.KEY_ESC || key == WatchUi.KEY_LAP) {
+            var backPressType = evt.getType();
+            _view.logBackInputEvent(_pressTypeName(backPressType), "received");
+
+            if (_view.isSummaryMode()) {
+                if (backPressType == WatchUi.PRESS_TYPE_DOWN) {
+                    _backDownSeen = true;
+                    _view.logBackInputEvent(_pressTypeName(backPressType), "summary_down_pass_system");
+                    return false;
+                }
+
+                // Simulator may emit only ACTION without DOWN on BACK in root.
+                // In that case consume ACTION to avoid simulator-side crash path.
+                if (backPressType == WatchUi.PRESS_TYPE_ACTION && !_backDownSeen) {
+                    _view.logBackInputEvent(_pressTypeName(backPressType), "summary_action_without_down_consumed");
+                    return true;
+                }
+
+                _backDownSeen = false;
+                // Root screen: let the system handle BACK/ESC directly.
+                _view.logBackInputEvent(_pressTypeName(backPressType), "summary_system_default");
+                return false;
+            }
+
+            _backDownSeen = false;
+            if (backPressType == WatchUi.PRESS_TYPE_DOWN) {
+                // Consume key-down and decide behavior on key release only.
+                _view.logBackInputEvent(_pressTypeName(backPressType), "non_summary_consume_down");
+                return true;
+            }
+            if (backPressType != WatchUi.PRESS_TYPE_ACTION) {
+                _view.logBackInputEvent(_pressTypeName(backPressType), "non_summary_ignore_non_action");
+                return true;
+            }
+            _view.logBackInputEvent(_pressTypeName(backPressType), "non_summary_delegate_to_view");
             return _view.handleBack();
         }
         if (key == WatchUi.KEY_MENU) {
@@ -104,5 +140,18 @@ class BodyMetricsInputDelegate extends WatchUi.InputDelegate {
             _view.openMenu();
         }
         return true;
+    }
+
+    function _pressTypeName(pressType as Number) as String {
+        if (pressType == WatchUi.PRESS_TYPE_DOWN) {
+            return "DOWN";
+        }
+        if (pressType == WatchUi.PRESS_TYPE_ACTION) {
+            return "ACTION";
+        }
+        if (pressType == WatchUi.PRESS_TYPE_UP) {
+            return "UP";
+        }
+        return "UNKNOWN(" + pressType.toString() + ")";
     }
 }

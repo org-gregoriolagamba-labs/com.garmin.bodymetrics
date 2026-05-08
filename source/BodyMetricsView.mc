@@ -232,6 +232,13 @@ class BodyMetricsView extends WatchUi.View {
         return _mode == MODE_SUMMARY;
     }
 
+    function logBackInputEvent(pressTypeName as String, decision as String) as Void {
+        System.println("[BodyMetrics][BACK][Input] pressType=" + pressTypeName
+            + " mode=" + _modeName(_mode)
+            + "(" + _mode.toString() + ")"
+            + " decision=" + decision);
+    }
+
     function handleSwipeUp() as Void {
         // In editor touch mode, swipe-up should increase values.
         if (_mode == MODE_DATA || _mode == MODE_TARGET) {
@@ -612,16 +619,25 @@ class BodyMetricsView extends WatchUi.View {
     }
 
     function handleBack() as Boolean {
+        _logBackPath("enter", true);
+
         if (_mode == MODE_SETUP) {
             if (_setupIndex > 0) {
                 _setupIndex -= 1;
+                _logBackPath("setup_prev_step", true);
             } else if (_resumeAfterWizardExit()) {
+                _logBackPath("setup_resume_after_exit", true);
                 return true;
             } else if (_domain.hasConfiguredProfile()) {
                 _mode = MODE_SUMMARY;
-                if (_resumeAfterWizardExit()) { return true; }
+                _logBackPath("setup_to_summary", true);
+                if (_resumeAfterWizardExit()) {
+                    _logBackPath("setup_resume_after_summary", true);
+                    return true;
+                }
             } else {
                 // First setup step with no saved profile: let the system handle BACK (exit app).
+                _logBackPath("setup_first_step_system_default", false);
                 return false;
             }
             WatchUi.requestUpdate();
@@ -631,9 +647,14 @@ class BodyMetricsView extends WatchUi.View {
         if (_mode == MODE_DATA) {
             if (_dataIndex > 0) {
                 _dataIndex -= 1;
+                _logBackPath("data_prev_step", true);
             } else {
-                if (_resumeAfterWizardExit()) { return true; }
+                if (_resumeAfterWizardExit()) {
+                    _logBackPath("data_resume_after_exit", true);
+                    return true;
+                }
                 _mode = MODE_SUMMARY;
+                _logBackPath("data_to_summary", true);
             }
             WatchUi.requestUpdate();
             return true;
@@ -642,9 +663,14 @@ class BodyMetricsView extends WatchUi.View {
         if (_mode == MODE_TARGET) {
             if (_targetIndex > 0) {
                 _targetIndex -= 1;
+                _logBackPath("target_prev_step", true);
             } else {
-                if (_resumeAfterWizardExit()) { return true; }
+                if (_resumeAfterWizardExit()) {
+                    _logBackPath("target_resume_after_exit", true);
+                    return true;
+                }
                 _mode = MODE_SUMMARY;
+                _logBackPath("target_to_summary", true);
             }
             WatchUi.requestUpdate();
             return true;
@@ -652,30 +678,55 @@ class BodyMetricsView extends WatchUi.View {
 
         if (_mode == MODE_INFO) {
             _mode = MODE_SUMMARY;
+            _logBackPath("info_to_summary", true);
             WatchUi.requestUpdate();
             return true;
         }
 
         if (_mode == MODE_DETAIL) {
             _mode = MODE_SUMMARY;
+            _logBackPath("detail_to_summary", true);
             WatchUi.requestUpdate();
             return true;
         }
 
         if (_mode == MODE_TREND) {
             _mode = MODE_TARGET_DELTA;
+            _logBackPath("trend_to_target_delta", true);
             WatchUi.requestUpdate();
             return true;
         }
 
         if (_mode == MODE_TARGET_DELTA) {
             _mode = MODE_DETAIL;
+            _logBackPath("target_delta_to_detail", true);
             WatchUi.requestUpdate();
             return true;
         }
 
-        // Summary/root state: do not consume BACK so the watch can close the app.
+        // Summary/root state: let the system handle BACK (exit app).
+        _logBackPath("root_system_default", false);
         return false;
+    }
+
+    function _logBackPath(path as String, consumed as Boolean) as Void {
+        var consumedText = consumed ? "true" : "false";
+        System.println("[BodyMetrics][BACK][View] mode=" + _modeName(_mode)
+            + "(" + _mode.toString() + ")"
+            + " path=" + path
+            + " consumed=" + consumedText);
+    }
+
+    function _modeName(modeValue as Number) as String {
+        if (modeValue == MODE_SUMMARY) { return "MODE_SUMMARY"; }
+        if (modeValue == MODE_INFO) { return "MODE_INFO"; }
+        if (modeValue == MODE_DETAIL) { return "MODE_DETAIL"; }
+        if (modeValue == MODE_SETUP) { return "MODE_SETUP"; }
+        if (modeValue == MODE_DATA) { return "MODE_DATA"; }
+        if (modeValue == MODE_TREND) { return "MODE_TREND"; }
+        if (modeValue == MODE_TARGET) { return "MODE_TARGET"; }
+        if (modeValue == MODE_TARGET_DELTA) { return "MODE_TARGET_DELTA"; }
+        return "MODE_UNKNOWN";
     }
 
     function drawSetup(dc as Dc) as Void {
