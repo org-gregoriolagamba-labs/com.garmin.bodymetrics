@@ -615,9 +615,14 @@ class BodyMetricsView extends WatchUi.View {
         if (_mode == MODE_SETUP) {
             if (_setupIndex > 0) {
                 _setupIndex -= 1;
+            } else if (_resumeAfterWizardExit()) {
+                return true;
             } else if (_domain.hasConfiguredProfile()) {
                 _mode = MODE_SUMMARY;
                 if (_resumeAfterWizardExit()) { return true; }
+            } else {
+                // First setup step with no saved profile: let the system handle BACK (exit app).
+                return false;
             }
             WatchUi.requestUpdate();
             return true;
@@ -627,8 +632,8 @@ class BodyMetricsView extends WatchUi.View {
             if (_dataIndex > 0) {
                 _dataIndex -= 1;
             } else {
-                _mode = MODE_SUMMARY;
                 if (_resumeAfterWizardExit()) { return true; }
+                _mode = MODE_SUMMARY;
             }
             WatchUi.requestUpdate();
             return true;
@@ -638,8 +643,8 @@ class BodyMetricsView extends WatchUi.View {
             if (_targetIndex > 0) {
                 _targetIndex -= 1;
             } else {
-                _mode = MODE_SUMMARY;
                 if (_resumeAfterWizardExit()) { return true; }
+                _mode = MODE_SUMMARY;
             }
             WatchUi.requestUpdate();
             return true;
@@ -669,7 +674,8 @@ class BodyMetricsView extends WatchUi.View {
             return true;
         }
 
-        return true;
+        // Summary/root state: do not consume BACK so the watch can close the app.
+        return false;
     }
 
     function drawSetup(dc as Dc) as Void {
