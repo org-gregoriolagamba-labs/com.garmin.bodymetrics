@@ -7,7 +7,6 @@ Questa guida e` destinata all'utente finale che vuole configurare BodyMetrics e 
 ## Come Leggere Questa Guida
 
 - I walkthrough seguono l'ordine reale di utilizzo dell'app.
-- I blocchi `Screenshot placeholder` indicano dove inserire catture per export PDF, wiki o store review.
 - Quando un flusso dipende da dati Garmin disponibili sul dispositivo, il comportamento viene indicato esplicitamente.
 
 ## Primo Avvio
@@ -25,16 +24,14 @@ Questa guida e` destinata all'utente finale che vuole configurare BodyMetrics e 
 5. Dopo l'ultimo campo, salva per completare il setup.
 6. Verifica l'arrivo alla schermata summary come conferma della configurazione iniziale.
 
-Screenshot placeholder:
-[SHOT-IT-SETUP-01] Avvio wizard profilo
-[SHOT-IT-SETUP-02] Campo profilo in modifica
-[SHOT-IT-SETUP-03] Summary dopo il primo salvataggio
-
 ## Navigazione Base
 
-- Usa UP e DOWN per cambiare metrica o valore del campo attivo.
-- Usa ENTER per entrare nei livelli successivi o confermare nel wizard.
-- Usa BACK per chiudere la vista corrente quando disponibile.
+- Usa `UP` e `DOWN` per cambiare metrica o valore del campo attivo.
+- Usa `ENTER` (o `START`) per entrare nei livelli successivi o confermare nel wizard.
+- Usa `BACK` (tasto `ESC`/`LAP`) per chiudere la vista corrente quando disponibile.
+- Usa `MENU` per aprire i menu.
+- **Pressione lunga richiesta**: da `Summary`, tieni premuto `ENTER` (o `START`) per aprire direttamente la vista `Info` della metrica corrente.
+- **Pressione lunga non richiesta**: per aprire `Menu` basta una pressione breve su `MENU`.
 
 ### Mappa Rapida delle Viste
 
@@ -44,27 +41,64 @@ Screenshot placeholder:
 - Trend: storico della metrica selezionata.
 - Target delta: scostamento dal target effettivo.
 
-Screenshot placeholder:
-[SHOT-IT-NAV-01] Summary principale
-[SHOT-IT-NAV-02] Vista detail
-[SHOT-IT-NAV-03] Vista trend
+### Percorsi Menu: Nomi Esatti E Tasti
+
+- Aprire `Menu` dalla schermata principale: `MENU`.
+- Aprire `Dati utente`: `MENU` -> `ENTER`.
+- Aprire `Preferenze`: `MENU` -> `DOWN` -> `ENTER`.
+- Aprire `Sistema`: `MENU` -> `DOWN` -> `DOWN` -> `ENTER`.
+- Aprire `Debug` (se visibile): `MENU` -> `DOWN` -> `DOWN` -> `DOWN` -> `ENTER`.
+
+Percorsi interni da `Dati utente`:
+
+- `Profilo`: `MENU` -> `ENTER` (`Dati utente`) -> `ENTER` (`Profilo`).
+- `Rilevazioni`: `MENU` -> `ENTER` (`Dati utente`) -> `DOWN` -> `ENTER` (`Rilevazioni`).
+- `Obiettivi`: `MENU` -> `ENTER` (`Dati utente`) -> `DOWN` -> `DOWN` -> `ENTER` (`Obiettivi`).
+
+Percorsi interni da `Rilevazioni`:
+
+- `Inserisci dati`: `MENU` -> `ENTER` (`Dati utente`) -> `DOWN` -> `ENTER` (`Rilevazioni`) -> `ENTER` (`Inserisci dati`).
+- `Cancella rilevazioni`: `MENU` -> `ENTER` (`Dati utente`) -> `DOWN` -> `ENTER` (`Rilevazioni`) -> `DOWN` -> `ENTER` (`Cancella rilevazioni`).
+
+Percorsi interni da `Obiettivi`:
+
+- `Imposta`: `MENU` -> `ENTER` (`Dati utente`) -> `DOWN` -> `DOWN` -> `ENTER` (`Obiettivi`) -> `ENTER` (`Imposta`).
+- `Reset completo`: `MENU` -> `ENTER` (`Dati utente`) -> `DOWN` -> `DOWN` -> `ENTER` (`Obiettivi`) -> `DOWN` -> `ENTER` (`Reset completo`).
+
+Percorsi interni da `Preferenze`:
+
+- `Lingua`: `MENU` -> `DOWN` -> `ENTER` (`Preferenze`) -> `ENTER` (`Lingua`).
+
+Percorsi interni da `Sistema`:
+
+- `Informazioni`: `MENU` -> `DOWN` -> `DOWN` -> `ENTER` (`Sistema`) -> `ENTER` (`Informazioni`).
+- `Reset Dati`: `MENU` -> `DOWN` -> `DOWN` -> `ENTER` (`Sistema`) -> `DOWN` -> `ENTER` (`Reset Dati`).
+
+Menu contestuali `Campo`:
+
+- In wizard `Rilevazioni`: `MENU` -> `ENTER` (`Cancella campo`).
+- In wizard `Obiettivi`: `MENU` -> `ENTER` (`Ripristina default`).
+- In vista `Trend` (se esiste almeno uno storico): `MENU` -> `ENTER` (`Cancella ultimo dato`).
 
 ## Inserire le Rilevazioni
 
-1. Apri il menu dati.
-2. Entra nella voce di inserimento rilevazioni.
-3. Modifica i campi disponibili e completa il wizard.
-4. Salva per aggiornare valori correnti e storico.
+1. Apri `Menu` con `MENU`.
+2. Entra in `Dati utente` con `ENTER`.
+3. Entra in `Rilevazioni` con `DOWN` + `ENTER`.
+4. Entra in `Inserisci dati` con `ENTER`.
+5. Modifica i campi disponibili e completa il wizard.
+6. Salva per aggiornare valori correnti e storico.
 
 ### Walkthrough Completo: Inserimento Dati
 
 1. Dalla summary apri il menu dell'app.
-2. Entra nella categoria dati e poi nella voce di inserimento rilevazioni.
+2. Esegui la sequenza tasti esatta: `MENU` -> `ENTER` (`Dati utente`) -> `DOWN` -> `ENTER` (`Rilevazioni`) -> `ENTER` (`Inserisci dati`).
 3. Scorri i campi del wizard uno per volta.
 4. Se il peso arriva da Garmin, il campo puo` risultare di sola lettura.
 5. Inserisci o aggiorna grasso corporeo, massa muscolare, acqua e massa ossea quando disponibili.
 6. Leggi i campi derivati come muscle percent e BMR senza modificarli direttamente.
 7. Salva alla fine del wizard per aggiornare i valori correnti e registrare uno snapshot nello storico.
+8. Per cancellare un singolo campo durante il wizard: `MENU` -> `ENTER` nel menu `Campo` su `Cancella campo`.
 
 ### Cosa Succede Dopo il Salvataggio
 
@@ -72,12 +106,6 @@ Screenshot placeholder:
 - Il peso manuale resta salvato solo se il dispositivo non fornisce un peso Garmin prioritario.
 - Lo storico viene aggiornato con uno snapshot delle metriche correnti.
 - Il trend verra` ricalcolato sulle finestre disponibili.
-
-Screenshot placeholder:
-[SHOT-IT-DATA-01] Menu dati
-[SHOT-IT-DATA-02] Wizard rilevazioni con campo editabile
-[SHOT-IT-DATA-03] Campo di sola lettura da Garmin
-[SHOT-IT-DATA-04] Conferma dopo salvataggio rilevazioni
 
 ## Leggere le Metriche
 
@@ -92,8 +120,11 @@ Screenshot placeholder:
 1. Parti dalla summary e seleziona la metrica desiderata.
 2. Entra in detail per leggere il valore corrente con maggiore contesto.
 3. Accedi a info per capire la metrica e le zone di riferimento.
-4. Entra in trend per osservare l'andamento nel tempo.
-5. Se presenti obiettivi, consulta target delta per vedere lo scostamento rispetto al target effettivo.
+4. Per aprire `Info` direttamente da `Summary` usa una pressione lunga su `ENTER` (o `START`).
+5. In alternativa, tocca l'icona `(i)` quando visibile sulla schermata `Summary`.
+6. Nel simulatore, se la pressione lunga non viene intercettata correttamente, usa due pressioni ravvicinate su `ENTER` come fallback.
+7. Entra in trend per osservare l'andamento nel tempo.
+8. Se presenti obiettivi, consulta target delta per vedere lo scostamento rispetto al target effettivo.
 
 ### Come Interpretare i Casi Particolari
 
@@ -101,57 +132,42 @@ Screenshot placeholder:
 - Se e` presente un solo dato storico, il trend mostra uno stato dedicato che invita ad aggiungere un secondo dato.
 - Alcune metriche sono calcolate e dipendono dai dati disponibili nel profilo e nelle rilevazioni.
 
-Screenshot placeholder:
-[SHOT-IT-METRIC-01] Summary con zona colore
-[SHOT-IT-METRIC-02] Info con zone e descrizione
-[SHOT-IT-METRIC-03] Trend con finestra selezionata
-[SHOT-IT-METRIC-04] Delta target
-
 ## Gestire gli Obiettivi
 
-1. Apri il menu obiettivi.
-2. Imposta i target desiderati per le metriche disponibili.
-3. Usa il reset del campo o il reset totale quando necessario.
+1. Apri `Menu` con `MENU`.
+2. Entra in `Dati utente` con `ENTER`.
+3. Entra in `Obiettivi` con `DOWN` -> `DOWN` -> `ENTER`.
+4. Entra in `Imposta` con `ENTER`.
+5. Imposta i target desiderati per le metriche disponibili.
+6. Usa il reset del campo o il reset totale quando necessario.
 
 ### Walkthrough Completo: Editor Obiettivi
 
-1. Apri il menu obiettivi dalla navigazione dell'app.
-2. Scegli la voce di impostazione obiettivi.
+1. Dalla schermata principale usa la sequenza esatta: `MENU` -> `ENTER` (`Dati utente`) -> `DOWN` -> `DOWN` -> `ENTER` (`Obiettivi`) -> `ENTER` (`Imposta`).
+2. Scegli la voce di impostazione obiettivi (`Imposta`).
 3. Modifica i target disponibili uno alla volta con UP e DOWN.
-4. Usa il menu contestuale del campo quando devi ripristinare il default del singolo target.
+4. Usa il menu contestuale `Campo` quando devi ripristinare il default del singolo target: `MENU` -> `ENTER` (`Ripristina default`).
 5. Completa il wizard e salva per rendere attivi i nuovi obiettivi.
-6. Se necessario, usa il reset totale per cancellare tutti i target utente e tornare ai target effettivi di default.
-
-Screenshot placeholder:
-[SHOT-IT-TARGET-01] Menu obiettivi
-[SHOT-IT-TARGET-02] Editor target su un campo
-[SHOT-IT-TARGET-03] Reset singolo campo
-[SHOT-IT-TARGET-04] Messaggio dopo reset totale target
+6. Se necessario, usa il reset totale con sequenza: `MENU` -> `ENTER` (`Dati utente`) -> `DOWN` -> `DOWN` -> `ENTER` (`Obiettivi`) -> `DOWN` -> `ENTER` (`Reset completo`).
 
 ## Cambio Lingua e Reset
 
-- La lingua si cambia dal menu opzioni.
-- Il reset dati cancella configurazioni e dati locali dell'app.
+- La lingua si cambia dal menu `Preferenze` -> `Lingua`.
+- Il reset dati cancella configurazioni e dati locali dell'app dal menu `Sistema` -> `Reset Dati`.
 
 ### Walkthrough Completo: Cambio Lingua
 
-1. Apri il menu opzioni.
-2. Entra nella selezione lingua.
+1. Apri il menu `Preferenze`.
+2. Usa la sequenza tasti esatta: `MENU` -> `DOWN` -> `ENTER` (`Preferenze`) -> `ENTER` (`Lingua`).
 3. Scegli la lingua desiderata.
 4. Verifica il ricaricamento delle etichette principali nelle schermate dell'app.
 
 ### Walkthrough Completo: Reset Dati
 
-1. Apri il menu informativo o la sezione che contiene il reset dati.
-2. Seleziona il reset completo solo quando vuoi cancellare i dati locali dell'app.
+1. Apri il menu `Sistema` con la sequenza: `MENU` -> `DOWN` -> `DOWN` -> `ENTER` (`Sistema`).
+2. Seleziona `Reset Dati` con `DOWN` -> `ENTER`.
 3. Conferma l'azione.
 4. Verifica il ritorno a uno stato coerente con profilo, rilevazioni, target e storico azzerati o ripristinati secondo il comportamento dell'app.
-
-Screenshot placeholder:
-[SHOT-IT-LANG-01] Menu lingua
-[SHOT-IT-LANG-02] UI dopo cambio lingua
-[SHOT-IT-RESET-01] Conferma reset dati
-[SHOT-IT-RESET-02] Stato app dopo reset
 
 ## Appendice Export
 

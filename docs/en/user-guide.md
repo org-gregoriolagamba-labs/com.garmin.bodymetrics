@@ -7,7 +7,6 @@ This guide is intended for the end user who wants to configure BodyMetrics and u
 ## How To Read This Guide
 
 - The walkthroughs follow the real order in which the app is typically used.
-- `Screenshot placeholder` blocks mark the locations to replace during PDF, wiki, or review-package export.
 - When a flow depends on Garmin data being available on the device, that dependency is called out explicitly.
 
 ## First Launch
@@ -25,16 +24,14 @@ This guide is intended for the end user who wants to configure BodyMetrics and u
 5. After the last field, save to complete setup.
 6. Confirm that the app lands on the summary screen.
 
-Screenshot placeholder:
-[SHOT-EN-SETUP-01] Profile wizard entry
-[SHOT-EN-SETUP-02] Profile field editing step
-[SHOT-EN-SETUP-03] Summary after first save
-
 ## Basic Navigation
 
-- Use UP and DOWN to change metric or edit the active field value.
-- Use ENTER to move deeper or confirm within a wizard.
-- Use BACK to close the current view when available.
+- Use `UP` and `DOWN` to change metric or edit the active field value.
+- Use `ENTER` (or `START`) to move deeper or confirm within a wizard.
+- Use `BACK` (`ESC`/`LAP`) to close the current view when available.
+- Use `MENU` to open menus.
+- **Long press required**: from `Summary`, hold `ENTER` (or `START`) to open `Info` directly for the current metric.
+- **Long press not required**: to open `Menu`, a short press on `MENU` is enough.
 
 ### Quick View Map
 
@@ -44,27 +41,64 @@ Screenshot placeholder:
 - Trend: history for the selected metric.
 - Target delta: distance from the effective target.
 
-Screenshot placeholder:
-[SHOT-EN-NAV-01] Main summary
-[SHOT-EN-NAV-02] Detail view
-[SHOT-EN-NAV-03] Trend view
+### Menu Paths: Exact Names And Keys
+
+- Open `Menu` from the main screen: `MENU`.
+- Open `User data`: `MENU` -> `ENTER`.
+- Open `Preferences`: `MENU` -> `DOWN` -> `ENTER`.
+- Open `System`: `MENU` -> `DOWN` -> `DOWN` -> `ENTER`.
+- Open `Debug` (if visible): `MENU` -> `DOWN` -> `DOWN` -> `DOWN` -> `ENTER`.
+
+Internal paths from `User data`:
+
+- `Profile`: `MENU` -> `ENTER` (`User data`) -> `ENTER` (`Profile`).
+- `Check-ins`: `MENU` -> `ENTER` (`User data`) -> `DOWN` -> `ENTER` (`Check-ins`).
+- `Targets`: `MENU` -> `ENTER` (`User data`) -> `DOWN` -> `DOWN` -> `ENTER` (`Targets`).
+
+Internal paths from `Check-ins`:
+
+- `Enter data`: `MENU` -> `ENTER` (`User data`) -> `DOWN` -> `ENTER` (`Check-ins`) -> `ENTER` (`Enter data`).
+- `Clear data`: `MENU` -> `ENTER` (`User data`) -> `DOWN` -> `ENTER` (`Check-ins`) -> `DOWN` -> `ENTER` (`Clear data`).
+
+Internal paths from `Targets`:
+
+- `Set`: `MENU` -> `ENTER` (`User data`) -> `DOWN` -> `DOWN` -> `ENTER` (`Targets`) -> `ENTER` (`Set`).
+- `Reset all targets`: `MENU` -> `ENTER` (`User data`) -> `DOWN` -> `DOWN` -> `ENTER` (`Targets`) -> `DOWN` -> `ENTER` (`Reset all targets`).
+
+Internal paths from `Preferences`:
+
+- `Language`: `MENU` -> `DOWN` -> `ENTER` (`Preferences`) -> `ENTER` (`Language`).
+
+Internal paths from `System`:
+
+- `Information`: `MENU` -> `DOWN` -> `DOWN` -> `ENTER` (`System`) -> `ENTER` (`Information`).
+- `Reset Data`: `MENU` -> `DOWN` -> `DOWN` -> `ENTER` (`System`) -> `DOWN` -> `ENTER` (`Reset Data`).
+
+Contextual `Field` menus:
+
+- In `Check-ins` wizard: `MENU` -> `ENTER` (`Clear field`).
+- In `Targets` wizard: `MENU` -> `ENTER` (`Reset to default`).
+- In `Trend` view (only if history has at least one entry): `MENU` -> `ENTER` (`Remove last entry`).
 
 ## Entering Measurements
 
-1. Open the data menu.
-2. Enter the measurement entry item.
-3. Edit the available fields and complete the wizard.
-4. Save to update current values and history.
+1. Open `Menu` with `MENU`.
+2. Enter `User data` with `ENTER`.
+3. Enter `Check-ins` with `DOWN` + `ENTER`.
+4. Enter `Enter data` with `ENTER`.
+5. Edit the available fields and complete the wizard.
+6. Save to update current values and history.
 
 ### Full Walkthrough: Measurement Entry
 
 1. From summary, open the app menu.
-2. Enter the data category and then the measurement entry item.
+2. Use the exact key sequence: `MENU` -> `ENTER` (`User data`) -> `DOWN` -> `ENTER` (`Check-ins`) -> `ENTER` (`Enter data`).
 3. Move through the wizard fields one by one.
 4. If weight is available from Garmin, that field may become read-only.
 5. Enter or update body fat, muscle mass, water, and bone mass when available.
 6. Read derived fields such as muscle percent and BMR without editing them directly.
 7. Save at the end of the wizard to update current values and record a history snapshot.
+8. To clear a single field during the wizard: `MENU` -> `ENTER` in `Field` on `Clear field`.
 
 ### What Happens After Save
 
@@ -72,12 +106,6 @@ Screenshot placeholder:
 - Manual weight stays stored only when no Garmin weight takes precedence.
 - History is updated with a snapshot of the current metrics.
 - Trend windows will be recomputed from the updated data.
-
-Screenshot placeholder:
-[SHOT-EN-DATA-01] Data menu
-[SHOT-EN-DATA-02] Measurement wizard with editable field
-[SHOT-EN-DATA-03] Garmin read-only field
-[SHOT-EN-DATA-04] Confirmation after measurement save
 
 ## Reading Metrics
 
@@ -92,8 +120,11 @@ Screenshot placeholder:
 1. Start from summary and select the metric you want to inspect.
 2. Enter detail to read the current value with more context.
 3. Open info to understand the metric and its reference zones.
-4. Open trend to inspect how the value changes over time.
-5. If targets exist, review target delta to see the gap from the effective target.
+4. To open `Info` directly from `Summary`, use a long press on `ENTER` (or `START`).
+5. As an alternative, tap the `(i)` icon when visible on `Summary`.
+6. In simulator, if long press is not reliably captured, use a quick double press on `ENTER` as fallback.
+7. Open trend to inspect how the value changes over time.
+8. If targets exist, review target delta to see the gap from the effective target.
 
 ### How To Read Edge Cases
 
@@ -101,57 +132,42 @@ Screenshot placeholder:
 - If only one historical point exists, trend shows a dedicated message inviting the user to add another entry.
 - Some metrics are derived and depend on the available profile and measurement data.
 
-Screenshot placeholder:
-[SHOT-EN-METRIC-01] Summary with color zone
-[SHOT-EN-METRIC-02] Info with zones and description
-[SHOT-EN-METRIC-03] Trend with selected window
-[SHOT-EN-METRIC-04] Target delta
-
 ## Managing Targets
 
-1. Open the targets menu.
-2. Set the desired goals for the available metrics.
-3. Use field reset or full reset when needed.
+1. Open `Menu` with `MENU`.
+2. Enter `User data` with `ENTER`.
+3. Enter `Targets` with `DOWN` -> `DOWN` -> `ENTER`.
+4. Enter `Set` with `ENTER`.
+5. Set the desired goals for the available metrics.
+6. Use field reset or full reset when needed.
 
 ### Full Walkthrough: Target Editor
 
-1. Open the targets menu from the app navigation.
-2. Choose the set-targets entry.
+1. From the main screen use the exact sequence: `MENU` -> `ENTER` (`User data`) -> `DOWN` -> `DOWN` -> `ENTER` (`Targets`) -> `ENTER` (`Set`).
+2. Choose the target setup entry (`Set`).
 3. Edit the available targets one by one with UP and DOWN.
-4. Use the field context menu when you need to restore the default value of a single target.
+4. Use the `Field` contextual menu when you need to restore the default for a single target: `MENU` -> `ENTER` (`Reset to default`).
 5. Complete the wizard and save to activate the new targets.
-6. If needed, use the full reset to clear all user targets and return to effective default targets.
-
-Screenshot placeholder:
-[SHOT-EN-TARGET-01] Targets menu
-[SHOT-EN-TARGET-02] Target editor on a field
-[SHOT-EN-TARGET-03] Single-field reset
-[SHOT-EN-TARGET-04] Feedback after full target reset
+6. If needed, use full reset with sequence: `MENU` -> `ENTER` (`User data`) -> `DOWN` -> `DOWN` -> `ENTER` (`Targets`) -> `DOWN` -> `ENTER` (`Reset all targets`).
 
 ## Language Change and Reset
 
-- Language can be changed from the options menu.
-- Data reset clears the app's local configuration and data.
+- Language can be changed from `Preferences` -> `Language`.
+- Data reset clears the app's local configuration and data from `System` -> `Reset Data`.
 
 ### Full Walkthrough: Language Change
 
-1. Open the options menu.
-2. Enter language selection.
+1. Open the `Preferences` menu.
+2. Use the exact key sequence: `MENU` -> `DOWN` -> `ENTER` (`Preferences`) -> `ENTER` (`Language`).
 3. Choose the desired language.
 4. Confirm that the main labels refresh across the app.
 
 ### Full Walkthrough: Data Reset
 
-1. Open the informational menu or section that contains data reset.
-2. Select full reset only when you want to clear the app's local data.
+1. Open the `System` menu with sequence: `MENU` -> `DOWN` -> `DOWN` -> `ENTER` (`System`).
+2. Select `Reset Data` with `DOWN` -> `ENTER`.
 3. Confirm the action.
 4. Verify that the app returns to a consistent state with profile, measurements, targets, and history cleared or restored according to app behavior.
-
-Screenshot placeholder:
-[SHOT-EN-LANG-01] Language menu
-[SHOT-EN-LANG-02] UI after language change
-[SHOT-EN-RESET-01] Data reset confirmation
-[SHOT-EN-RESET-02] App state after reset
 
 ## Export Appendix
 
@@ -159,7 +175,6 @@ Screenshot placeholder:
 
 - Cover page with app name, document version, and language.
 - Clickable table of contents.
-- Final screenshots replacing every `SHOT-*` placeholder.
 - Final note pointing readers to the privacy and data handling document.
 
 ### Recommended Shared Assets

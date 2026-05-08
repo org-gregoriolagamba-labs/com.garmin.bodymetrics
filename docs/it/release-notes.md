@@ -4,6 +4,7 @@
 
 - identificatore release o versione: `1.0.0`
 - data: `2026-05-06`
+- tipologia rilascio: `primo rilascio stabile`
 
 ### Contenuti Principali
 
@@ -22,14 +23,6 @@
 - reset completo dei dati locali dell'app;
 - documentazione di base avviata in doppia lingua italiano/inglese.
 
-### Fix Rilevanti Inclusi Nella Baseline 1.0.0
-
-- corretta la gestione del trend con un solo dato storico, sostituendo lo stato ambiguo con un messaggio dedicato;
-- corretta la forma delle entry di history debug per includere tutti i campi metrici previsti;
-- corretta la ricarica dei dati dopo operazioni debug su history e disattivazione debug;
-- corretta la navigazione dei badge e dei ritorni menu nelle azioni debug;
-- corretta la gestione iniziale della ciclazione target per i campi che partono da zero.
-
 ### Limitazioni Note
 
 - target prodotto documentato: `fr265`;
@@ -41,84 +34,5 @@
 
 ### Note Sul Rilascio
 
-- questa voce rappresenta la baseline funzionale documentata della prima versione `1.0.0`;
-- le release successive dovranno aggiungere solo variazioni incrementali rispetto a questa baseline, senza riscriverla interamente.
-
-## Formato Per Le Prossime Voci
-
-Ogni nuova voce dovrebbe includere almeno:
-
-- identificatore release o versione;
-- data;
-- contenuti principali;
-- fix rilevanti;
-- eventuali limitazioni note.
-
-## Template Riusabile
-
-Per le prossime release usa come riferimento operativo il template condiviso in `docs/shared/changelog-template.md`.
-
-### Blocco Copy-Paste Per 1.0.1
-
-```md
-## 1.0.1
-
-- identificatore release o versione: `1.0.1`
-- data: `YYYY-MM-DD`
-
-### Contenuti Principali
-
-- miglioramento puntuale 1;
-- miglioramento puntuale 2;
-
-### Fix Rilevanti
-
-- fix 1;
-- fix 2;
-
-### Limitazioni Note
-
-- limitazione ancora valida 1;
-- limitazione ancora valida 2;
-
-### Note Sul Rilascio
-
-- nota di compatibilita` o validazione;
-- differenza principale rispetto alla release precedente.
-```
-
-### Blocco Copy-Paste Per 1.1.0
-
-```md
-## 1.1.0
-
-- identificatore release o versione: `1.1.0`
-- data: `YYYY-MM-DD`
-
-### Contenuti Principali
-
-- nuova funzionalita` 1;
-- nuova funzionalita` 2;
-- miglioramento UX o documentale;
-
-### Fix Rilevanti
-
-- fix importante 1;
-- fix importante 2;
-
-### Limitazioni Note
-
-- limitazione residua 1;
-- vincolo hardware o di integrazione 2;
-
-### Note Sul Rilascio
-
-- sintesi dell'impatto della minor release;
-- nota su compatibilita`, test o rollout.
-```
-
-### Regola Per Le Release Successive
-
-- usa patch release come `1.0.2` o `1.0.3` per correzioni e aggiustamenti limitati;
-- usa minor release come `1.2.0` o `1.3.0` quando introduci nuove funzionalita` o espansioni di flusso;
-- mantieni sempre la stessa sequenza di sezioni per facilitare confronto e traduzione.
+- questa voce rappresenta la prima disponibilita` stabile pubblicabile di BodyMetrics;
+- la release `1.0.0` definisce la baseline funzionale ufficiale di riferimento.
