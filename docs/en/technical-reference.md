@@ -61,7 +61,8 @@
 
 - Accessible from menu `System` -> `Information`.
 - Displays: app name, version, release date, author, website.
-- The website is shown as a scannable QR code (`QrcodeWebsite`, 120×120 px) instead of a plain URL text.
+- The "Website" entry in the system info screen is an actionable button (`:action => true`, `:actionId => :open_qrcode`): pressing ENTER opens `BodyMetricsQrcodeView`.
+- `BodyMetricsQrcodeView` loads `Rez.Drawables.QrcodeWebsite` (120×120 px PNG) and draws it centered on a full-screen black background.
 - The QR code resource is declared in `resources/drawables/drawables.xml`; the file is `resources/drawables/qrcode_website.png`.
 
 ## Build and Validation

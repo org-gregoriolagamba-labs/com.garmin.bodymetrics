@@ -18,6 +18,7 @@ BodyMetrics is a Connect IQ application for viewing body metrics, historical tre
 - Renderers receive rendering-ready models and do not read storage or application services.
 - The main renderers cover summary/detail, trend, setup/data/targets wizards, and info/target delta.
 - `source/renderers/RendererCommon.mc` exposes global functions shared across all renderers: `fitTextBlockGlobal`, `maxTextWidthGlobal`, `drawCenteredTextBlockGlobal`, `wrapTextGlobal`, `splitWordsGlobal`, `availableWidthAtYGlobal`, `pct`.
+- `source/BodyMetricsQrcodeView.mc` displays the website QR code full-screen; it is opened by the `BodyMetricsBadgeInfoView` delegate via `BodyMetricsView.openQrcodeView()`.
 
 ### Domain Facade
 

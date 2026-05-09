@@ -10,6 +10,7 @@ class BodyMetricsBadgeInfoView extends WatchUi.View {
     var _lines as Array;      // [{:label, :value}]
     var _scrollY as Number;
     var _contentH as Number;
+    var _selectedItemIndex as Number;  // Track selected item for actions
 
     function initialize(title as String, lines as Array) {
         View.initialize();
@@ -17,6 +18,55 @@ class BodyMetricsBadgeInfoView extends WatchUi.View {
         _lines = lines;
         _scrollY = 0;
         _contentH = 0;
+        _selectedItemIndex = _firstSelectableItemIndex();
+    }
+
+    function _firstSelectableItemIndex() as Number {
+        for (var i = 0; i < _lines.size(); i += 1) {
+            var item = _lines[i] as Dictionary;
+            if (item[:action] != null && (item[:action] as Boolean)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    function selectItemWithAction() as Symbol or Null {
+        if (_selectedItemIndex >= 0 && _selectedItemIndex < _lines.size()) {
+            var item = _lines[_selectedItemIndex] as Dictionary;
+            if (item[:action] != null && (item[:action] as Boolean) && item[:actionId] != null) {
+                return item[:actionId] as Symbol;
+            }
+        }
+        return null;
+    }
+
+    function nextSelectableItem() as Void {
+        var startIdx = _selectedItemIndex >= 0 ? _selectedItemIndex + 1 : 0;
+        for (var i = startIdx; i < _lines.size(); i += 1) {
+            var item = _lines[i] as Dictionary;
+            if (item[:action] != null && (item[:action] as Boolean)) {
+                _selectedItemIndex = i;
+                WatchUi.requestUpdate();
+                return;
+            }
+        }
+        _selectedItemIndex = -1;
+        WatchUi.requestUpdate();
+    }
+
+    function prevSelectableItem() as Void {
+        var startIdx = _selectedItemIndex >= 0 ? _selectedItemIndex - 1 : _lines.size() - 1;
+        for (var i = startIdx; i >= 0; i -= 1) {
+            var item = _lines[i] as Dictionary;
+            if (item[:action] != null && (item[:action] as Boolean)) {
+                _selectedItemIndex = i;
+                WatchUi.requestUpdate();
+                return;
+            }
+        }
+        _selectedItemIndex = -1;
+        WatchUi.requestUpdate();
     }
 
     function scrollBy(delta as Number) as Void {
@@ -64,27 +114,31 @@ class BodyMetricsBadgeInfoView extends WatchUi.View {
             var item = _lines[i] as Dictionary;
             var lbl = item[:label].toString();
             
-            // Check if this is an image item (has :image key)
-            if (item[:image] != null) {
-                allLines.add({:text => lbl, :type => :label});
-                allLines.add({:type => :image, :resourceId => item[:image]});
-                allLines.add({:text => "", :type => :empty});
+            // Check if this is a pure button item (action, no value, no image)
+            var hasAction = item[:action] != null && (item[:action] as Boolean);
+            if (hasAction && item[:value] == null && item[:image] == null) {
+                allLines.add({:text => lbl, :type => :button, :itemIndex => i});
+                allLines.add({:text => "", :type => :empty, :itemIndex => -1});
+            } else if (item[:image] != null) {
+                allLines.add({:text => lbl, :type => :label, :itemIndex => i});
+                allLines.add({:type => :image, :resourceId => item[:image], :itemIndex => i});
+                allLines.add({:text => "", :type => :empty, :itemIndex => -1});
             } else {
                 var val = item[:value].toString();
                 if (lbl.equals("") && val.equals("")) {
-                    allLines.add({:text => "", :type => :empty});
+                    allLines.add({:text => "", :type => :empty, :itemIndex => -1});
                 } else if (!lbl.equals("") && val.equals("")) {
-                    allLines.add({:text => lbl, :type => :centered});
+                    allLines.add({:text => lbl, :type => :centered, :itemIndex => i});
                 } else {
                     var labelWrapped = wrapTextGlobal(dc, lbl, font, itemW);
                     for (var li = 0; li < labelWrapped.size(); li += 1) {
-                        allLines.add({:text => labelWrapped[li].toString(), :type => :label});
+                        allLines.add({:text => labelWrapped[li].toString(), :type => :label, :itemIndex => i});
                     }
                     var valueWrapped = wrapTextGlobal(dc, val, font, itemW);
                     for (var vi = 0; vi < valueWrapped.size(); vi += 1) {
-                        allLines.add({:text => valueWrapped[vi].toString(), :type => :value});
+                        allLines.add({:text => valueWrapped[vi].toString(), :type => :value, :itemIndex => i});
                     }
-                    allLines.add({:text => "", :type => :empty});
+                    allLines.add({:text => "", :type => :empty, :itemIndex => -1});
                 }
             }
         }
@@ -99,6 +153,7 @@ class BodyMetricsBadgeInfoView extends WatchUi.View {
         // Draw with clipping
         dc.setClip(0, contentTop, w, visibleH);
         var y = contentTop - _scrollY;
+        var lastWasImage = false;
         for (var i = 0; i < allLines.size(); i += 1) {
             var line = allLines[i] as Dictionary;
             var lineType = line[:type];
@@ -113,25 +168,53 @@ class BodyMetricsBadgeInfoView extends WatchUi.View {
                         var imgX = (w - imgW) / 2;
                         dc.drawBitmap(imgX, y, img);
                         y += imgH + 8;  // Add spacing after image
-                        i = i;  // Prevent line count increment
+                        lastWasImage = true;
                     } catch (ex) {
                         System.println("[BodyMetrics] Failed to load image resource");
+                        lastWasImage = false;
                     }
                 } else if (lineType == :centered) {
                     dc.setColor(COLOR_ACCENT, Graphics.COLOR_TRANSPARENT);
                     dc.drawText(cx, y, font, line[:text].toString(), Graphics.TEXT_JUSTIFY_CENTER);
+                    lastWasImage = false;
                 } else if (lineType == :label) {
                     dc.setColor(0xCCCCCC, Graphics.COLOR_TRANSPARENT);
                     dc.drawText(cx, y, font, line[:text].toString(), Graphics.TEXT_JUSTIFY_CENTER);
+                    lastWasImage = false;
+                } else if (lineType == :button) {
+                    var btnIdx = line[:itemIndex] as Number;
+                    var btnText = line[:text].toString();
+                    var btnSelected = btnIdx == _selectedItemIndex;
+                    var btnW = dc.getTextWidthInPixels("[ " + btnText + " ]", font) + pct(w, 6);
+                    var btnH = lineH + 4;
+                    var btnX = cx - btnW / 2;
+                    var btnY = y - 2;
+                    if (btnSelected) {
+                        dc.setColor(COLOR_ACCENT, Graphics.COLOR_TRANSPARENT);
+                        dc.fillRoundedRectangle(btnX, btnY, btnW, btnH, 4);
+                        dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
+                    } else {
+                        dc.setColor(0x444444, Graphics.COLOR_TRANSPARENT);
+                        dc.drawRoundedRectangle(btnX, btnY, btnW, btnH, 4);
+                        dc.setColor(0xCCCCCC, Graphics.COLOR_TRANSPARENT);
+                    }
+                    dc.drawText(cx, y, font, btnText, Graphics.TEXT_JUSTIFY_CENTER);
+                    lastWasImage = false;
                 } else if (lineType == :value) {
                     dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
                     dc.drawText(cx, y, font, line[:text].toString(), Graphics.TEXT_JUSTIFY_CENTER);
+                    lastWasImage = false;
                 } else if (lineType == :centeredText) {
                     dc.setColor(0xCCCCCC, Graphics.COLOR_TRANSPARENT);
                     dc.drawText(cx, y, font, line[:text].toString(), Graphics.TEXT_JUSTIFY_CENTER);
+                    lastWasImage = false;
+                } else if (lineType == :empty) {
+                    lastWasImage = false;
                 }
             }
-            y += lineH;
+            if (!lastWasImage) {
+                y += lineH;
+            }
         }
         dc.clearClip();
 
@@ -155,10 +238,12 @@ class BodyMetricsBadgeInfoView extends WatchUi.View {
 class BodyMetricsBadgeInfoDelegate extends WatchUi.BehaviorDelegate {
 
     var _badgeView as BodyMetricsBadgeInfoView;
+    var _parentView as BodyMetricsView or Null;
 
-    function initialize(badgeView as BodyMetricsBadgeInfoView) {
+    function initialize(badgeView as BodyMetricsBadgeInfoView, parentView as BodyMetricsView or Null) {
         BehaviorDelegate.initialize();
         _badgeView = badgeView;
+        _parentView = parentView;
     }
 
     function onNextPage() as Boolean {
@@ -171,12 +256,28 @@ class BodyMetricsBadgeInfoDelegate extends WatchUi.BehaviorDelegate {
         return true;
     }
 
+    function onUp() as Boolean {
+        _badgeView.prevSelectableItem();
+        return true;
+    }
+
+    function onDown() as Boolean {
+        _badgeView.nextSelectableItem();
+        return true;
+    }
+
     function onBack() as Boolean {
         WatchUi.popView(WatchUi.SLIDE_DOWN);
         return true;
     }
 
     function onSelect() as Boolean {
-        return true;
+        var action = _badgeView.selectItemWithAction();
+        if (action == :open_qrcode && _parentView != null) {
+            (_parentView as BodyMetricsView).openQrcodeView();
+            return true;
+        }
+        return false;
     }
 }
+

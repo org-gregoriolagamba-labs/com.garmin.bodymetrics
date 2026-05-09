@@ -60,8 +60,9 @@
 ## Sistema Informazioni (Sysinfo)
 
 - La schermata `Informazioni` mostra: nome app, versione, data rilascio, autore e sito web.
-- Il sito web e` visualizzato come QR code (`QrcodeWebsite`, 120×120 px) anziché come testo URL.
-- La risorsa QR code e` dichiarata in `resources/drawables/drawables.xml` e il file e` `resources/drawables/qrcode_website.png`.
+- La voce "Sito web" nella schermata informazioni è un button azionabile (`:action => true`, `:actionId => :open_qrcode`): premendo ENTER apre `BodyMetricsQrcodeView`.
+- `BodyMetricsQrcodeView` carica `Rez.Drawables.QrcodeWebsite` (PNG 120×120 px) e lo disegna centrato a schermo intero.
+- La risorsa QR code è dichiarata in `resources/drawables/drawables.xml`; il file è `resources/drawables/qrcode_website.png`.
 
 ## Build e Validazione
 

@@ -189,4 +189,4 @@ Contextual `Field` menus:
 - When history is insufficient, the trend screen may show an informational message.
 - For details on collected, stored, and resettable data, see `privacy-data-handling.md`.
 - In the data-entry wizard (profile, measurements, or targets), the MENU key is blocked and does not open the system menu.
-- The System Information screen displays the author's website as a QR code. Bring your smartphone camera close to the watch face to open the link directly.
+- In the `Information` screen, the "Website" entry is a button: press ENTER to open the QR code screen, then bring your smartphone camera close to scan.

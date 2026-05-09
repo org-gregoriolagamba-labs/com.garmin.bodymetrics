@@ -8,7 +8,7 @@
 
 ### Contenuti Principali
 
-- schermata informazioni sistema: il sito web dell'autore e` ora mostrato come QR code scansionabile al posto del testo URL;
+- schermata informazioni sistema: la voce "Sito web" è ora un button che apre una schermata dedicata con il QR code centrato a tutto schermo;
 - pulsante MENU in modalita` wizard di inserimento dati: il menu di sistema non si apre piu` per errore durante la modifica dei campi (fix onMenu);
 - label `sysinfo.author` corretta in tutte le quattro lingue (Autore / Author / Auteur / Autor);
 - testo dei valori nella vista informazioni badge ridotto a `FONT_XTINY` per evitare troncature su valori lunghi;

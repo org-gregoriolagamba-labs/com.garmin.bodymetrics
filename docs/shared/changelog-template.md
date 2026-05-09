@@ -108,3 +108,11 @@ This file provides a reusable structure for future BodyMetrics release notes.
 - Keep wording factual and version-specific.
 - Separate features from fixes.
 - Do not list debug-only changes as user-facing features unless they affect release behavior.
+
+## Build Variants Note
+
+When preparing release notes for a future lite build, add a **Build Variants** section listing the target devices, jungle file, and localizations included. Use the pattern established in `1.0.1` release notes as the reference.
+
+## Architectural Refactoring Note
+
+When a release includes internal refactoring with no user-facing changes, document it in a dedicated **Architectural Refactoring** section (as done in `1.0.1`). Keep user-facing and technical changes separate so end users can skip the technical section.

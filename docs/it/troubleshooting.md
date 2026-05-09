@@ -34,8 +34,8 @@
 
 ### Il QR code del sito web non si legge
 
-- Il QR code e` un'immagine PNG 120x120 px: e` ottimizzato per dispositivi con schermo tondo tipo FR265.
-- Avvicinare la fotocamera dello smartphone a una distanza adeguata e assicurarsi che lo schermo del watch sia sufficientemente luminoso.
+- Aprire prima la schermata QR code: dalla schermata `Informazioni`, selezionare la voce "Sito web" (già evidenziata all'apertura) e premere ENTER.
+- Il QR code occupa tutto lo schermo (120×120 px su FR265): avvicinare la fotocamera dello smartphone a una distanza di 10–15 cm con luminosità del display al massimo.
 
 ## Diagnosi Tecnica Rapida
 

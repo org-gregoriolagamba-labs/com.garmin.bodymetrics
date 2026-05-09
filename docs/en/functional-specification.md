@@ -50,7 +50,7 @@ BodyMetrics allows the user to inspect body metrics, view their history, set per
 
 - Accessible from the menu System -> Information.
 - Displays: app name, version, release date, author, and website.
-- The website is displayed as a scannable QR code: the user can bring their smartphone close to the watch face to open the link directly.
+- The website entry is a selectable button: pressing ENTER opens a dedicated full-screen view with the QR code centered.
 
 ## Input Workflows
 

@@ -8,7 +8,7 @@
 
 ### Main Contents
 
-- system info screen: the author's website is now displayed as a scannable QR code instead of a plain URL text;
+- system info screen: the "Website" entry is now a button that opens a dedicated full-screen view with the QR code centered;
 - MENU key behavior in data-entry wizard mode: the system menu no longer opens by mistake while editing fields (onMenu fix);
 - `sysinfo.author` label corrected in all four languages (Autore / Author / Auteur / Autor);
 - badge info view values reduced to `FONT_XTINY` to prevent truncation on long strings;

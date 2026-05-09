@@ -263,10 +263,15 @@ class BodyMetricsView extends WatchUi.View {
             {:label => text("sysinfo.version"),  :value => "1.0.1"},
             {:label => text("sysinfo.release"),  :value => "10 mag 2026"},
             {:label => text("sysinfo.author"),   :value => "Gregorio La Gamba"},
-            {:label => text("sysinfo.website"),  :image => :QrcodeWebsite}
+            {:label => text("sysinfo.website"), :action => true, :actionId => :open_qrcode}
         ] as Array;
         var systemView = new BodyMetricsBadgeInfoView(text("sysinfo.title"), lines);
-        WatchUi.pushView(systemView, new BodyMetricsBadgeInfoDelegate(systemView), WatchUi.SLIDE_UP);
+        WatchUi.pushView(systemView, new BodyMetricsBadgeInfoDelegate(systemView, self), WatchUi.SLIDE_UP);
+    }
+
+    function openQrcodeView() as Void {
+        var qrcodeView = new BodyMetricsQrcodeView();
+        WatchUi.pushView(qrcodeView, new BodyMetricsQrcodeDelegate(), WatchUi.SLIDE_UP);
     }
 
     //! Routes the MENU key: main menu in all modes.

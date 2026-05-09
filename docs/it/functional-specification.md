@@ -13,7 +13,7 @@ BodyMetrics permette all'utente di consultare metriche corporee, visualizzare il
 - Configurazione e manutenzione del profilo utente.
 - Gestione di obiettivi personalizzati per metrica.
 - Cambio lingua e reset dati locali.
-- Schermata informazioni sistema con sito web mostrato come QR code scansionabile.
+- Schermata informazioni sistema con accesso diretto al QR code del sito web tramite button dedicato.
 
 ## Flussi Utente Principali
 
@@ -52,7 +52,7 @@ BodyMetrics permette all'utente di consultare metriche corporee, visualizzare il
 
 - Accessibile dal menu `Sistema` -> `Informazioni`.
 - Mostra: nome app, versione, data rilascio, autore, sito web.
-- Il sito web e` visualizzato come QR code scansionabile (120x120 px) anziche` come testo URL.
+- La voce "Sito web" è un button selezionabile: premendo ENTER si apre una schermata dedicata con il QR code centrato a tutto schermo.
 
 ## Dati Gestiti
 

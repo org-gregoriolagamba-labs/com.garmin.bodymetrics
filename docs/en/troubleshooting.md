@@ -34,8 +34,8 @@
 
 ### The website QR code is hard to scan
 
-- The QR code is a 120×120 px PNG image optimized for round-screen devices such as the FR265.
-- Hold your smartphone camera at the appropriate distance and ensure the watch display brightness is high enough.
+- First open the QR code screen: from the `Information` screen, select the "Website" entry (already highlighted on open) and press ENTER.
+- The QR code fills the entire screen (120×120 px on FR265): hold your smartphone camera 10–15 cm away with the watch display at full brightness.
 
 ## Quick Technical Diagnosis
 
