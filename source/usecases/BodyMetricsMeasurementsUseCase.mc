@@ -22,7 +22,7 @@ class BodyMetricsMeasurementsUseCase {
     }
 
     function measurementFieldCount() as Number {
-        return measurementFields().size();
+        return 7; // weightKg, fatPct, muscleKg, musclePct (derived), waterPct, boneKg, bmr (derived)
     }
 
     function measurementFieldDefinition(index as Number) as Dictionary {
@@ -57,7 +57,7 @@ class BodyMetricsMeasurementsUseCase {
         } else if (next > field[:max].toFloat()) {
             next = field[:min].toFloat();
         }
-        draft[key] = _round1(next);
+        draft[key] = round1Global(next);
         return refreshDerivedMeasurementFields(draft, profile);
     }
 
@@ -69,7 +69,7 @@ class BodyMetricsMeasurementsUseCase {
         }
 
         var value = draft[key].toFloat();
-        return _fmt1(value) + " " + field[:unit].toString();
+        return fmt1Global(value) + " " + field[:unit].toString();
     }
 
     function saveMeasurements(draft as Dictionary) as Dictionary {
@@ -89,7 +89,7 @@ class BodyMetricsMeasurementsUseCase {
         if (muscleKg == null || weightKg == null || weightKg.toFloat() <= 0.0) {
             return null;
         }
-        return _round1(muscleKg.toFloat() / weightKg.toFloat() * 100.0);
+        return round1Global(muscleKg.toFloat() / weightKg.toFloat() * 100.0);
     }
 
     function derivedBmrValueForDraft(draft as Dictionary, profile as Dictionary) {
@@ -100,15 +100,5 @@ class BodyMetricsMeasurementsUseCase {
         return _calculators.calculateBmrReference(profile, draft[:weightKg]).toFloat();
     }
 
-    hidden function _round1(v as Float) as Float {
-        return Math.round(v * 10.0).toFloat() / 10.0;
-    }
 
-    hidden function _fmt1(v as Float) as String {
-        var scaled = Math.round(_round1(v) * 10.0).toNumber();
-        var whole = scaled / 10;
-        var frac = scaled - whole * 10;
-        if (frac < 0) { frac = -frac; }
-        return whole.toString() + "." + frac.toString();
-    }
 }

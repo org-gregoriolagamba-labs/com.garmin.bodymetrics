@@ -317,7 +317,7 @@ class BodyMetricsTrendRenderer {
     }
 
     function _formatAxisValue(value as Float, range as Float, compactLayout as Boolean) as String {
-        return _fmt1(value);
+        return fmt1Global(value);
     }
 
     function _fitSingleLineText(dc as Dc, value as String, primaryFont, fallbackFont, maxWidth as Number) as Dictionary {
@@ -348,18 +348,6 @@ class BodyMetricsTrendRenderer {
         } else {
             dc.fillPolygon([[cx, cy + half], [cx - half, cy - half], [cx + half, cy - half]]);
         }
-    }
-
-    function _fmt1(v as Float) as String {
-        var scaled = Math.round(_round1(v) * 10.0).toNumber();
-        var whole = scaled / 10;
-        var frac = scaled - whole * 10;
-        if (frac < 0) { frac = -frac; }
-        return whole.toString() + "." + frac.toString();
-    }
-
-    function _round1(v as Float) as Float {
-        return Math.round(v * 10.0).toFloat() / 10.0;
     }
 
     function _pct(total as Number, percent as Number) as Number {

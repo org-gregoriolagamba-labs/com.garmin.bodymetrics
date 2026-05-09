@@ -348,18 +348,7 @@ class BodyMetricsSummaryDetailRenderer {
         if (!metric[:available]) {
             return "--";
         }
-        return _fmt1(metric[:value].toFloat());
+        return fmt1Global(metric[:value].toFloat());
     }
 
-    function _fmt1(v as Float) as String {
-        var scaled = Math.round(_round1(v) * 10.0).toNumber();
-        var whole = scaled / 10;
-        var frac = scaled - whole * 10;
-        if (frac < 0) { frac = -frac; }
-        return whole.toString() + "." + frac.toString();
-    }
-
-    function _round1(v as Float) as Float {
-        return Math.round(v * 10.0).toFloat() / 10.0;
-    }
 }

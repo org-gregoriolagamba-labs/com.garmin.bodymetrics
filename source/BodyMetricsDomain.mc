@@ -17,11 +17,6 @@ const POLICY_TARGET_RANGE = "targetRange";
 const POLICY_LOW_ONLY = "lowOnly";
 const POLICY_REFERENCE_ONLY = "referenceOnly";
 
-const PROFILE_SEX_KEY = "bodyMetrics.profile.sex";
-const PROFILE_AGE_BAND_KEY = "bodyMetrics.profile.ageBand";
-const PROFILE_BODY_PROFILE_KEY = "bodyMetrics.profile.bodyProfile";
-const PROFILE_HEIGHT_KEY = "bodyMetrics.profile.heightCm";
-
 //! Cuore della logica applicativa. Coordina profilo utente, misurazioni,
 //! classificazione a zone colorate, soglie cliniche e history.
 //! Non dipende dalla UI: tutta la presentazione è delegata a BodyMetricsView.
@@ -195,16 +190,16 @@ class BodyMetricsDomain {
 
     function clearMeasurementField(fieldIndex as Number) as Void {
         var field = _measurementsUseCase.measurementFieldDefinition(fieldIndex);
-        if (_measurementFieldIsReadOnly(field as Dictionary)) {
+        if (field.hasKey(:readOnly) && (field[:readOnly] as Boolean)) {
             return;
         }
-        _dataProvider.clearMeasurementFieldByKey(_measurementFieldKey(field as Dictionary));
+        _dataProvider.clearMeasurementFieldByKey(field[:key] as Symbol);
         _reloadMeasurementsAndRebuildMetrics();
     }
 
     function isMeasurementFieldReadOnly(fieldIndex as Number) as Boolean {
         var field = _measurementsUseCase.measurementFieldDefinition(fieldIndex);
-        return _measurementFieldIsReadOnly(field as Dictionary);
+        return field.hasKey(:readOnly) && (field[:readOnly] as Boolean);
     }
 
     function clearTargetField(fieldIndex as Number) as Void {
@@ -217,9 +212,9 @@ class BodyMetricsDomain {
 
     function resetAllUserData() as Void {
         var resetState = _resetUserDataUseCase.resetAllUserData();
-        _hasStoredProfile = _resetStateHasStoredProfile(resetState as Dictionary);
-        _profile = _resetStateProfile(resetState as Dictionary);
-        _measurements = _resetStateMeasurements(resetState as Dictionary);
+        _hasStoredProfile = resetState[:hasStoredProfile] as Boolean;
+        _profile = resetState[:profile] as Dictionary;
+        _measurements = resetState[:measurements] as Dictionary;
         rebuildMetrics();
     }
 
@@ -309,8 +304,8 @@ class BodyMetricsDomain {
 
     function loadProfile() as Dictionary {
         var loaded = _profileUseCase.loadProfile();
-        _hasStoredProfile = _loadedProfileHasStoredProfile(loaded as Dictionary);
-        return _loadedProfile(loaded as Dictionary);
+        _hasStoredProfile = loaded[:hasStoredProfile] as Boolean;
+        return loaded[:profile] as Dictionary;
     }
 
     function sanitizeProfile(profile as Dictionary) as Dictionary {
@@ -355,34 +350,6 @@ class BodyMetricsDomain {
     hidden function _reloadMeasurementsAndRebuildMetrics() as Void {
         _measurements = _dataProvider.loadMeasurements();
         rebuildMetrics();
-    }
-
-    hidden function _measurementFieldIsReadOnly(field as Dictionary) as Boolean {
-        return field.hasKey(:readOnly) && field[:readOnly];
-    }
-
-    hidden function _measurementFieldKey(field as Dictionary) as Symbol {
-        return field[:key] as Symbol;
-    }
-
-    hidden function _resetStateHasStoredProfile(resetState as Dictionary) as Boolean {
-        return resetState[:hasStoredProfile] as Boolean;
-    }
-
-    hidden function _resetStateProfile(resetState as Dictionary) as Dictionary {
-        return resetState[:profile] as Dictionary;
-    }
-
-    hidden function _resetStateMeasurements(resetState as Dictionary) as Dictionary {
-        return resetState[:measurements] as Dictionary;
-    }
-
-    hidden function _loadedProfileHasStoredProfile(loaded as Dictionary) as Boolean {
-        return loaded[:hasStoredProfile] as Boolean;
-    }
-
-    hidden function _loadedProfile(loaded as Dictionary) as Dictionary {
-        return loaded[:profile] as Dictionary;
     }
 
     function rebuildMetrics() as Void {

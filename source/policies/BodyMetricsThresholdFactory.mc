@@ -164,43 +164,15 @@ class BodyMetricsThresholdFactory {
     }
 
     //! Estimated muscle power range in watts: Potenza (W) = muscle_kg × 35.
-    //! Thresholds derived from muscleKgRange × 35, using POLICY_LOW_ONLY (more = better).
+    //! Derived directly from muscleKgRange — no constants to maintain separately.
     function potenzaRange(profile as Dictionary) as Dictionary {
-        var sex = profile[:sex].toString();
-        var bodyProfile = profile[:bodyProfile].toString();
-        var greenMin;
-        var greenMax;
-
-        if (sex.equals("female")) {
-            if (bodyProfile.equals("endurance")) {
-                greenMin = 26.0 * 35.0;
-                greenMax = 34.0 * 35.0;
-            } else if (bodyProfile.equals("strength")) {
-                greenMin = 29.0 * 35.0;
-                greenMax = 40.0 * 35.0;
-            } else {
-                greenMin = 27.0 * 35.0;
-                greenMax = 36.0 * 35.0;
-            }
-        } else {
-            if (bodyProfile.equals("endurance")) {
-                greenMin = 33.0 * 35.0;
-                greenMax = 44.0 * 35.0;
-            } else if (bodyProfile.equals("strength")) {
-                greenMin = 38.0 * 35.0;
-                greenMax = 52.0 * 35.0;
-            } else {
-                greenMin = 35.0 * 35.0;
-                greenMax = 46.0 * 35.0;
-            }
-        }
-
-        if (profile[:ageBand].equals("60_plus")) {
-            greenMin -= 2.0 * 35.0;
-            greenMax -= 2.0 * 35.0;
-        }
-
-        return buildLowThresholds(greenMin, greenMax, 3.0 * 35.0, 7.0 * 35.0);
+        var kg = muscleKgRange(profile);
+        return {
+            :greenMin  => round1Global((kg[:greenMin]  as Float) * 35.0),
+            :greenMax  => round1Global((kg[:greenMax]  as Float) * 35.0),
+            :yellowMin => round1Global((kg[:yellowMin] as Float) * 35.0),
+            :orangeMin => round1Global((kg[:orangeMin] as Float) * 35.0)
+        };
     }
 
     function weightTargetRange(profile as Dictionary, bmiRange as Dictionary) as Dictionary {
@@ -208,32 +180,32 @@ class BodyMetricsThresholdFactory {
         var heightSquared = heightM * heightM;
 
         return buildTargetMetricThresholds(
-            _round1(bmiRange[:greenMin].toFloat() * heightSquared),
-            _round1(bmiRange[:greenMax].toFloat() * heightSquared),
-            _round1(bmiRange[:yellowLowMin].toFloat() * heightSquared),
-            _round1(bmiRange[:yellowLowMax].toFloat() * heightSquared),
-            _round1(bmiRange[:yellowHighMin].toFloat() * heightSquared),
-            _round1(bmiRange[:yellowHighMax].toFloat() * heightSquared),
-            _round1(bmiRange[:orangeLowMin].toFloat() * heightSquared),
-            _round1(bmiRange[:orangeLowMax].toFloat() * heightSquared),
-            _round1(bmiRange[:orangeHighMin].toFloat() * heightSquared),
-            _round1(bmiRange[:orangeHighMax].toFloat() * heightSquared)
+            round1Global(bmiRange[:greenMin].toFloat() * heightSquared),
+            round1Global(bmiRange[:greenMax].toFloat() * heightSquared),
+            round1Global(bmiRange[:yellowLowMin].toFloat() * heightSquared),
+            round1Global(bmiRange[:yellowLowMax].toFloat() * heightSquared),
+            round1Global(bmiRange[:yellowHighMin].toFloat() * heightSquared),
+            round1Global(bmiRange[:yellowHighMax].toFloat() * heightSquared),
+            round1Global(bmiRange[:orangeLowMin].toFloat() * heightSquared),
+            round1Global(bmiRange[:orangeLowMax].toFloat() * heightSquared),
+            round1Global(bmiRange[:orangeHighMin].toFloat() * heightSquared),
+            round1Global(bmiRange[:orangeHighMax].toFloat() * heightSquared)
         );
     }
 
     function buildTargetThresholds(greenMin as Float, greenMax as Float,
         lowStepYellow as Float, lowStepOrange as Float, highStepYellow as Float, highStepOrange as Float) as Dictionary {
         return buildTargetMetricThresholds(
-            _round1(greenMin),
-            _round1(greenMax),
-            _round1(greenMin - lowStepYellow),
-            _round1(greenMin),
-            _round1(greenMax),
-            _round1(greenMax + highStepYellow),
-            _round1(greenMin - lowStepOrange),
-            _round1(greenMin - lowStepYellow),
-            _round1(greenMax + highStepYellow),
-            _round1(greenMax + highStepOrange)
+            round1Global(greenMin),
+            round1Global(greenMax),
+            round1Global(greenMin - lowStepYellow),
+            round1Global(greenMin),
+            round1Global(greenMax),
+            round1Global(greenMax + highStepYellow),
+            round1Global(greenMin - lowStepOrange),
+            round1Global(greenMin - lowStepYellow),
+            round1Global(greenMax + highStepYellow),
+            round1Global(greenMax + highStepOrange)
         );
     }
 
@@ -255,14 +227,12 @@ class BodyMetricsThresholdFactory {
 
     function buildLowThresholds(greenMin as Float, greenMax as Float, yellowStep as Float, orangeStep as Float) as Dictionary {
         return {
-            :greenMin => _round1(greenMin),
-            :greenMax => _round1(greenMax),
-            :yellowMin => _round1(greenMin - yellowStep),
-            :orangeMin => _round1(greenMin - orangeStep)
+            :greenMin => round1Global(greenMin),
+            :greenMax => round1Global(greenMax),
+            :yellowMin => round1Global(greenMin - yellowStep),
+            :orangeMin => round1Global(greenMin - orangeStep)
         };
     }
 
-    hidden function _round1(v as Float) as Float {
-        return Math.round(v * 10.0).toFloat() / 10.0;
-    }
+
 }

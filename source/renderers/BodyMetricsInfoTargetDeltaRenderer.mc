@@ -154,9 +154,9 @@ class BodyMetricsInfoTargetDeltaRenderer {
         var showData = available && !policy.equals(POLICY_REFERENCE_ONLY) &&
             effectiveTarget != null && deltaAbs != null && deltaPct != null;
 
-        var currentText = targetCurrentText + ": " + _fmt1(metric[:value].toFloat()) + " " + metric[:unit].toString();
+        var currentText = targetCurrentText + ": " + fmt1Global(metric[:value].toFloat()) + " " + metric[:unit].toString();
         var targetText = showData
-            ? targetLabelText + ": " + _fmt1(effectiveTarget.toFloat()) + " " + metric[:unit].toString()
+            ? targetLabelText + ": " + fmt1Global(effectiveTarget.toFloat()) + " " + metric[:unit].toString()
             : hintUnavailableText;
         var deltaText = showData
             ? targetDeltaAbsText + ": " + _formatDeltaValue(deltaAbs.toFloat(), metric[:unit].toString())
@@ -292,7 +292,7 @@ _drawSingleLineCentered(dc, cx, y, currentFit, 0xCCCCCC);
 
     function _formatDeltaValue(value as Float, unit as String) as String {
         var sign = value >= 0.0 ? "+" : "";
-        return sign + _fmt1(value) + " " + unit;
+        return sign + fmt1Global(value) + " " + unit;
     }
 
     function _fitSingleLineText(dc as Dc, value as String, primaryFont, fallbackFont, maxWidth as Number) as Dictionary {
@@ -325,15 +325,5 @@ _drawSingleLineCentered(dc, cx, y, currentFit, 0xCCCCCC);
         return Graphics.COLOR_RED;
     }
 
-    function _fmt1(v as Float) as String {
-        var scaled = Math.round(_round1(v) * 10.0).toNumber();
-        var whole = scaled / 10;
-        var frac = scaled - whole * 10;
-        if (frac < 0) { frac = -frac; }
-        return whole.toString() + "." + frac.toString();
-    }
 
-    function _round1(v as Float) as Float {
-        return Math.round(v * 10.0).toFloat() / 10.0;
-    }
 }

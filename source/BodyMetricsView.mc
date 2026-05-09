@@ -269,10 +269,6 @@ class BodyMetricsView extends WatchUi.View {
         WatchUi.pushView(systemView, new BodyMetricsBadgeInfoDelegate(systemView), WatchUi.SLIDE_UP);
     }
 
-    function canOpenMenu() as Boolean {
-        return true;
-    }
-
     //! Routes the MENU key: main menu in all modes.
     //! Field-level restore/clear removed: use DOWN to zero a field,
     //! or restore defaults from the main menu after exiting wizard.

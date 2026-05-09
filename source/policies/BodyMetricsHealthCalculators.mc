@@ -21,7 +21,7 @@ class BodyMetricsHealthCalculators {
 
     function calculateBmi(weightKg, heightCm) as Float {
         var heightM = heightCm.toFloat() / 100.0;
-        return _round1(weightKg.toFloat() / (heightM * heightM));
+        return round1Global(weightKg.toFloat() / (heightM * heightM));
     }
 
     function calculateBmrReference(profile as Dictionary, weightKg) as Float {
@@ -29,20 +29,13 @@ class BodyMetricsHealthCalculators {
         var height = profile[:heightCm].toFloat();
         var base = (10.0 * weightKg.toFloat()) + (6.25 * height) - (5.0 * age.toFloat());
         if (profile[:sex].equals("female")) {
-            return _round1(base - 161.0);
+            return round1Global(base - 161.0);
         }
-        return _round1(base + 5.0);
+        return round1Global(base + 5.0);
     }
 
     function muscleKgFromMeasurements(measurements as Dictionary) as Float {
-        return _round1(measurements[:weightKg].toFloat() * (measurements[:musclePct].toFloat() / 100.0));
-    }
-
-    //! Derive muscle % from directly entered muscle mass (kg) and weight (kg).
-    //! muscle_pct = muscle_kg / weight_kg * 100
-    function calculateMusclePct(muscleKg as Float, weightKg as Float) as Float {
-        if (weightKg <= 0.0) { return 0.0; }
-        return _round1(muscleKg / weightKg * 100.0);
+        return round1Global(measurements[:weightKg].toFloat() * (measurements[:musclePct].toFloat() / 100.0));
     }
 
     //! Estimated muscle power output in watts.
@@ -51,10 +44,8 @@ class BodyMetricsHealthCalculators {
     //! exercise physiology literature (McArdle, Katch & Katch, Exercise Physiology, 8th ed.;
     //! Fitts & Widrick, 1996, "Muscle mechanics: adaptations with exercise-training").
     function calculatePotenza(muscleKg as Float) as Float {
-        return _round1(muscleKg * 35.0);
+        return round1Global(muscleKg * 35.0);
     }
 
-    hidden function _round1(v as Float) as Float {
-        return Math.round(v * 10.0).toFloat() / 10.0;
-    }
+
 }

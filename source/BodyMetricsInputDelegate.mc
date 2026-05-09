@@ -206,9 +206,7 @@ class BodyMetricsInputDelegate extends WatchUi.BehaviorDelegate {
     // -------------------------------------------------------------------------
 
     function _openMenu() as Boolean {
-        if (_view.canOpenMenu()) {
-            _view.openMenu();
-        }
+        _view.openMenu();
         return true;
     }
 }

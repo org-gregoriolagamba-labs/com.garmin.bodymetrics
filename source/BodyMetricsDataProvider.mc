@@ -109,7 +109,8 @@ class BodyMetricsDataProvider {
     }
 
     //! Clears all persisted measurement values and related metadata.
-    function clearStoredMeasurements() as Void {        Storage.deleteValue(MEAS_WEIGHT_KEY);
+    function clearStoredMeasurements() as Void {
+        Storage.deleteValue(MEAS_WEIGHT_KEY);
         Storage.deleteValue(MEAS_FAT_KEY);
         Storage.deleteValue(MEAS_MUSCLE_KG_KEY);
         Storage.deleteValue(MEAS_MUSCLE_KEY);  // legacy key cleanup

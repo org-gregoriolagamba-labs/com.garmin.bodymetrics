@@ -14,7 +14,8 @@ function fitTextBlockGlobal(dc as Dc, value as String, primaryFont, fallbackFont
         :font => font,
         :lines => lines,
         :lineHeight => dc.getFontHeight(font),
-        :height => lines.size() * dc.getFontHeight(font)
+        :height => lines.size() * dc.getFontHeight(font),
+        :width => maxTextWidthGlobal(dc, lines, font)
     };
 }
 

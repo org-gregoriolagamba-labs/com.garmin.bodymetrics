@@ -132,7 +132,7 @@ class BodyMetricsProfileUseCase {
     }
 
     function profileFieldCount() as Number {
-        return profileFields().size();
+        return 4; // sex, ageBand, heightCm, bodyProfile — fixed structure
     }
 
     function profileFieldDefinition(index as Number) as Dictionary {

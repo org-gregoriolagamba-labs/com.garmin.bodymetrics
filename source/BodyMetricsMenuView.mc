@@ -32,42 +32,6 @@ class BodyMetricsMenuView extends WatchUi.View {
         WatchUi.requestUpdate();
     }
 
-    function fitMenuText(dc as Dc, value as String, primaryFont, fallbackFont, maxWidth as Number) as Dictionary {
-        var font = primaryFont;
-        var lines = wrapTextGlobal(dc, value, font, maxWidth);
-        if (lines.size() > 2 || maxTextWidth(dc, lines, font) > maxWidth) {
-            font = fallbackFont;
-            lines = wrapTextGlobal(dc, value, font, maxWidth);
-        }
-        return {
-            :font => font,
-            :lines => lines,
-            :lineHeight => dc.getFontHeight(font),
-            :width => maxTextWidth(dc, lines, font)
-        };
-    }
-
-    function maxTextWidth(dc as Dc, lines as Array, font) as Number {
-        var maxWidth = 0;
-        for (var i = 0; i < lines.size(); i += 1) {
-            var lineWidth = dc.getTextWidthInPixels(lines[i].toString(), font);
-            if (lineWidth > maxWidth) {
-                maxWidth = lineWidth;
-            }
-        }
-        return maxWidth;
-    }
-
-    function drawCenteredLines(dc as Dc, cx as Number, startY as Number, layout as Dictionary, color as Number) as Void {
-        var lines = layout[:lines] as Array;
-        var font = layout[:font];
-        var lineHeight = layout[:lineHeight];
-        dc.setColor(color, Graphics.COLOR_TRANSPARENT);
-        for (var i = 0; i < lines.size(); i += 1) {
-            dc.drawText(cx, startY + i * lineHeight, font, lines[i].toString(), Graphics.TEXT_JUSTIFY_CENTER);
-        }
-    }
-
     function onUpdate(dc as Dc) as Void {
         var w = dc.getWidth();
         var h = dc.getHeight();
@@ -87,9 +51,9 @@ class BodyMetricsMenuView extends WatchUi.View {
 
         // Title
         var titleY = lineY + pct(h, 2);
-        var titleLayout = fitMenuText(dc, _title, Graphics.FONT_TINY, Graphics.FONT_XTINY, pct(w, 72));
+        var titleLayout = fitTextBlockGlobal(dc, _title, Graphics.FONT_TINY, Graphics.FONT_XTINY, pct(w, 72));
         var titleLineHeight = titleLayout[:lineHeight];
-        drawCenteredLines(dc, cx, titleY, titleLayout, COLOR_ACCENT);
+        drawCenteredTextBlockGlobal(dc, cx, titleY, titleLayout, COLOR_ACCENT);
 
         // Separator below title
         var titleBlockH = (titleLayout[:lines] as Array).size() * titleLineHeight;
@@ -105,7 +69,7 @@ class BodyMetricsMenuView extends WatchUi.View {
 
         for (var i = 0; i < _items.size(); i += 1) {
             var item = _items[i] as Dictionary;
-            var layout = fitMenuText(dc, item[:label].toString(), Graphics.FONT_TINY, Graphics.FONT_XTINY, safeW);
+            var layout = fitTextBlockGlobal(dc, item[:label].toString(), Graphics.FONT_TINY, Graphics.FONT_XTINY, safeW);
             itemLayouts.add(layout);
             totalItemsH += (layout[:lines] as Array).size() * layout[:lineHeight];
             if (i < _items.size() - 1) {
@@ -139,9 +103,9 @@ class BodyMetricsMenuView extends WatchUi.View {
 
                 dc.setColor(COLOR_ACCENT_DIM, COLOR_ACCENT_DIM);
                 dc.fillRoundedRectangle(pillX, pillY, pillW, pillH, pillR);
-                drawCenteredLines(dc, cx, currentY, layout, Graphics.COLOR_WHITE);
+                drawCenteredTextBlockGlobal(dc, cx, currentY, layout, Graphics.COLOR_WHITE);
             } else {
-                drawCenteredLines(dc, cx, currentY, layout, 0xCCCCCC);
+                drawCenteredTextBlockGlobal(dc, cx, currentY, layout, 0xCCCCCC);
             }
             currentY += itemH + itemGap;
         }
