@@ -53,7 +53,7 @@ class BodyMetricsTrendRenderer {
             labelFont = Graphics.FONT_XTINY;
         }
         var labelH = dc.getFontHeight(labelFont);
-        dc.setColor(available ? domain.zoneColor(metric, zone) : Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
+        dc.setColor(available ? domain.zoneColor(metric, zone) : 0x888888, Graphics.COLOR_TRANSPARENT);
         dc.drawText(cx, topY, labelFont, labelText, Graphics.TEXT_JUSTIFY_CENTER);
 
         // Current value + unit.
@@ -70,7 +70,7 @@ class BodyMetricsTrendRenderer {
         if (trendWindow == 0 || trendValues.size() < 2) {
             var emptyStateText = trendSampleCount == 1 ? trendSingleEntryText : trendNoDataText;
             var noDataLayout = fitTextBlockGlobal(dc, emptyStateText, Graphics.FONT_XTINY, Graphics.FONT_XTINY, _pct(w, 72));
-            drawCenteredTextBlockGlobal(dc, cx, (h / 2) - (noDataLayout[:height] / 2), noDataLayout, Graphics.COLOR_DK_GRAY);
+            drawCenteredTextBlockGlobal(dc, cx, (h / 2) - (noDataLayout[:height] / 2), noDataLayout, 0x888888);
         } else {
             var compactLayout = (trendWindow >= 90 || w < 240);
             var bounds = _trendValueBounds(trendValues);
@@ -100,7 +100,7 @@ class BodyMetricsTrendRenderer {
                 chartY = trendY - pad - chartH;
             }
             var chartW = w - chartX - chartRightPad;
-            var lineColor = available ? domain.zoneColor(metric, zone) : Graphics.COLOR_DK_GRAY;
+            var lineColor = available ? domain.zoneColor(metric, zone) : 0x888888;
             _drawMiniChart(dc, chartX, chartY, chartW, chartH, trendValues, lineColor,
                 bounds, axisLabels, compactLayout);
 
@@ -138,10 +138,10 @@ class BodyMetricsTrendRenderer {
             }
             var trendLayout = _fitSingleLineText(dc, trendLabel, trendFont, trendFont, trendTextMaxW);
 
-            dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
+            dc.setColor(0xCCCCCC, Graphics.COLOR_TRANSPARENT);
             dc.drawText(cx, trendY, trendLayout[:font], trendLayout[:text].toString(), Graphics.TEXT_JUSTIFY_CENTER);
 
-            dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
+            dc.setColor(0x888888, Graphics.COLOR_TRANSPARENT);
             dc.drawText(cx, windowY, Graphics.FONT_XTINY, windowLabel, Graphics.TEXT_JUSTIFY_CENTER);
         }
 
@@ -177,7 +177,7 @@ class BodyMetricsTrendRenderer {
             pts[i] = [px, py];
         }
 
-        dc.setColor(0x333333, Graphics.COLOR_TRANSPARENT);
+        dc.setColor(0x555555, Graphics.COLOR_TRANSPARENT);
         dc.drawLine(plotX, plotY, plotX + plotW, plotY);
         dc.drawLine(plotX, plotY + plotH / 2, plotX + plotW, plotY + plotH / 2);
 
@@ -240,7 +240,7 @@ class BodyMetricsTrendRenderer {
                 dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
                 dc.fillCircle(x, dotY, activeR);
             } else {
-                dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
+                dc.setColor(0x888888, Graphics.COLOR_TRANSPARENT);
                 dc.fillCircle(x, dotY, inactiveR);
             }
         }

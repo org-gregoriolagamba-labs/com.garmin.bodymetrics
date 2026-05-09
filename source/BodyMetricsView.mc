@@ -901,5 +901,5 @@ class BodyMetricsView extends WatchUi.View {
 
 //! UI color constants used across views and menus.
 const COLOR_ACCENT = 0x66CCFF;
-const COLOR_ACCENT_DIM = 0x224466;
+const COLOR_ACCENT_DIM = 0x2266AA;
 const COLOR_BADGE_BG = 0x335C99;

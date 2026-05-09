@@ -63,7 +63,7 @@ class BodyMetricsWizardRenderer {
         var labelY = cy - centralH / 2;
         var valueY = labelY + fieldLabelLayout[:height] + gap;
 
-        drawCenteredTextBlockGlobal(dc, cx, labelY, fieldLabelLayout, isReadOnly ? COLOR_ACCENT : Graphics.COLOR_LT_GRAY);
+        drawCenteredTextBlockGlobal(dc, cx, labelY, fieldLabelLayout, isReadOnly ? COLOR_ACCENT : 0xCCCCCC);
 
         dc.setColor(isReadOnly ? COLOR_ACCENT : Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
         var valueFont = Graphics.FONT_SMALL;
@@ -87,7 +87,7 @@ class BodyMetricsWizardRenderer {
                 dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
                 dc.fillCircle(dotX, dotsY, activeR);
             } else {
-                dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
+                dc.setColor(0x888888, Graphics.COLOR_TRANSPARENT);
                 dc.fillCircle(dotX, dotsY, inactiveR);
             }
         }
@@ -104,7 +104,7 @@ class BodyMetricsWizardRenderer {
         }
 
         var footerY = h - pct(h, 16) - footerLayout[:height];
-        drawCenteredTextBlockGlobal(dc, cx, footerY, footerLayout, Graphics.COLOR_LT_GRAY);
+        drawCenteredTextBlockGlobal(dc, cx, footerY, footerLayout, 0xCCCCCC);
     }
 
     function _drawTriangle(dc as Dc, cx as Number, cy as Number, size as Number, pointUp as Boolean) as Void {

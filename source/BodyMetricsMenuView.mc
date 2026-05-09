@@ -141,7 +141,7 @@ class BodyMetricsMenuView extends WatchUi.View {
                 dc.fillRoundedRectangle(pillX, pillY, pillW, pillH, pillR);
                 drawCenteredLines(dc, cx, currentY, layout, Graphics.COLOR_WHITE);
             } else {
-                drawCenteredLines(dc, cx, currentY, layout, Graphics.COLOR_LT_GRAY);
+                drawCenteredLines(dc, cx, currentY, layout, 0xCCCCCC);
             }
             currentY += itemH + itemGap;
         }

@@ -99,13 +99,13 @@ class BodyMetricsBadgeInfoView extends WatchUi.View {
                     dc.setColor(COLOR_ACCENT, Graphics.COLOR_TRANSPARENT);
                     dc.drawText(cx, y, font, line[:text].toString(), Graphics.TEXT_JUSTIFY_CENTER);
                 } else if (lineType == :label) {
-                    dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
+                    dc.setColor(0xCCCCCC, Graphics.COLOR_TRANSPARENT);
                     dc.drawText(cx, y, font, line[:text].toString(), Graphics.TEXT_JUSTIFY_CENTER);
                 } else if (lineType == :value) {
                     dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
                     dc.drawText(cx, y, Graphics.FONT_TINY, line[:text].toString(), Graphics.TEXT_JUSTIFY_CENTER);
                 } else if (lineType == :centeredText) {
-                    dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
+                    dc.setColor(0xCCCCCC, Graphics.COLOR_TRANSPARENT);
                     dc.drawText(cx, y, font, line[:text].toString(), Graphics.TEXT_JUSTIFY_CENTER);
                 }
             }
@@ -121,7 +121,7 @@ class BodyMetricsBadgeInfoView extends WatchUi.View {
             if (thumbH < 8) { thumbH = 8; }
             var thumbY = trackY + (_scrollY * (trackH - thumbH) / maxScroll);
             var trackX = w - pct(w, 5);
-            dc.setColor(0x333333, Graphics.COLOR_TRANSPARENT);
+            dc.setColor(0x555555, Graphics.COLOR_TRANSPARENT);
             dc.fillRectangle(trackX, trackY, 3, trackH);
             dc.setColor(COLOR_ACCENT, Graphics.COLOR_TRANSPARENT);
             dc.fillRectangle(trackX, thumbY, 3, thumbH);

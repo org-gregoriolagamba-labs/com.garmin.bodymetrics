@@ -5,7 +5,7 @@ import Toybox.Lang;
 class BodyMetricsInfoTargetDeltaRenderer {
 
     const COLOR_ACCENT = 0x66CCFF;
-    const COLOR_ACCENT_DIM = 0x224466;
+    const COLOR_ACCENT_DIM = 0x2266AA;
 
     function initialize() {
     }
@@ -89,13 +89,13 @@ class BodyMetricsInfoTargetDeltaRenderer {
                     dc.setColor(COLOR_ACCENT, Graphics.COLOR_TRANSPARENT);
                     dc.drawText(cx, y, font, line[:text].toString(), Graphics.TEXT_JUSTIFY_CENTER);
                 } else if (lineType == :body) {
-                    dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
+                    dc.setColor(0xCCCCCC, Graphics.COLOR_TRANSPARENT);
                     dc.drawText(cx, y, font, line[:text].toString(), Graphics.TEXT_JUSTIFY_CENTER);
                 } else if (lineType == :rangeLabel) {
                     dc.setColor(COLOR_ACCENT, Graphics.COLOR_TRANSPARENT);
                     dc.drawText(textLeft, y, font, line[:text].toString(), Graphics.TEXT_JUSTIFY_LEFT);
                 } else if (lineType == :rangeValue) {
-                    dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
+                    dc.setColor(0xCCCCCC, Graphics.COLOR_TRANSPARENT);
                     dc.drawText(textLeft, y, font, line[:text].toString(), Graphics.TEXT_JUSTIFY_LEFT);
                 }
             }
@@ -110,7 +110,7 @@ class BodyMetricsInfoTargetDeltaRenderer {
             if (thumbH < 8) { thumbH = 8; }
             var thumbY = trackY + (infoScrollY * (trackH - thumbH) / maxScroll);
             var trackX = w - pct(w, 5);
-            dc.setColor(0x333333, Graphics.COLOR_TRANSPARENT);
+            dc.setColor(0x555555, Graphics.COLOR_TRANSPARENT);
             dc.fillRectangle(trackX, trackY, 3, trackH);
             dc.setColor(COLOR_ACCENT, Graphics.COLOR_TRANSPARENT);
             dc.fillRectangle(trackX, thumbY, 3, thumbH);
@@ -195,11 +195,11 @@ class BodyMetricsInfoTargetDeltaRenderer {
         _drawSingleLineCentered(dc, cx, y, titleFit, COLOR_ACCENT);
         y += titleLineH + gap;
 
-        _drawSingleLineCentered(dc, cx, y, metricFit, available ? domain.zoneColor(metric, zone) : Graphics.COLOR_DK_GRAY);
+        _drawSingleLineCentered(dc, cx, y, metricFit, available ? domain.zoneColor(metric, zone) : 0x888888);
         y += titleLineH + sectionGap;
 
         if (showData) {
-            _drawSingleLineCentered(dc, cx, y, currentFit, Graphics.COLOR_LT_GRAY);
+_drawSingleLineCentered(dc, cx, y, currentFit, 0xCCCCCC);
             y += lineH + gap;
 
             _drawSingleLineCentered(dc, cx, y, targetFit, COLOR_ACCENT);
@@ -218,7 +218,7 @@ class BodyMetricsInfoTargetDeltaRenderer {
         if (y > bottomSafe - lineH) {
             y = bottomSafe - lineH;
         }
-        _drawSingleLineCentered(dc, cx, y, disclaimerFit, Graphics.COLOR_DK_GRAY);
+        _drawSingleLineCentered(dc, cx, y, disclaimerFit, 0x888888);
 
         _drawPageDots(dc, cx, bottomSafe + 1, w, domain.metricsCount(), selectedMetric, -1);
     }
@@ -230,14 +230,14 @@ class BodyMetricsInfoTargetDeltaRenderer {
         var barH = 6;
         var centerX = cx;
 
-        dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
+        dc.setColor(0x444444, Graphics.COLOR_TRANSPARENT);
         dc.fillRectangle(barX, barY, width, barH);
 
         dc.setColor(COLOR_ACCENT_DIM, Graphics.COLOR_TRANSPARENT);
         dc.drawLine(centerX, barY - 6, centerX, barY + barH + 6);
 
         if (!hasData) {
-            dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
+            dc.setColor(0x888888, Graphics.COLOR_TRANSPARENT);
             dc.fillCircle(centerX, barY + barH / 2, 4);
             return;
         }
@@ -283,7 +283,7 @@ class BodyMetricsInfoTargetDeltaRenderer {
                 if (priorityIndex == i) {
                     dc.setColor(Graphics.COLOR_ORANGE, Graphics.COLOR_TRANSPARENT);
                 } else {
-                    dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
+                    dc.setColor(0x888888, Graphics.COLOR_TRANSPARENT);
                 }
                 dc.fillCircle(dotX, y, inactiveR);
             }

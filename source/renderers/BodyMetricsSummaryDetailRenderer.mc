@@ -5,7 +5,7 @@ import Toybox.Lang;
 class BodyMetricsSummaryDetailRenderer {
 
     const COLOR_ACCENT = 0x66CCFF;
-    const COLOR_ACCENT_DIM = 0x224466;
+    const COLOR_ACCENT_DIM = 0x2266AA;
 
     function initialize() {
     }
@@ -59,7 +59,7 @@ class BodyMetricsSummaryDetailRenderer {
         var labelY = cy - totalH / 2;
         if (labelY < topSafe) { labelY = topSafe; }
 
-        dc.setColor(available ? domain.zoneColor(metric, zone) : Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
+        dc.setColor(available ? domain.zoneColor(metric, zone) : 0x888888, Graphics.COLOR_TRANSPARENT);
         dc.drawText(cx, labelY, labelFont, labelText, Graphics.TEXT_JUSTIFY_CENTER);
 
         var iconHitbox = _drawInfoIcon(dc, cx, labelY, labelText, labelFont);
@@ -68,7 +68,7 @@ class BodyMetricsSummaryDetailRenderer {
         if (!dateText.equals("")) {
             dateH = dc.getFontHeight(Graphics.FONT_XTINY);
             var dateY = labelY + hLabelFont + pct(h, 1);
-            dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
+            dc.setColor(0xCCCCCC, Graphics.COLOR_TRANSPARENT);
             dc.drawText(cx, dateY, Graphics.FONT_XTINY, dateText, Graphics.TEXT_JUSTIFY_CENTER);
         }
 
@@ -77,7 +77,7 @@ class BodyMetricsSummaryDetailRenderer {
         dc.drawText(cx, valueY, Graphics.FONT_NUMBER_MILD, _formatValue(metric), Graphics.TEXT_JUSTIFY_CENTER);
 
         var unitY = valueY + hNumMild + pad;
-        dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
+        dc.setColor(0xCCCCCC, Graphics.COLOR_TRANSPARENT);
         dc.drawText(cx, unitY, Graphics.FONT_XTINY, metric[:unit].toString(), Graphics.TEXT_JUSTIFY_CENTER);
 
         var hintY = unitY + hXtiny + pad;
@@ -94,7 +94,7 @@ class BodyMetricsSummaryDetailRenderer {
         if (available) {
             drawCenteredTextBlockGlobal(dc, cx, hintY, hintLayout, domain.zoneColor(metric, zone));
         } else {
-            drawCenteredTextBlockGlobal(dc, cx, hintY, hintLayout, Graphics.COLOR_DK_GRAY);
+            drawCenteredTextBlockGlobal(dc, cx, hintY, hintLayout, 0x888888);
         }
 
         _drawPageDots(dc, cx, dotsY, w, domain.metricsCount(), selectedMetric, domain.priorityMetricIndex());
@@ -152,7 +152,7 @@ class BodyMetricsSummaryDetailRenderer {
         var labelY = cy - totalH / 2;
         if (labelY < topSafe) { labelY = topSafe; }
 
-        dc.setColor(available ? domain.zoneColor(metric, zone) : Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
+        dc.setColor(available ? domain.zoneColor(metric, zone) : 0x888888, Graphics.COLOR_TRANSPARENT);
         dc.drawText(cx, labelY, labelFont, labelText, Graphics.TEXT_JUSTIFY_CENTER);
 
         var valueY = labelY + hLabel + pad;
@@ -187,13 +187,13 @@ class BodyMetricsSummaryDetailRenderer {
         if (available) {
             _drawDetailZoneBar(dc, barX, barY, barW, barH, metric, zone, policy);
             drawCenteredTextBlockGlobal(dc, cx, hintY, hintLayout, domain.zoneColor(metric, zone));
-            drawCenteredTextBlockGlobal(dc, cx, rangeY, rangeLayout, Graphics.COLOR_DK_GRAY);
+            drawCenteredTextBlockGlobal(dc, cx, rangeY, rangeLayout, 0x888888);
 
             if (showIdealRange) {
-                drawCenteredTextBlockGlobal(dc, cx, idealY, idealLayout, Graphics.COLOR_LT_GRAY);
+                drawCenteredTextBlockGlobal(dc, cx, idealY, idealLayout, 0xCCCCCC);
             }
         } else {
-            drawCenteredTextBlockGlobal(dc, cx, hintY, hintLayout, Graphics.COLOR_DK_GRAY);
+            drawCenteredTextBlockGlobal(dc, cx, hintY, hintLayout, 0x888888);
         }
 
         _drawPageDots(dc, cx, dotsY, w, domain.metricsCount(), selectedMetric, -1);
@@ -283,7 +283,7 @@ class BodyMetricsSummaryDetailRenderer {
                 if (priorityIndex == i) {
                     dc.setColor(Graphics.COLOR_ORANGE, Graphics.COLOR_TRANSPARENT);
                 } else {
-                    dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_TRANSPARENT);
+                    dc.setColor(0x888888, Graphics.COLOR_TRANSPARENT);
                 }
                 dc.fillCircle(dotX, y, inactiveR);
             }
@@ -340,7 +340,7 @@ class BodyMetricsSummaryDetailRenderer {
         var segW = w / segCount;
         var barR = h / 2;
 
-        dc.setColor(Graphics.COLOR_DK_GRAY, Graphics.COLOR_DK_GRAY);
+        dc.setColor(0x444444, 0x444444);
         dc.fillCircle(x + barR, y + barR, barR);
         dc.fillCircle(x + w - barR, y + barR, barR);
         dc.fillRectangle(x + barR, y, w - barR * 2, h);
