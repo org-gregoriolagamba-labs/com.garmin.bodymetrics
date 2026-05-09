@@ -46,6 +46,17 @@ BodyMetrics allows the user to inspect body metrics, view their history, set per
 - Available windows are user-selectable.
 - When only one historical point exists, the app shows a dedicated state instead of an incomplete chart.
 
+### System Info Screen
+
+- Accessible from the menu System -> Information.
+- Displays: app name, version, release date, author, and website.
+- The website is displayed as a scannable QR code: the user can bring their smartphone close to the watch face to open the link directly.
+
+## Input Workflows
+
+- In the data-entry wizard (profile, measurements, or targets), the MENU key is blocked and does not open the system menu.
+- This prevents accidental navigation away from the wizard while editing.
+
 ## Managed Data
 
 - User profile.
@@ -54,8 +65,16 @@ BodyMetrics allows the user to inspect body metrics, view their history, set per
 - Historical metric snapshots.
 - Language preference.
 
+## Build Variants
+
+| Variant | Jungle file | Targets | Localizations |
+|---------|-------------|---------|---------------|
+| Full | `monkey.jungle` | FR265 | IT, EN, FR, ES |
+| Lite (planned) | `monkey-lite.jungle` | FR55, FR735XT | EN only |
+
+The Lite variant will preserve all user-facing features but will ship with English only and a separate source configuration to meet device memory limits.
+
 ## Current Functional Limits
 
-- The documented active hardware target is `fr265`.
 - Debug features are outside the end-user scope.
 - Some values come from Garmin while others are manual-only; the source must remain distinguishable.

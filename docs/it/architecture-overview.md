@@ -10,18 +10,20 @@ BodyMetrics e` un'app Connect IQ per la consultazione di metriche corporee, tren
 
 - `source/BodyMetricsView.mc` coordina modalita`, stato selezione, editor transienti, badge e dispatch verso i renderer.
 - `source/BodyMetricsInputDelegate.mc` gestisce input hardware e touch traducendoli in transizioni di stato.
-- `source/BodyMetricsMenuView.mc` gestisce menu custom, sottomeni e delegati di navigazione.
+- `source/BodyMetricsMenuView.mc` gestisce menu custom, sottomenu e delegati di navigazione.
 
 ### Rendering
 
 - `source/renderers/*` disegna solamente.
 - I renderer ricevono modelli pronti per il rendering e non leggono storage o servizi applicativi.
 - I renderer principali coprono summary/detail, trend, wizard setup/data/targets e info/target delta.
+- `source/renderers/RendererCommon.mc` espone le funzioni globali condivise da tutti i renderer: `fitTextBlockGlobal`, `maxTextWidthGlobal`, `drawCenteredTextBlockGlobal`, `wrapTextGlobal`, `splitWordsGlobal`, `availableWidthAtYGlobal`, `pct`.
 
 ### Facade di Dominio
 
 - `source/BodyMetricsDomain.mc` espone la superficie compatibile usata dalla view.
 - Coordina use case, policy, locale e cache trend senza duplicare logica di presentazione.
+- Non definisce costanti di storage key: quelle autorevoli risiedono nei rispettivi use case.
 
 ### Workflow Applicativi
 
@@ -33,15 +35,23 @@ BodyMetrics e` un'app Connect IQ per la consultazione di metriche corporee, tren
 
 ### Regole e Servizi
 
-- `source/policies/*` contiene classificazione, soglie e logica deterministica.
+- `source/policies/BodyMetricsClassificationPolicy.mc` classifica le metriche in zone cromatiche.
+- `source/policies/BodyMetricsThresholdFactory.mc` genera le soglie per ogni metrica e profilo; `potenzaRange()` e` derivato direttamente da `muscleKgRange()` scalato per 35.
+- `source/policies/BodyMetricsHealthCalculators.mc` contiene i calcoli puri BMI, BMR e muscolo.
 - `source/BodyMetricsHistory.mc`, `source/BodyMetricsDataProvider.mc`, `source/BodyMetricsTargets.mc` e `source/BodyMetricsGarminProfile.mc` gestiscono persistenza e integrazioni dati.
 - `source/trend/BodyMetricsTrendCacheService.mc` e` una cache di presentazione e non la sorgente autorevole dei dati.
 
 ### Localizzazione
 
 - `source/i18n/BodyMetricsLocale.mc` e` l'adapter unico per il lookup runtime.
-- `source/i18n/BodyMetricsLocaleCatalog.mc` contiene il catalogo multilingua.
+- `source/i18n/BodyMetricsLocaleCatalog.mc` contiene il catalogo multilingua (IT, EN, FR, ES).
 - `source/i18n/BodyMetricsLocaleValidator.mc` valida la completezza rispetto a `en`.
+
+## Principi di Qualita` del Codice
+
+- Le funzioni `round1Global()` e `fmt1Global()` sono le uniche implementazioni di arrotondamento e formattazione decimale nell'intera codebase: nessun file puo` definire versioni locali equivalenti.
+- Le funzioni globali di rendering in RendererCommon sono l'unica implementazione autorizzata di wrapping testo, misurazione larghezza e disegno testo centrato.
+- `measurementFieldCount()` e `profileFieldCount()` restituiscono costanti intere coerenti con le definizioni dei rispettivi campi: non ricostruiscono l'array a ogni chiamata.
 
 ## Vincoli Architetturali
 
@@ -50,6 +60,7 @@ BodyMetrics e` un'app Connect IQ per la consultazione di metriche corporee, tren
 - Gli use case non dipendono da classi UI o helper di rendering.
 - Le policy restano side-effect free.
 - Il fallback locale e`: lingua corrente -> `en` -> chiave raw.
+- Il Domain non ridefinisce costanti di storage chiave: ogni use case possiede le proprie.
 
 ## Flussi Principali
 
@@ -58,6 +69,11 @@ BodyMetrics e` un'app Connect IQ per la consultazione di metriche corporee, tren
 - Workflow di inserimento: profilo, rilevazioni e obiettivi tramite wizard.
 - Workflow di supporto: cambio lingua, reset dati, debug locale/storico.
 
+## Build Supportate
+
+- **Full** (target `fr265`): build standard con tutte le localizzazioni (IT, EN, FR, ES) e tutte le funzionalita`.
+- **Lite** (target dispositivi a risorse limitate come FR55, FR735XT): in pianificazione. Usera` un jungle dedicato, sorgenti separate e manterra` solo la localizzazione EN. Nessuna funzionalita` utente rimossa rispetto alla versione full.
+
 ## Stato del Documento
 
-Questo documento e` la panoramica architetturale di primo livello. I dettagli su storage, contratti tecnici e workflow funzionali verranno separati nei documenti dedicati dello stesso set bilingue.
+Aggiornato alla build v15 (10 maggio 2026). Riflette il refactoring Clean Code completo e la struttura architetturale corrente del repository.

@@ -17,11 +17,13 @@ BodyMetrics is a Connect IQ application for viewing body metrics, historical tre
 - `source/renderers/*` is responsible for drawing only.
 - Renderers receive rendering-ready models and do not read storage or application services.
 - The main renderers cover summary/detail, trend, setup/data/targets wizards, and info/target delta.
+- `source/renderers/RendererCommon.mc` exposes global functions shared across all renderers: `fitTextBlockGlobal`, `maxTextWidthGlobal`, `drawCenteredTextBlockGlobal`, `wrapTextGlobal`, `splitWordsGlobal`, `availableWidthAtYGlobal`, `pct`.
 
 ### Domain Facade
 
 - `source/BodyMetricsDomain.mc` exposes the compatibility surface consumed by the view.
 - It coordinates use cases, policies, locale, and trend cache without duplicating presentation logic.
+- It does not define storage key constants: the authoritative copies live in the respective use cases.
 
 ### Application Workflows
 
@@ -33,15 +35,23 @@ BodyMetrics is a Connect IQ application for viewing body metrics, historical tre
 
 ### Rules and Services
 
-- `source/policies/*` contains classification, thresholds, and deterministic logic.
+- `source/policies/BodyMetricsClassificationPolicy.mc` classifies metrics into color zones.
+- `source/policies/BodyMetricsThresholdFactory.mc` generates thresholds for each metric and profile; `potenzaRange()` is derived directly from `muscleKgRange()` scaled by 35.
+- `source/policies/BodyMetricsHealthCalculators.mc` holds pure BMI, BMR, and muscle calculations.
 - `source/BodyMetricsHistory.mc`, `source/BodyMetricsDataProvider.mc`, `source/BodyMetricsTargets.mc`, and `source/BodyMetricsGarminProfile.mc` manage persistence and data integrations.
 - `source/trend/BodyMetricsTrendCacheService.mc` is a presentation cache and not the authoritative data source.
 
 ### Localization
 
 - `source/i18n/BodyMetricsLocale.mc` is the only runtime lookup adapter.
-- `source/i18n/BodyMetricsLocaleCatalog.mc` stores the multilingual catalog.
+- `source/i18n/BodyMetricsLocaleCatalog.mc` stores the multilingual catalog (IT, EN, FR, ES).
 - `source/i18n/BodyMetricsLocaleValidator.mc` validates completeness against `en`.
+
+## Code Quality Principles
+
+- `round1Global()` and `fmt1Global()` are the only authoritative implementations of one-decimal rounding and formatting in the entire codebase: no file may define local equivalents.
+- The global rendering functions in RendererCommon are the only authoritative implementations of text wrapping, width measurement, and centered text drawing.
+- `measurementFieldCount()` and `profileFieldCount()` return integer constants consistent with their field definitions: they do not rebuild the array on each call.
 
 ## Architectural Constraints
 
@@ -50,6 +60,7 @@ BodyMetrics is a Connect IQ application for viewing body metrics, historical tre
 - Use cases must not depend on UI classes or rendering helpers.
 - Policies remain side-effect free.
 - Locale fallback is: current language -> `en` -> raw key.
+- The Domain must not redefine storage key constants: each use case owns its own.
 
 ## Main Flows
 
@@ -58,6 +69,11 @@ BodyMetrics is a Connect IQ application for viewing body metrics, historical tre
 - Input workflows: profile, measurements, and targets through wizard screens.
 - Support workflows: language change, data reset, debug locale/history actions.
 
+## Build Variants
+
+- **Full** (target `fr265`): standard build with all localizations (IT, EN, FR, ES) and all features.
+- **Lite** (planned — targets FR55, FR735XT): separate jungle file, English-only locale, all user features preserved.
+
 ## Document Status
 
-This document is the first-level architecture overview. Storage details, technical contracts, and functional workflows will be split into the dedicated documents of the same bilingual set.
+Updated to build v15 (May 10, 2026). Reflects the completed Clean Code refactoring and the current architectural structure of the repository.

@@ -13,6 +13,7 @@ BodyMetrics permette all'utente di consultare metriche corporee, visualizzare il
 - Configurazione e manutenzione del profilo utente.
 - Gestione di obiettivi personalizzati per metrica.
 - Cambio lingua e reset dati locali.
+- Schermata informazioni sistema con sito web mostrato come QR code scansionabile.
 
 ## Flussi Utente Principali
 
@@ -33,6 +34,7 @@ BodyMetrics permette all'utente di consultare metriche corporee, visualizzare il
 - Dal menu dati l'utente entra nel wizard di inserimento.
 - Ogni campo viene modificato con cicli min/max/step definiti dal use case.
 - Al salvataggio le rilevazioni aggiornano la persistenza e registrano uno snapshot storico.
+- Durante il wizard di inserimento dati, il tasto MENU è bloccato e non apre il menu di sistema.
 
 ### Gestione Obiettivi
 
@@ -46,6 +48,12 @@ BodyMetrics permette all'utente di consultare metriche corporee, visualizzare il
 - Le finestre disponibili sono selezionabili dall'utente.
 - In presenza di un solo dato storico l'app mostra uno stato dedicato e non un grafico incompleto.
 
+### Schermata Informazioni Sistema
+
+- Accessibile dal menu `Sistema` -> `Informazioni`.
+- Mostra: nome app, versione, data rilascio, autore, sito web.
+- Il sito web e` visualizzato come QR code scansionabile (120x120 px) anziche` come testo URL.
+
 ## Dati Gestiti
 
 - Profilo utente.
@@ -54,8 +62,14 @@ BodyMetrics permette all'utente di consultare metriche corporee, visualizzare il
 - Storico dei snapshot metrici.
 - Preferenza lingua.
 
+## Varianti di Build
+
+- **Full**: build standard per `fr265`, con localizzazione completa (IT, EN, FR, ES) e tutte le funzionalita`.
+- **Lite** (in pianificazione): build per dispositivi a risorse limitate (FR55, FR735XT), con localizzazione ridotta a solo EN. Nessuna funzionalita` utente rimossa.
+
 ## Limiti Funzionali Correnti
 
 - Il target hardware attivo documentato e` `fr265`.
 - Le funzioni debug non fanno parte dello scope utente finale.
 - Alcuni dati provengono da Garmin, altri sono solo manuali; la fonte deve restare distinguibile.
+- La versione lite non e` ancora disponibile.

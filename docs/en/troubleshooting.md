@@ -12,6 +12,17 @@
 - Not every metric is read from the Garmin profile.
 - Weight may come from Garmin, while other metrics require manual entry.
 
+### UP/DOWN in the simulator do not change the field value
+
+- The simulator sends only `PRESS_TYPE_ACTION` without the full down/repeat/up sequence of a physical device.
+- This is expected behavior: each keypress produces exactly one step.
+- On a physical device, holding the key activates adaptive step acceleration (×10 after 1 s, ×50 after 3 s).
+
+### MENU key opens the system menu during data entry
+
+- In any data-entry wizard, the MENU key is blocked and must not open the system menu.
+- If the system menu appears in wizard mode, this is a regression: verify that `onMenu()` in the InputDelegate returns `true` when `isWizardEditMode()` is active.
+
 ### I changed language and want to verify all strings
 
 - Full catalog validation is a debug action, not an end-user workflow.
@@ -21,8 +32,14 @@
 - Use the data reset function from the dedicated menu.
 - Remember that reset affects the app's local data.
 
+### The website QR code is hard to scan
+
+- The QR code is a 120×120 px PNG image optimized for round-screen devices such as the FR265.
+- Hold your smartphone camera at the appropriate distance and ensure the watch display brightness is high enough.
+
 ## Quick Technical Diagnosis
 
 - If the issue is related to a recent regression, rebuild with the documented `monkeyc` command.
 - If the issue is visual or navigation-related, inspect the behavior in the simulator with `.vscode/run-bodymetrics-sim.sh`.
 - If the issue involves translations or debug badges, always separate end-user flow from dev-only flow during analysis.
+- If a renderer shows incorrectly formatted values, verify there is no local `_round1` or `_fmt1` implementation: the only authoritative implementations are the global functions `round1Global()` and `fmt1Global()`.

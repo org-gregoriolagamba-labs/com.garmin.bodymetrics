@@ -188,4 +188,6 @@ Menu contestuali `Campo`:
 - Alcuni dati possono arrivare da Garmin, altri solo da inserimento manuale.
 - Le funzioni debug non sono parte dell'uso normale dell'app.
 - In presenza di storico insufficiente il trend puo` mostrare un messaggio informativo.
+- Durante il wizard di inserimento dati, il tasto MENU è bloccato e non apre il menu di sistema.
+- Il sito web nella schermata `Informazioni` e` mostrato come QR code: avvicinare la fotocamera dello smartphone per aprire il link.
 - Per i dettagli su dati letti, dati salvati e reset, consulta `privacy-data-handling.md`.
