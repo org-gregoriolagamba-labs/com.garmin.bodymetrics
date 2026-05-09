@@ -85,21 +85,27 @@ class BodyMetricsInputDelegate extends WatchUi.InputDelegate {
 
             if (_view.isSummaryMode()) {
                 if (backPressType == WatchUi.PRESS_TYPE_DOWN) {
+                    // Device sends DOWN before ACTION. Consume and wait for ACTION.
                     _backDownSeen = true;
-                    _view.logBackInputEvent(_pressTypeName(backPressType), "summary_down_pass_system");
-                    return false;
+                    _view.logBackInputEvent(_pressTypeName(backPressType), "summary_down_consumed_wait_action");
+                    return true;
                 }
 
-                // Simulator may emit only ACTION without DOWN on BACK in root.
-                // In that case consume ACTION to avoid simulator-side crash path.
-                if (backPressType == WatchUi.PRESS_TYPE_ACTION && !_backDownSeen) {
-                    _view.logBackInputEvent(_pressTypeName(backPressType), "summary_action_without_down_consumed");
+                if (backPressType == WatchUi.PRESS_TYPE_ACTION) {
+                    if (!_backDownSeen) {
+                        // Simulator sends only ACTION (no DOWN). Consume silently to avoid crash.
+                        _view.logBackInputEvent(_pressTypeName(backPressType), "summary_action_without_down_simulator_consumed");
+                        return true;
+                    }
+                    // Device: proper DOWN+ACTION sequence. Exit app explicitly via popView.
+                    _backDownSeen = false;
+                    _view.logBackInputEvent(_pressTypeName(backPressType), "summary_action_with_down_device_exit");
+                    WatchUi.popView(WatchUi.SLIDE_DOWN);
                     return true;
                 }
 
                 _backDownSeen = false;
-                // Root screen: let the system handle BACK/ESC directly.
-                _view.logBackInputEvent(_pressTypeName(backPressType), "summary_system_default");
+                _view.logBackInputEvent(_pressTypeName(backPressType), "summary_other_pass_system");
                 return false;
             }
 
