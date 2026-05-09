@@ -92,16 +92,17 @@ class BodyMetricsInputDelegate extends WatchUi.InputDelegate {
                 }
 
                 if (backPressType == WatchUi.PRESS_TYPE_ACTION) {
-                    if (!_backDownSeen) {
-                        // Simulator sends only ACTION (no DOWN). Consume silently to avoid crash.
-                        _view.logBackInputEvent(_pressTypeName(backPressType), "summary_action_without_down_simulator_consumed");
+                    var hadDown = _backDownSeen;
+                    _backDownSeen = false;
+                    if (hadDown) {
+                        _view.logBackInputEvent(_pressTypeName(backPressType), "summary_action_with_down_try_exit");
+                        _safeExitFromSummary();
+                        return true;
+                    } else {
+                        // ACTION-only path is typically simulator behavior; keep it safe to avoid root-exit crashes.
+                        _view.logBackInputEvent(_pressTypeName(backPressType), "summary_action_without_down_safe_consume");
                         return true;
                     }
-                    // Device: proper DOWN+ACTION sequence. Exit app explicitly via popView.
-                    _backDownSeen = false;
-                    _view.logBackInputEvent(_pressTypeName(backPressType), "summary_action_with_down_device_exit");
-                    WatchUi.popView(WatchUi.SLIDE_DOWN);
-                    return true;
                 }
 
                 _backDownSeen = false;
@@ -160,4 +161,22 @@ class BodyMetricsInputDelegate extends WatchUi.InputDelegate {
         }
         return "UNKNOWN(" + pressType.toString() + ")";
     }
+
+    function _safeExitFromSummary() as Void {
+        try {
+            // System.exit() is the most reliable way to leave the app across
+            // simulator and physical devices.
+            System.exit();
+            _view.logBackInputEvent("ACTION", "summary_exit_system_exit_invoked");
+        } catch (exitEx) {
+            _view.logBackInputEvent("ACTION", "summary_exit_system_exit_failed:" + exitEx.toString());
+            try {
+                WatchUi.popView(WatchUi.SLIDE_DOWN);
+                _view.logBackInputEvent("ACTION", "summary_exit_pop_view_fallback_invoked");
+            } catch (popEx) {
+                _view.logBackInputEvent("ACTION", "summary_exit_pop_view_fallback_failed:" + popEx.toString());
+            }
+        }
+    }
+
 }
