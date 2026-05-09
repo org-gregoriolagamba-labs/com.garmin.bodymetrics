@@ -260,8 +260,8 @@ class BodyMetricsView extends WatchUi.View {
     function openSystemInfo() as Void {
         var lines = [
             {:label => text("sysinfo.app"),     :value => "BodyMetrics"},
-            {:label => text("sysinfo.version"),  :value => "1.0.0"},
-            {:label => text("sysinfo.release"),  :value => "09 mag 2026"},
+            {:label => text("sysinfo.version"),  :value => "1.0.1"},
+            {:label => text("sysinfo.release"),  :value => "10 mag 2026"},
             {:label => text("sysinfo.author"),   :value => "Gregorio La Gamba"},
             {:label => text("sysinfo.website"),  :image => :QrcodeWebsite}
         ] as Array;
