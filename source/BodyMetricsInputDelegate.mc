@@ -76,7 +76,17 @@ class BodyMetricsInputDelegate extends WatchUi.BehaviorDelegate {
                 return true;
             }
             if (pressType == WatchUi.PRESS_TYPE_ACTION) {
-                // Timer is already running; consume silently and let it continue.
+                if (_navTimer == null) {
+                    // Short press (PRESS_TYPE_DOWN did not fire, e.g. simulator):
+                    // apply a single step without starting the repeat timer.
+                    _navDownTime = System.getTimer();
+                    _navDirection = (key == WatchUi.KEY_DOWN) ? 1 : -1;
+                    _applyNavStep();
+                    _navDownTime = 0;
+                    _navDirection = 0;
+                }
+                // If timer is already running (real device auto-repeat): consume
+                // silently so the timer continues uninterrupted.
                 return true;
             }
         }
