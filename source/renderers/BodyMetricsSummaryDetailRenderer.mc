@@ -10,8 +10,8 @@ class BodyMetricsSummaryDetailRenderer {
     function initialize() {
     }
 
-    //! Draw summary screen and return info icon hitbox.
-    function drawSummary(dc as Dc, model as Dictionary) as Dictionary {
+    //! Draw summary screen.
+    function drawSummary(dc as Dc, model as Dictionary) as Void {
         var domain = model[:domain];
         var selectedMetric = model[:selectedMetric].toNumber();
         var animPhase = model[:animPhase].toNumber();
@@ -48,8 +48,7 @@ class BodyMetricsSummaryDetailRenderer {
         var labelText = domain.metricLabel(selectedMetric);
         var labelFont = Graphics.FONT_TINY;
         var labelSafeW = availableWidthAtYGlobal(w, h, topSafe, dc.getFontHeight(labelFont)) - pct(w, 10);
-        var iconExtraW = 22;
-        if (dc.getTextWidthInPixels(labelText, labelFont) + iconExtraW > labelSafeW) {
+        if (dc.getTextWidthInPixels(labelText, labelFont) > labelSafeW) {
             labelFont = Graphics.FONT_XTINY;
         }
         var hLabelFont = dc.getFontHeight(labelFont);
@@ -61,8 +60,6 @@ class BodyMetricsSummaryDetailRenderer {
 
         dc.setColor(available ? domain.zoneColor(metric, zone) : 0x888888, Graphics.COLOR_TRANSPARENT);
         dc.drawText(cx, labelY, labelFont, labelText, Graphics.TEXT_JUSTIFY_CENTER);
-
-        var iconHitbox = _drawInfoIcon(dc, cx, labelY, labelText, labelFont);
 
         var dateH = 0;
         if (!dateText.equals("")) {
@@ -98,7 +95,6 @@ class BodyMetricsSummaryDetailRenderer {
         }
 
         _drawPageDots(dc, cx, dotsY, w, domain.metricsCount(), selectedMetric, domain.priorityMetricIndex());
-        return iconHitbox;
     }
 
     function drawDetail(dc as Dc, model as Dictionary) as Void {
@@ -288,32 +284,6 @@ class BodyMetricsSummaryDetailRenderer {
                 dc.fillCircle(dotX, y, inactiveR);
             }
         }
-    }
-
-    function _drawInfoIcon(dc as Dc, cx as Number, labelY as Number, labelText as String, labelFont) as Dictionary {
-        var labelW = dc.getTextWidthInPixels(labelText, labelFont);
-        var labelH = dc.getFontHeight(labelFont);
-        var r = 7;
-        var iconX = cx + labelW / 2 + r + 4;
-        var iconY = labelY + labelH / 2;
-
-        dc.setColor(COLOR_ACCENT, Graphics.COLOR_TRANSPARENT);
-        dc.drawCircle(iconX, iconY, r);
-
-        var dotR = 1;
-        var dotY = iconY - r / 2;
-        dc.fillCircle(iconX, dotY, dotR);
-
-        var stemW = 2;
-        var stemH = r - 2;
-        var stemY = dotY + dotR + 2;
-        dc.fillRectangle(iconX - stemW / 2, stemY, stemW, stemH);
-
-        return {
-            :iconX => iconX,
-            :iconY => iconY,
-            :iconR => r
-        };
     }
 
     function _drawDetailZoneBar(dc as Dc, x as Number, y as Number, w as Number, h as Number,

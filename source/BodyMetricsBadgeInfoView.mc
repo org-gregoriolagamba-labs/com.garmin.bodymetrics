@@ -63,21 +63,29 @@ class BodyMetricsBadgeInfoView extends WatchUi.View {
         for (var i = 0; i < _lines.size(); i += 1) {
             var item = _lines[i] as Dictionary;
             var lbl = item[:label].toString();
-            var val = item[:value].toString();
-            if (lbl.equals("") && val.equals("")) {
+            
+            // Check if this is an image item (has :image key)
+            if (item[:image] != null) {
+                allLines.add({:text => lbl, :type => :label});
+                allLines.add({:type => :image, :resourceId => item[:image]});
                 allLines.add({:text => "", :type => :empty});
-            } else if (!lbl.equals("") && val.equals("")) {
-                allLines.add({:text => lbl, :type => :centered});
             } else {
-                var labelWrapped = wrapTextGlobal(dc, lbl, font, itemW);
-                for (var li = 0; li < labelWrapped.size(); li += 1) {
-                    allLines.add({:text => labelWrapped[li].toString(), :type => :label});
+                var val = item[:value].toString();
+                if (lbl.equals("") && val.equals("")) {
+                    allLines.add({:text => "", :type => :empty});
+                } else if (!lbl.equals("") && val.equals("")) {
+                    allLines.add({:text => lbl, :type => :centered});
+                } else {
+                    var labelWrapped = wrapTextGlobal(dc, lbl, font, itemW);
+                    for (var li = 0; li < labelWrapped.size(); li += 1) {
+                        allLines.add({:text => labelWrapped[li].toString(), :type => :label});
+                    }
+                    var valueWrapped = wrapTextGlobal(dc, val, font, itemW);
+                    for (var vi = 0; vi < valueWrapped.size(); vi += 1) {
+                        allLines.add({:text => valueWrapped[vi].toString(), :type => :value});
+                    }
+                    allLines.add({:text => "", :type => :empty});
                 }
-                var valueWrapped = wrapTextGlobal(dc, val, Graphics.FONT_TINY, itemW);
-                for (var vi = 0; vi < valueWrapped.size(); vi += 1) {
-                    allLines.add({:text => valueWrapped[vi].toString(), :type => :value});
-                }
-                allLines.add({:text => "", :type => :empty});
             }
         }
 
@@ -95,7 +103,21 @@ class BodyMetricsBadgeInfoView extends WatchUi.View {
             var line = allLines[i] as Dictionary;
             var lineType = line[:type];
             if (y + lineH > contentTop - lineH && y < contentTop + visibleH + lineH) {
-                if (lineType == :centered) {
+                if (lineType == :image) {
+                    // Draw image centered
+                    var resourceId = line[:resourceId] as ResourceId;
+                    try {
+                        var img = WatchUi.loadResource(resourceId) as BitmapResource;
+                        var imgW = img.getWidth();
+                        var imgH = img.getHeight();
+                        var imgX = (w - imgW) / 2;
+                        dc.drawBitmap(imgX, y, img);
+                        y += imgH + 8;  // Add spacing after image
+                        i = i;  // Prevent line count increment
+                    } catch (ex) {
+                        System.println("[BodyMetrics] Failed to load image resource");
+                    }
+                } else if (lineType == :centered) {
                     dc.setColor(COLOR_ACCENT, Graphics.COLOR_TRANSPARENT);
                     dc.drawText(cx, y, font, line[:text].toString(), Graphics.TEXT_JUSTIFY_CENTER);
                 } else if (lineType == :label) {
@@ -103,7 +125,7 @@ class BodyMetricsBadgeInfoView extends WatchUi.View {
                     dc.drawText(cx, y, font, line[:text].toString(), Graphics.TEXT_JUSTIFY_CENTER);
                 } else if (lineType == :value) {
                     dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-                    dc.drawText(cx, y, Graphics.FONT_TINY, line[:text].toString(), Graphics.TEXT_JUSTIFY_CENTER);
+                    dc.drawText(cx, y, font, line[:text].toString(), Graphics.TEXT_JUSTIFY_CENTER);
                 } else if (lineType == :centeredText) {
                     dc.setColor(0xCCCCCC, Graphics.COLOR_TRANSPARENT);
                     dc.drawText(cx, y, font, line[:text].toString(), Graphics.TEXT_JUSTIFY_CENTER);

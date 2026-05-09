@@ -98,9 +98,6 @@ class BodyMetricsView extends WatchUi.View {
     var _infoTargetDeltaRenderer;
     var _infoScrollY;           // Scroll offset for info screen
     var _infoContentH;           // Total content height for info screen
-    var _infoIconCx;             // (i) icon center X for tap detection
-    var _infoIconCy;             // (i) icon center Y for tap detection
-    var _infoIconR;              // (i) icon radius for tap detection
     var _debugEnabled = false;  // Debug menu: impostare a true solo durante lo sviluppo
     var _reopenDataMenuAfterExit = false; // Dopo azione Data submenu, riapri il submenu
     var _feedbackBadgeText as String;
@@ -130,9 +127,6 @@ class BodyMetricsView extends WatchUi.View {
         _infoTargetDeltaRenderer = new BodyMetricsInfoTargetDeltaRenderer();
         _infoScrollY = 0;
         _infoContentH = 0;
-        _infoIconCx = -100;
-        _infoIconCy = -100;
-        _infoIconR = 0;
         _feedbackBadgeText = "";
         _feedbackBadgeUntil = 0;
 
@@ -232,6 +226,12 @@ class BodyMetricsView extends WatchUi.View {
         return _mode == MODE_SUMMARY;
     }
 
+    // Returns true when the user is editing a numeric field (setup, data, target).
+    // Used by the delegate to decide whether to apply adaptive step.
+    function isWizardEditMode() as Boolean {
+        return _mode == MODE_SETUP || _mode == MODE_DATA || _mode == MODE_TARGET;
+    }
+
     function logBackInputEvent(pressTypeName as String, decision as String) as Void {
         System.println("[BodyMetrics][BACK][Input] pressType=" + pressTypeName
             + " mode=" + _modeName(_mode)
@@ -261,8 +261,9 @@ class BodyMetricsView extends WatchUi.View {
         var lines = [
             {:label => text("sysinfo.app"),     :value => "BodyMetrics"},
             {:label => text("sysinfo.version"),  :value => "1.0.0"},
-            {:label => text("sysinfo.release"),  :value => "22 apr 2026"},
-            {:label => text("sysinfo.author"),   :value => "BodyMetrics Team"}
+            {:label => text("sysinfo.release"),  :value => "09 mag 2026"},
+            {:label => text("sysinfo.author"),   :value => "Gregorio La Gamba"},
+            {:label => text("sysinfo.website"),  :image => :QrcodeWebsite}
         ] as Array;
         var systemView = new BodyMetricsBadgeInfoView(text("sysinfo.title"), lines);
         WatchUi.pushView(systemView, new BodyMetricsBadgeInfoDelegate(systemView), WatchUi.SLIDE_UP);
@@ -272,22 +273,10 @@ class BodyMetricsView extends WatchUi.View {
         return true;
     }
 
-    //! Routes the MENU key: contextual field menu in wizard modes, main menu otherwise.
+    //! Routes the MENU key: main menu in all modes.
+    //! Field-level restore/clear removed: use DOWN to zero a field,
+    //! or restore defaults from the main menu after exiting wizard.
     function openMenu() as Void {
-        if (_mode == MODE_DATA) {
-            if (!_domain.isMeasurementFieldReadOnly(_dataIndex)) {
-                var items = [{:label => text("menu.field_clear"), :id => :field_clear}];
-                var ctxView = new BodyMetricsMenuView(text("menu.field_options"), items);
-                WatchUi.pushView(ctxView, new BodyMetricsFieldContextMenuDelegate(ctxView, self, :data), WatchUi.SLIDE_UP);
-            }
-            return;
-        }
-        if (_mode == MODE_TARGET) {
-            var items = [{:label => text("menu.target_reset_field"), :id => :target_reset_field}];
-            var ctxView = new BodyMetricsMenuView(text("menu.field_options"), items);
-            WatchUi.pushView(ctxView, new BodyMetricsFieldContextMenuDelegate(ctxView, self, :target), WatchUi.SLIDE_UP);
-            return;
-        }
         if (_mode == MODE_TREND && _domain.hasHistoryEntries()) {
             var items = [{:label => text("menu.history_remove_last"), :id => :history_remove_last}];
             var ctxView = new BodyMetricsMenuView(text("menu.field_options"), items);
@@ -299,6 +288,9 @@ class BodyMetricsView extends WatchUi.View {
 
     function _openMainMenu() as Void {
         var items = [] as Array;
+        if (_mode == MODE_SUMMARY) {
+            items.add({:label => text("menu.metric_info"), :id => :metric_info});
+        }
         items.add({:label => text("menu.cat.data"), :id => :data_management});
         items.add({:label => text("menu.cat.options"), :id => :options});
         items.add({:label => text("menu.cat.info"), :id => :information});
@@ -331,15 +323,6 @@ class BodyMetricsView extends WatchUi.View {
         _cacheTrendData();
         showFeedbackBadge(text("menu.history_entry_removed"), 2000);
         WatchUi.requestUpdate();
-    }
-
-    //! Check if a screen tap hits the (i) info icon
-    function isInfoIconTap(x as Number, y as Number) as Boolean {
-        if (_mode != MODE_SUMMARY) { return false; }
-        var dx = x - _infoIconCx;
-        var dy = y - _infoIconCy;
-        var tapR = _infoIconR + 8;  // generous tap target
-        return (dx * dx + dy * dy) <= (tapR * tapR);
     }
 
     function text(key as String) as String {
@@ -491,18 +474,22 @@ class BodyMetricsView extends WatchUi.View {
     }
 
     function nextMetric() as Void {
+        nextMetricBy(1);
+    }
+
+    function nextMetricBy(multiplier as Number) as Void {
         if (_mode == MODE_SETUP) {
-            _profileDraft = _domain.cycleProfileField(_profileDraft, _setupIndex, -1);
+            _profileDraft = _domain.cycleProfileField(_profileDraft, _setupIndex, -multiplier);
             WatchUi.requestUpdate();
             return;
         }
         if (_mode == MODE_DATA) {
-            _dataDraft = _domain.cycleMeasurementField(_dataDraft, _dataIndex, -1);
+            _dataDraft = _domain.cycleMeasurementField(_dataDraft, _dataIndex, -multiplier);
             WatchUi.requestUpdate();
             return;
         }
         if (_mode == MODE_TARGET) {
-            _targetDraft = _domain.cycleTargetField(_targetDraft, _targetIndex, -1);
+            _targetDraft = _domain.cycleTargetField(_targetDraft, _targetIndex, -multiplier);
             WatchUi.requestUpdate();
             return;
         }
@@ -524,18 +511,22 @@ class BodyMetricsView extends WatchUi.View {
     }
 
     function previousMetric() as Void {
+        previousMetricBy(1);
+    }
+
+    function previousMetricBy(multiplier as Number) as Void {
         if (_mode == MODE_SETUP) {
-            _profileDraft = _domain.cycleProfileField(_profileDraft, _setupIndex, 1);
+            _profileDraft = _domain.cycleProfileField(_profileDraft, _setupIndex, multiplier);
             WatchUi.requestUpdate();
             return;
         }
         if (_mode == MODE_DATA) {
-            _dataDraft = _domain.cycleMeasurementField(_dataDraft, _dataIndex, 1);
+            _dataDraft = _domain.cycleMeasurementField(_dataDraft, _dataIndex, multiplier);
             WatchUi.requestUpdate();
             return;
         }
         if (_mode == MODE_TARGET) {
-            _targetDraft = _domain.cycleTargetField(_targetDraft, _targetIndex, 1);
+            _targetDraft = _domain.cycleTargetField(_targetDraft, _targetIndex, multiplier);
             WatchUi.requestUpdate();
             return;
         }
@@ -777,17 +768,13 @@ class BodyMetricsView extends WatchUi.View {
 
     function drawSummary(dc as Dc) as Void {
         var metric = _domain.metricAt(_selectedMetric) as Dictionary;
-        var icon = _summaryDetailRenderer.drawSummary(dc, {
+        _summaryDetailRenderer.drawSummary(dc, {
             :domain => _domain,
             :selectedMetric => _selectedMetric,
             :animPhase => _animPhase,
             :hintUnavailableText => text("hint.unavailable"),
             :dateText => manualDateText(metric)
-        }) as Dictionary;
-
-        _infoIconCx = icon[:iconX].toNumber();
-        _infoIconCy = icon[:iconY].toNumber();
-        _infoIconR = icon[:iconR].toNumber();
+        });
     }
 
     function drawInfo(dc as Dc) as Void {

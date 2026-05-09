@@ -158,7 +158,7 @@ class BodyMetricsMenuView extends WatchUi.View {
 
 //! Toggle globale per abilitare funzioni di debug nel menu.
 //! Impostare a false prima della build di release.
-const DEBUG = true;
+const DEBUG = false;
 
 function buildDebugMenuItems(view as BodyMetricsView) as Array {
     var items = [] as Array;
@@ -212,7 +212,10 @@ class BodyMetricsCustomMenuDelegate extends BodyMetricsBaseMenuDelegate {
     function onSelect() as Boolean {
         var id = _menuView.selectedId();
         
-        if (id == :data_management) {
+        if (id == :metric_info) {
+            WatchUi.popView(WatchUi.SLIDE_DOWN);
+            _view.openMetricInfo();
+        } else if (id == :data_management) {
             _openDataSubmenu();
         } else if (id == :options) {
             _openOptionsSubmenu();
