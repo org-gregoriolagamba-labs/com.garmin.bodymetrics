@@ -13,5 +13,6 @@ docs/public/
 *.tmp
 *.tmp.md
 *.temp
+*.lock
 
 
