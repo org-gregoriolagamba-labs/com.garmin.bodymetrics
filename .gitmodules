@@ -1,0 +1,3 @@
+[submodule "docs/themes/shiori"]
+	path = docs/themes/shiori
+	url = https://github.com/carmelolg/shiori
