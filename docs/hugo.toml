@@ -1,0 +1,58 @@
+baseURL      = "https://gregoriolagamba.github.io/bodymetrics/"
+title        = "BodyMetrics Docs"
+theme        = "shiori"
+
+defaultContentLanguage        = "en"
+defaultContentLanguageInSubdir = false
+
+[languages]
+  [languages.en]
+    languageName = "English"
+    weight       = 1
+    [languages.en.params]
+      description   = "Official documentation for BodyMetrics — a Garmin Connect IQ widget for body metrics tracking on your Forerunner 265."
+      quickStartURL = "/v1.0.0/articles/getting-started/"
+      heroTitle     = "BodyMetrics <span>Documentation</span>"
+  [languages.it]
+    languageName = "Italiano"
+    weight       = 2
+    baseURL      = "https://gregoriolagamba.github.io/bodymetrics/it/"
+    [languages.it.params]
+      description   = "Documentazione ufficiale di BodyMetrics — il widget Garmin Connect IQ per il monitoraggio delle metriche corporee sul tuo Forerunner 265."
+      quickStartURL = "/it/v1.0.0/articles/getting-started/"
+      heroTitle     = "BodyMetrics <span>Documentazione</span>"
+
+[params]
+  author         = "Gregorio La Gamba"
+  version        = "1.0.1"
+  currentVersion = "v1.0.0"
+  tagline        = "A Garmin Connect IQ widget for body metrics tracking on your wrist"
+  licenseName    = "GPL-3.0"
+  license        = "https://github.com/org-gregoriolagamba-labs/com.garmin.bodymetrics/blob/main/LICENSE"
+  website        = "https://gregoriolagamba.github.io"
+  github         = "https://github.com/org-gregoriolagamba-labs/com.garmin.bodymetrics"
+  editBaseURL    = "https://github.com/org-gregoriolagamba-labs/com.garmin.bodymetrics/edit/main/docs/content"
+  logoText       = "BodyMetrics"
+  dateFormat     = "January 2, 2006"
+
+  [[params.versions]]
+    label = "v1.0.0"
+    url   = "/v1.0.0/"
+
+[markup]
+  [markup.highlight]
+    noClasses   = false
+    lineNos     = false
+    codeFences  = true
+    guessSyntax = true
+    tabWidth    = 2
+  [markup.goldmark.renderer]
+    unsafe = true
+
+[outputs]
+  home    = ["HTML", "RSS", "JSON"]
+  section = ["HTML", "RSS"]
+  page    = ["HTML"]
+
+[taxonomies]
+  tag = "tags"
