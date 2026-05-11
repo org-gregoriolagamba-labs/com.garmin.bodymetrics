@@ -23,7 +23,7 @@ defaultContentLanguageInSubdir = false
 
 [params]
   author         = "Gregorio La Gamba"
-  version        = "1.0.1"
+  version        = "1.0.0"
   currentVersion = "v1.0.0"
   tagline        = "A Garmin Connect IQ widget for body metrics tracking on your wrist"
   licenseName    = "GPL-3.0"
