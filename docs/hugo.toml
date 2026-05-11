@@ -18,7 +18,7 @@ defaultContentLanguageInSubdir = false
     weight       = 2
     [languages.it.params]
       description   = "Documentazione ufficiale di BodyMetrics — il widget Garmin Connect IQ per il monitoraggio delle metriche corporee sul tuo Forerunner 265."
-      quickStartURL = "/it/v1.0.0/articles/getting-started/"
+      quickStartURL = "/v1.0.0/articles/getting-started/"
       heroTitle     = "BodyMetrics <span>Documentazione</span>"
 
 [params]
