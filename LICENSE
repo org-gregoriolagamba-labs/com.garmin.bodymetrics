@@ -1,0 +1,64 @@
+Commons Clause License Condition v1.0
+
+The Software is provided to you by the Licensor under the License, as defined below, subject to the following condition.
+
+Without limiting other conditions in the License, the grant of rights under the License will not include, and the License does not grant to you, the right to Sell the Software.
+
+For purposes of the foregoing, "Sell" means practicing any or all of the rights granted to you under the License to provide to third parties, for a fee or other consideration (including without limitation fees for hosting or consulting/support services related to the Software), a product or service whose value derives, in whole or in part, from the functionality of the Software. Any license notice or attribution required by the License must also include this Commons Clause License Condition notice.
+
+---
+
+MIT License
+
+Copyright (c) 2026 Gregorio La Gamba
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+THE ABOVE COMMONS CLAUSE LICENSE CONDITION MUST BE OBSERVED.
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+REDISTRIBUTION AND COMMERCIAL USE RESTRICTIONS:
+
+Notwithstanding the permissions granted above, you may NOT:
+
+1. Redistribute, resell, or re-license the Software or any substantial portion 
+   of it to third parties for any form of consideration (monetary or otherwise).
+
+2. Use the Software as a core component of a commercial product or service 
+   without prior written permission and explicit consent from the copyright holder.
+
+3. Host, deploy, or make the Software available as a service to others without 
+   prior written permission from the copyright holder.
+
+4. Modify and redistribute the Software without notifying and obtaining written 
+   consent from the copyright holder (Gregorio La Gamba).
+
+PERMITTED USE:
+
+You may:
+- Use the Software for personal, non-commercial purposes
+- Modify the Software for your own use
+- Study and learn from the code
+- Report issues and contribute improvements (pull requests)
+- Use it internally within your organization (non-commercial)
+
+EXCEPTIONS AND PERMISSIONS:
+
+If you wish to redistribute, commercialize, or relicense the Software in any way,
+you must contact the copyright holder at gregoriolagamba@gmail.com and obtain explicit
+written permission. Permitted uses may be negotiated on a case-by-case basis.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
