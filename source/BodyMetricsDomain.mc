@@ -189,17 +189,17 @@ class BodyMetricsDomain {
     }
 
     function clearMeasurementField(fieldIndex as Number) as Void {
-        var field = _measurementsUseCase.measurementFieldDefinition(fieldIndex);
-        if (field.hasKey(:readOnly) && (field[:readOnly] as Boolean)) {
+        var field = _measurementsUseCase.measurementFieldDefinition(fieldIndex) as Dictionary<Symbol, Object>;
+        if (field.get(:readOnly) as Boolean? == true) {
             return;
         }
-        _dataProvider.clearMeasurementFieldByKey(field[:key] as Symbol);
+        _dataProvider.clearMeasurementFieldByKey(field.get(:key) as Symbol?);
         _reloadMeasurementsAndRebuildMetrics();
     }
 
     function isMeasurementFieldReadOnly(fieldIndex as Number) as Boolean {
-        var field = _measurementsUseCase.measurementFieldDefinition(fieldIndex);
-        return field.hasKey(:readOnly) && (field[:readOnly] as Boolean);
+        var field = _measurementsUseCase.measurementFieldDefinition(fieldIndex) as Dictionary<Symbol, Object>;
+        return (field.get(:readOnly) as Boolean?) == true;
     }
 
     function clearTargetField(fieldIndex as Number) as Void {
@@ -211,10 +211,10 @@ class BodyMetricsDomain {
     }
 
     function resetAllUserData() as Void {
-        var resetState = _resetUserDataUseCase.resetAllUserData();
-        _hasStoredProfile = resetState[:hasStoredProfile] as Boolean;
-        _profile = resetState[:profile] as Dictionary;
-        _measurements = resetState[:measurements] as Dictionary;
+        var resetState = _resetUserDataUseCase.resetAllUserData() as Dictionary<Symbol, Object>;
+        _hasStoredProfile = resetState.get(:hasStoredProfile) as Boolean?;
+        _profile = resetState.get(:profile) as Dictionary?;
+        _measurements = resetState.get(:measurements) as Dictionary?;
         rebuildMetrics();
     }
 
@@ -303,9 +303,9 @@ class BodyMetricsDomain {
     }
 
     function loadProfile() as Dictionary {
-        var loaded = _profileUseCase.loadProfile();
-        _hasStoredProfile = loaded[:hasStoredProfile] as Boolean;
-        return loaded[:profile] as Dictionary;
+        var loaded = _profileUseCase.loadProfile() as Dictionary<Symbol, Object>;
+        _hasStoredProfile = loaded.get(:hasStoredProfile) as Boolean?;
+        return loaded.get(:profile) as Dictionary?;
     }
 
     function sanitizeProfile(profile as Dictionary) as Dictionary {
