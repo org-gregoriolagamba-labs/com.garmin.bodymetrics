@@ -26,11 +26,12 @@ defaultContentLanguageInSubdir = false
   version        = "1.0.0"
   currentVersion = "v1.0.0"
   tagline        = "A Garmin Connect IQ widget for body metrics tracking on your wrist"
-  licenseName    = "GPL-3.0"
+  licenseName    = "Commons Clause + MIT"
   license        = "https://github.com/org-gregoriolagamba-labs/com.garmin.bodymetrics/blob/main/LICENSE"
   website        = "https://gregoriolagamba.github.io"
   github         = "https://github.com/org-gregoriolagamba-labs/com.garmin.bodymetrics"
   editBaseURL    = "https://github.com/org-gregoriolagamba-labs/com.garmin.bodymetrics/edit/main/docs/content"
+  showEditButton = false
   logoText       = "BodyMetrics"
   dateFormat     = "January 2, 2006"
 
