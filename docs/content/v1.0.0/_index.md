@@ -1,11 +1,11 @@
 ---
 title: "BodyMetrics Documentation"
-description: "Official documentation for BodyMetrics v1.0.1 — the Garmin Connect IQ widget for body metrics tracking."
+description: "Official documentation for BodyMetrics v1.0.0 — the Garmin Connect IQ widget for body metrics tracking."
 layout: "docs-home"
-version: "v1.0.1"
+version: "v1.0.0"
 ---
 
-Welcome to the **BodyMetrics v1.0.1** documentation.
+Welcome to the **BodyMetrics v1.0.0** documentation.
 
 BodyMetrics is a Garmin Connect IQ widget for the **Forerunner 265** that displays key body composition metrics on your wrist, tracks your history over time, and helps you stay on target toward your personal health goals.
 
@@ -35,4 +35,4 @@ BodyMetrics is a Garmin Connect IQ widget for the **Forerunner 265** that displa
 
 ## Latest Release
 
-**v1.0.1** — May 10, 2026 — quality and UX patch. See [Changelog](articles/changelog/) for details.
+**v1.0.0** — May 10, 2026 — first stable release. See [Changelog](articles/changelog/) for details.
