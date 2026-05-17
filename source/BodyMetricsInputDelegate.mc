@@ -1,6 +1,5 @@
 import Toybox.Lang;
 import Toybox.System;
-import Toybox.Timer;
 import Toybox.WatchUi;
 
 //! Uses BehaviorDelegate so that onBack() is invoked by the CIQ runtime for
@@ -10,29 +9,40 @@ class BodyMetricsInputDelegate extends WatchUi.BehaviorDelegate {
 
     var _view;
 
-    // Adaptive step: track when UP/DOWN was first pressed in wizard edit mode.
-    // Step multiplier increases with hold duration:
-    //   0–1 s  → ×1  (step 0.1 for floats, 1 for ints)
-    //   1–3 s  → ×10 (step 1.0 for floats, 10 for ints)
-    //   >3 s   → ×50 (step 5.0 for floats, 50 for ints)
-    // Option B: a Timer fires every NAV_REPEAT_MS while key is held,
-    // re-applying the step with the updated multiplier on each tick.
-    var _navDownTime as Number;   // System.getTimer() when UP/DOWN was pressed
-    var _navDirection as Number;  // +1 = next (DOWN), -1 = prev (UP), 0 = none
-    var _navTimer as Timer.Timer?;
+    // Rapid-press acceleration for wizard edit mode.
+    //
+    // On FR265, long press of DOWN opens the Music Player (OS-level, cannot be
+    // intercepted). Long press of UP fires onMenu() directly — the runtime
+    // never delivers PRESS_TYPE_DOWN for KEY_UP in that case. Therefore
+    // hold-duration detection is unreliable and is NOT used.
+    //
+    // Instead, each short press (PRESS_TYPE_ACTION) increments a streak counter
+    // while the user keeps pressing the same button within RAPID_THRESHOLD_MS.
+    // The step multiplier grows with the streak:
+    //   1–2 presses  → ×1
+    //   3–5 presses  → ×5
+    //   6–9 presses  → ×10
+    //   ≥10 presses  → ×50
+    // The streak resets when direction changes or the gap exceeds the threshold.
+    var _lastPressTime as Number;  // System.getTimer() of last wizard press
+    var _rapidCount    as Number;  // consecutive rapid presses in the same direction
+    var _rapidDir      as Number;  // +1 = DOWN, -1 = UP, 0 = none
 
-    const STEP_MID_MS  = 1000;   // after 1 s → ×10
-    const STEP_HIGH_MS = 3000;   // after 3 s → ×50
-    const STEP_MID_MUL = 10;
-    const STEP_HIGH_MUL = 50;
-    const NAV_REPEAT_MS = 300;   // timer repeat interval while key held
+    const RAPID_THRESHOLD_MS = 500; // gap below this → rapid consecutive press
 
     function initialize(view as BodyMetricsView) {
         BehaviorDelegate.initialize();
         _view = view;
-        _navDownTime = 0;
-        _navDirection = 0;
-        _navTimer = null;
+        _lastPressTime = 0;
+        _rapidCount    = 0;
+        _rapidDir      = 0;
+    }
+
+    function _rapidMultiplier() as Number {
+        if (_rapidCount >= 10) { return 50; }
+        if (_rapidCount >=  6) { return 10; }
+        if (_rapidCount >=  3) { return  5; }
+        return 1;
     }
 
     // -------------------------------------------------------------------------
@@ -45,10 +55,11 @@ class BodyMetricsInputDelegate extends WatchUi.BehaviorDelegate {
     }
 
     // -------------------------------------------------------------------------
-    // Raw key override — intercepts UP/DOWN PRESS_TYPE_DOWN for adaptive step
-    // timing, and UP/DOWN PRESS_TYPE_UP to reset tracking.
-    // Everything else is forwarded to BehaviorDelegate.onKey() so the runtime
-    // can invoke onBack(), onSelect(), onNextPage(), onPreviousPage(), etc.
+    // Raw key override — intercepts UP/DOWN in wizard edit mode.
+    // PRESS_TYPE_ACTION applies a step (with rapid-press acceleration).
+    // PRESS_TYPE_DOWN / PRESS_TYPE_UP are consumed silently so the runtime
+    // does not double-call onNextPage()/onPreviousPage() in wizard mode.
+    // Everything else is forwarded to BehaviorDelegate.onKey().
     // -------------------------------------------------------------------------
 
     function onKey(evt as WatchUi.KeyEvent) as Boolean {
@@ -56,44 +67,30 @@ class BodyMetricsInputDelegate extends WatchUi.BehaviorDelegate {
         var pressType = evt.getType();
 
         if ((key == WatchUi.KEY_UP || key == WatchUi.KEY_DOWN) && _view.isWizardEditMode()) {
-            if (pressType == WatchUi.PRESS_TYPE_DOWN) {
-                // Guard against firmware auto-repeat: only initialize on the
-                // very first PRESS_TYPE_DOWN (when no timer is running yet).
-                // Subsequent auto-repeat PRESS_TYPE_DOWN events are consumed
-                // silently so the timer keeps running uninterrupted.
-                if (_navTimer == null) {
-                    _navDownTime = System.getTimer();
-                    _navDirection = (key == WatchUi.KEY_DOWN) ? 1 : -1;
-                    _applyNavStep();
-                    _startNavTimer();
-                }
-                return true;
-            }
-            if (pressType == WatchUi.PRESS_TYPE_UP) {
-                _stopNavTimer();
-                _navDownTime = 0;
-                _navDirection = 0;
-                return true;
-            }
             if (pressType == WatchUi.PRESS_TYPE_ACTION) {
-                if (_navTimer == null) {
-                    // Short press (PRESS_TYPE_DOWN did not fire, e.g. simulator):
-                    // apply a single step without starting the repeat timer.
-                    _navDownTime = System.getTimer();
-                    _navDirection = (key == WatchUi.KEY_DOWN) ? 1 : -1;
-                    _applyNavStep();
-                    _navDownTime = 0;
-                    _navDirection = 0;
+                var dir = (key == WatchUi.KEY_DOWN) ? 1 : -1;
+                var now = System.getTimer();
+                if (dir == _rapidDir && (now - _lastPressTime) < RAPID_THRESHOLD_MS) {
+                    _rapidCount += 1;
+                } else {
+                    _rapidCount = 1;
+                    _rapidDir   = dir;
                 }
-                // If timer is already running (real device auto-repeat): consume
-                // silently so the timer continues uninterrupted.
+                _lastPressTime = now;
+                var mul = _rapidMultiplier();
+                if (dir > 0) {
+                    _view.nextMetricBy(mul);
+                } else {
+                    _view.previousMetricBy(mul);
+                }
                 return true;
             }
+            // Consume PRESS_TYPE_DOWN and PRESS_TYPE_UP silently.
+            return true;
         }
 
-        // On FR265, long press of the UP physical button fires KEY_MENU (a
-        // separate key code), NOT KEY_UP + PRESS_TYPE_ACTION. Intercept it in
-        // wizard edit mode so it does not open the main menu.
+        // On FR265, long press UP fires KEY_MENU via onMenu() — also block it
+        // here in case the runtime routes it through onKey() on other devices.
         if (key == WatchUi.KEY_MENU && _view.isWizardEditMode()) {
             return true;
         }
@@ -102,51 +99,13 @@ class BodyMetricsInputDelegate extends WatchUi.BehaviorDelegate {
         return BehaviorDelegate.onKey(evt);
     }
 
-    // Called on each timer tick (every NAV_REPEAT_MS) while UP/DOWN is held in
-    // wizard edit mode. Multiplier increases as elapsed time grows.
-    function _onNavTick() as Void {
-        _applyNavStep();
-    }
-
-    function _startNavTimer() as Void {
-        _stopNavTimer();
-        _navTimer = new Timer.Timer();
-        _navTimer.start(method(:_onNavTick), NAV_REPEAT_MS, true);
-    }
-
-    function _stopNavTimer() as Void {
-        if (_navTimer != null) {
-            _navTimer.stop();
-            _navTimer = null;
-        }
-    }
-
-    // Computes current multiplier based on how long the key has been held,
-    // then calls nextMetricBy/previousMetricBy on the view.
-    function _applyNavStep() as Void {
-        if (_navDirection == 0 || _navDownTime == 0) { return; }
-        var elapsed = System.getTimer() - _navDownTime;
-        var mul = 1;
-        if (elapsed >= STEP_HIGH_MS) {
-            mul = STEP_HIGH_MUL;
-        } else if (elapsed >= STEP_MID_MS) {
-            mul = STEP_MID_MUL;
-        }
-        if (_navDirection > 0) {
-            _view.nextMetricBy(mul);
-        } else {
-            _view.previousMetricBy(mul);
-        }
-    }
-
     // -------------------------------------------------------------------------
     // Semantic behavior methods
     // -------------------------------------------------------------------------
 
     //! MENU behavior (= long press UP on FR265) — called DIRECTLY by the CIQ
-    //! runtime, bypassing onKey(). In wizard edit mode the adaptive step timer
-    //! is already running from PRESS_TYPE_DOWN, so we just consume this event
-    //! to prevent the main menu from opening. Outside wizard mode, open menu.
+    //! runtime, bypassing onKey(). In wizard edit mode we consume it to prevent
+    //! the main menu from opening. Outside wizard mode, open menu.
     function onMenu() as Boolean {
         if (_view.isWizardEditMode()) {
             return true;

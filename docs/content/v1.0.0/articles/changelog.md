@@ -33,9 +33,8 @@ tags: ["changelog", "releases"]
 ### UX Refinements
 
 - **MENU key in wizard**: blocked during data-entry wizard mode to prevent accidental system menu opening.
-- **Label fix**: `sysinfo.author` label corrected in all four languages (Autore / Author / Auteur / Autor).
-- **Badge info view**: values rendered in `FONT_XTINY` to prevent truncation on long strings.
-- **Simulator navigation**: adaptive UP/DOWN — a single tap produces one step, consistent with physical device behaviour.
+
+- **Wizard navigation**: rapid-press acceleration for UP/DOWN — consecutive taps within 500 ms progressively increase the step multiplier (×1 → ×5 → ×10 → ×50).
 
 ### Architecture
 
