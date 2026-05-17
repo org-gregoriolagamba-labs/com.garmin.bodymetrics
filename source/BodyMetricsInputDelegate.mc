@@ -11,14 +11,19 @@ class BodyMetricsInputDelegate extends WatchUi.BehaviorDelegate {
 
     // Rapid-press acceleration for wizard edit mode.
     //
-    // On FR265, long press of DOWN opens the Music Player (OS-level, cannot be
-    // intercepted). Long press of UP fires onMenu() directly — the runtime
-    // never delivers PRESS_TYPE_DOWN for KEY_UP in that case. Therefore
-    // hold-duration detection is unreliable and is NOT used.
+    // IMPORTANT: BehaviorDelegate dispatch order — the runtime calls the
+    // behavior method (onNextPage / onPreviousPage) FIRST. Only when it returns
+    // false does the runtime also call the raw onKey(). Therefore the rapid-press
+    // logic must live in onNextPage() / onPreviousPage(), not in onKey().
     //
-    // Instead, each short press (PRESS_TYPE_ACTION) increments a streak counter
-    // while the user keeps pressing the same button within RAPID_THRESHOLD_MS.
-    // The step multiplier grows with the streak:
+    // On FR265, long press DOWN opens the Music Player (OS-level, cannot be
+    // intercepted). Long press UP fires onMenu() directly — the runtime never
+    // delivers PRESS_TYPE_DOWN for KEY_UP in that case. Hold-duration detection
+    // is therefore unreliable and is not used.
+    //
+    // Instead, each short press increments a streak counter while the user
+    // keeps pressing the same button within RAPID_THRESHOLD_MS. The step
+    // multiplier grows with the streak:
     //   1–2 presses  → ×1
     //   3–5 presses  → ×5
     //   6–9 presses  → ×10
@@ -28,7 +33,7 @@ class BodyMetricsInputDelegate extends WatchUi.BehaviorDelegate {
     var _rapidCount    as Number;  // consecutive rapid presses in the same direction
     var _rapidDir      as Number;  // +1 = DOWN, -1 = UP, 0 = none
 
-    const RAPID_THRESHOLD_MS = 500; // gap below this → rapid consecutive press
+    const RAPID_THRESHOLD_MS = 600; // gap below this → rapid consecutive press
 
     function initialize(view as BodyMetricsView) {
         BehaviorDelegate.initialize();
@@ -55,48 +60,41 @@ class BodyMetricsInputDelegate extends WatchUi.BehaviorDelegate {
     }
 
     // -------------------------------------------------------------------------
-    // Raw key override — intercepts UP/DOWN in wizard edit mode.
-    // PRESS_TYPE_ACTION applies a step (with rapid-press acceleration).
-    // PRESS_TYPE_DOWN / PRESS_TYPE_UP are consumed silently so the runtime
-    // does not double-call onNextPage()/onPreviousPage() in wizard mode.
-    // Everything else is forwarded to BehaviorDelegate.onKey().
+    // Raw key override — only used for KEY_MENU safety net in wizard mode.
+    // UP/DOWN are handled by onNextPage()/onPreviousPage() which the runtime
+    // calls BEFORE onKey(), so the UP/DOWN block here is never reached for
+    // those events.
     // -------------------------------------------------------------------------
 
     function onKey(evt as WatchUi.KeyEvent) as Boolean {
         var key = evt.getKey();
-        var pressType = evt.getType();
-
-        if ((key == WatchUi.KEY_UP || key == WatchUi.KEY_DOWN) && _view.isWizardEditMode()) {
-            if (pressType == WatchUi.PRESS_TYPE_ACTION) {
-                var dir = (key == WatchUi.KEY_DOWN) ? 1 : -1;
-                var now = System.getTimer();
-                if (dir == _rapidDir && (now - _lastPressTime) < RAPID_THRESHOLD_MS) {
-                    _rapidCount += 1;
-                } else {
-                    _rapidCount = 1;
-                    _rapidDir   = dir;
-                }
-                _lastPressTime = now;
-                var mul = _rapidMultiplier();
-                if (dir > 0) {
-                    _view.nextMetricBy(mul);
-                } else {
-                    _view.previousMetricBy(mul);
-                }
-                return true;
-            }
-            // Consume PRESS_TYPE_DOWN and PRESS_TYPE_UP silently.
-            return true;
-        }
-
-        // On FR265, long press UP fires KEY_MENU via onMenu() — also block it
-        // here in case the runtime routes it through onKey() on other devices.
+        // Safety net: block KEY_MENU in wizard mode in case the runtime routes
+        // it through onKey() rather than onMenu() on some devices.
         if (key == WatchUi.KEY_MENU && _view.isWizardEditMode()) {
             return true;
         }
-
-        // Forward to BehaviorDelegate: KEY_ESC→onBack(), UP/DOWN→onPreviousPage/onNextPage(), etc.
         return BehaviorDelegate.onKey(evt);
+    }
+
+    // -------------------------------------------------------------------------
+    // Rapid-press step helper
+    // -------------------------------------------------------------------------
+
+    function _applyRapidStep(dir as Number) as Void {
+        var now = System.getTimer();
+        if (dir == _rapidDir && (now - _lastPressTime) < RAPID_THRESHOLD_MS) {
+            _rapidCount += 1;
+        } else {
+            _rapidCount = 1;
+            _rapidDir   = dir;
+        }
+        _lastPressTime = now;
+        var mul = _rapidMultiplier();
+        if (dir > 0) {
+            _view.nextMetricBy(mul);
+        } else {
+            _view.previousMetricBy(mul);
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -131,16 +129,24 @@ class BodyMetricsInputDelegate extends WatchUi.BehaviorDelegate {
         return true;
     }
 
-    //! DOWN button → next metric / decrease value in wizard.
-    //! In non-wizard modes this is called directly by the runtime.
-    //! In wizard mode, onKey handles it with adaptive step.
+    //! DOWN button → next metric (non-wizard) or accelerated step (wizard).
+    //! Called by the runtime BEFORE onKey() for the DOWN button short press.
     function onNextPage() as Boolean {
+        if (_view.isWizardEditMode()) {
+            _applyRapidStep(1);
+            return true;
+        }
         _view.nextMetric();
         return true;
     }
 
-    //! UP button → previous metric / increase value in wizard.
+    //! UP button → previous metric (non-wizard) or accelerated step (wizard).
+    //! Called by the runtime BEFORE onKey() for the UP button short press.
     function onPreviousPage() as Boolean {
+        if (_view.isWizardEditMode()) {
+            _applyRapidStep(-1);
+            return true;
+        }
         _view.previousMetric();
         return true;
     }
