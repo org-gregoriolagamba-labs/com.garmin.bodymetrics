@@ -54,15 +54,15 @@ Data in BodyMetrics flows in one direction: from **persistent storage** through 
 ## Metric Navigation Flow
 
 1. User presses **UP / DOWN** on the Summary screen.
-2. `BodyMetricsInputDelegate` calls `view.nextMetric()` / `view.prevMetric()`.
+2. `BodyMetricsInputDelegate` calls `view.nextMetric()` / `view.previousMetric()`.
 3. The view updates `_selectedMetric` and requests a redraw.
 4. `onUpdate()` builds a new render model from the domain and calls `summaryDetailRenderer.drawSummary(dc, model)`.
 
 ## Measurement Entry Flow
 
 1. User opens Check-ins wizard via menu.
-2. View enters `MODE_DATA_ENTRY`.
-3. UP/DOWN cycle through the bounded field range (from `MeasurementsUseCase.fieldStep()`).
+2. View enters `MODE_DATA`.
+3. UP/DOWN cycle through the bounded field range (step and bounds defined per field in `MeasurementsUseCase`).
 4. On **ENTER**, the view advances to the next field.
 5. After the last field, the view calls `domain.saveMeasurements(values)`.
 6. The use case writes to `DataProvider`, records a history snapshot in `History`, and invalidates the trend cache.

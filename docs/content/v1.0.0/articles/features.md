@@ -36,7 +36,7 @@ Press **ENTER** on the Summary screen to open Detail. It shows a richer numeric 
 
 ## Info Screen
 
-From Summary, **long-press UP** to open the Info screen for the current metric.
+From Summary, press **MENU** (long-press UP on FR265), then **ENTER** to open the Info screen for the current metric.
 
 Info displays:
 
@@ -68,10 +68,10 @@ The effective target is either:
 
 From **Menu → User data → Check-ins → Enter data**, the measurement wizard lets you manually enter values for all tracked metrics.
 
-Each field uses a bounded min/max/step cycle — UP increases the value, DOWN decreases it.
+Each field uses a bounded min/max/step cycle — **UP increases** the value, **DOWN decreases** it.
 
 {{< callout type="tip" >}}
-You can clear a single field in the wizard with **MENU → Clear field** without losing other entries.
+Press the same button repeatedly within 600 ms to activate rapid-press acceleration: ×1 → ×5 → ×10 → ×50 step. Pause or change direction to reset.
 {{< /callout >}}
 
 On save, the app:

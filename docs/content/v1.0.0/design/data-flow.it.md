@@ -54,15 +54,15 @@ I dati in BodyMetrics fluiscono in una sola direzione: dallo **storage persisten
 ## Flusso di Navigazione tra Metriche
 
 1. L'utente preme **SU / GIÙ** nella schermata Riepilogo.
-2. `BodyMetricsInputDelegate` chiama `view.nextMetric()` / `view.prevMetric()`.
+2. `BodyMetricsInputDelegate` chiama `view.nextMetric()` / `view.previousMetric()`.
 3. La view aggiorna `_selectedMetric` e richiede un ridisegno.
 4. `onUpdate()` costruisce un nuovo modello dal domain e chiama `summaryDetailRenderer.drawSummary(dc, model)`.
 
 ## Flusso di Inserimento Misurazioni
 
 1. L'utente apre la procedura guidata Check-in tramite menu.
-2. La view entra in `MODE_DATA_ENTRY`.
-3. SU/GIÙ scorrono nell'intervallo del campo delimitato (da `MeasurementsUseCase.fieldStep()`).
+2. La view entra in `MODE_DATA`.
+3. SU/GIÙ scorrono nell'intervallo del campo delimitato (step e limiti definiti per campo in `MeasurementsUseCase`).
 4. A **ENTER**, la view avanza al campo successivo.
 5. Dopo l'ultimo campo, la view chiama `domain.saveMeasurements(values)`.
 6. L'use case scrive su `DataProvider`, registra uno snapshot storico in `History` e invalida la cache trend.

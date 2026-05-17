@@ -36,7 +36,7 @@ Premi **ENTER** nella schermata Riepilogo per aprire il Dettaglio. Mostra un'ana
 
 ## Schermata Info
 
-Dal Riepilogo, **tieni premuto SU** per aprire la schermata Info per la metrica corrente.
+Dal Riepilogo, premi **MENU** (tieni premuto SU sul FR265), poi **ENTER** per aprire la schermata Info per la metrica corrente.
 
 Info mostra:
 
@@ -68,10 +68,10 @@ L'obiettivo effettivo è:
 
 Da **Menu → Dati utente → Check-in → Inserisci dati**, la procedura guidata di misurazione ti permette di inserire manualmente i valori per tutte le metriche monitorate.
 
-Ogni campo usa un ciclo min/max/step — SU aumenta il valore, GIÙ lo diminuisce.
+Ogni campo usa un ciclo min/max/step — **SU aumenta** il valore, **GIÙ lo diminuisce**.
 
 {{< callout type="tip" >}}
-Puoi azzerare un singolo campo nella procedura guidata con **MENU → Azzera campo** senza perdere gli altri inserimenti.
+Premi lo stesso tasto più volte entro 600 ms per attivare l'accelerazione: ×1 → ×5 → ×10 → ×50. Fai una pausa o cambia direzione per azzerare.
 {{< /callout >}}
 
 Al salvataggio, l'app:

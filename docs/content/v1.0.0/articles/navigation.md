@@ -12,15 +12,18 @@ tags: ["navigation", "keys", "menus"]
 
 | Key | Action |
 |-----|--------|
-| **UP** | Previous metric (Summary) / decrease value (wizard) / scroll up (Info) |
-| **DOWN** | Next metric (Summary) / increase value (wizard) / scroll down (Info) |
+| **UP** | Previous metric (Summary) / increase value (wizard) / scroll up (Info) |
+| **DOWN** | Next metric (Summary) / decrease value (wizard) / scroll down (Info) |
 | **ENTER** / **START** | Confirm / open deeper view |
 | **BACK** / **ESC** / **LAP** | Close current view and go back |
-| **MENU** | Open context or main menu |
-| **Long-press UP** | Open Info screen directly from Summary |
+| **MENU** / **Long-press UP** | Open main menu (from Summary: Metric Info is the first item) |
 
 {{< callout type="note" >}}
 In any wizard screen (Profile, Check-ins, Targets), **MENU is blocked** and will not open the system menu. This prevents accidental navigation away while you are editing a field.
+{{< /callout >}}
+
+{{< callout type="tip" >}}
+In wizard screens, **UP and DOWN** support rapid-press acceleration: consecutive taps within 600 ms progressively increase the step multiplier (×1 → ×5 → ×10 → ×50). The streak resets when you pause or change direction.
 {{< /callout >}}
 
 ## View Map
@@ -29,10 +32,10 @@ In any wizard screen (Profile, Check-ins, Targets), **MENU is blocked** and will
 Summary
 ├── ENTER                → Detail
 │   └── BACK             → Summary
-├── Long-press UP        → Info (for current metric)
-│   └── BACK             → Summary
 ├── BACK                 → Exit app
-└── MENU                 → Main Menu
+└── MENU / Long-press UP → Main Menu
+    ├── Metric Info       → Info (for current metric)  [Summary only]
+    │   └── BACK          → Summary
     ├── User data
     │   ├── Profile       → Profile wizard
     │   ├── Check-ins
@@ -55,18 +58,19 @@ Summary
 
 | Destination | Key Sequence |
 |-------------|-------------|
-| User data | `MENU` → `ENTER` |
-| Preferences | `MENU` → `DOWN` → `ENTER` |
-| System | `MENU` → `DOWN` → `DOWN` → `ENTER` |
-| Debug | `MENU` → `DOWN` → `DOWN` → `DOWN` → `ENTER` |
+| Metric Info (Summary only) | `MENU` → `ENTER` |
+| User data | `MENU` → `DOWN` → `ENTER` |
+| Preferences | `MENU` → `DOWN` → `DOWN` → `ENTER` |
+| System | `MENU` → `DOWN` → `DOWN` → `DOWN` → `ENTER` |
+| Debug | `MENU` → `DOWN` → `DOWN` → `DOWN` → `DOWN` → `ENTER` |
 
 ### User Data Sub-Menus
 
 | Destination | Key Sequence |
 |-------------|-------------|
-| Profile | `MENU` → `ENTER` → `ENTER` |
-| Check-ins | `MENU` → `ENTER` → `DOWN` → `ENTER` |
-| Targets | `MENU` → `ENTER` → `DOWN` → `DOWN` → `ENTER` |
+| Profile | `MENU` → `DOWN` → `ENTER` → `ENTER` |
+| Check-ins | `MENU` → `DOWN` → `ENTER` → `DOWN` → `ENTER` |
+| Targets | `MENU` → `DOWN` → `ENTER` → `DOWN` → `DOWN` → `ENTER` |
 
 ### Check-ins Sub-Menus
 
@@ -86,18 +90,11 @@ Summary
 
 | Destination | Key Sequence |
 |-------------|-------------|
-| Language | `MENU` → `DOWN` → `ENTER` → `ENTER` |
+| Language | `MENU` → `DOWN` → `DOWN` → `ENTER` → `ENTER` |
 
 ### System Sub-Menus
 
 | Destination | Key Sequence |
 |-------------|-------------|
-| Information | `MENU` → `DOWN` → `DOWN` → `ENTER` → `ENTER` |
-| Reset Data | `MENU` → `DOWN` → `DOWN` → `ENTER` → `DOWN` → `ENTER` |
-
-## Contextual Field Menus (Inside Wizards)
-
-| Action | Key Sequence |
-|--------|-------------|
-| Clear current field (Check-ins wizard) | `MENU` → `ENTER` |
-| Reset to default (Targets wizard) | `MENU` → `ENTER` |
+| Information | `MENU` → `DOWN` → `DOWN` → `DOWN` → `ENTER` → `ENTER` |
+| Reset Data | `MENU` → `DOWN` → `DOWN` → `DOWN` → `ENTER` → `DOWN` → `ENTER` |

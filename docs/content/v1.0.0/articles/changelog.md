@@ -34,7 +34,7 @@ tags: ["changelog", "releases"]
 
 - **MENU key in wizard**: blocked during data-entry wizard mode to prevent accidental system menu opening.
 
-- **Wizard navigation**: rapid-press acceleration for UP/DOWN — consecutive taps within 500 ms progressively increase the step multiplier (×1 → ×5 → ×10 → ×50).
+- **Wizard navigation**: rapid-press acceleration for UP/DOWN — consecutive taps within 600 ms progressively increase the step multiplier (×1 → ×5 → ×10 → ×50).
 
 ### Architecture
 

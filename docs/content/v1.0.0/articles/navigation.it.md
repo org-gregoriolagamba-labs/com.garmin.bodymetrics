@@ -12,40 +12,43 @@ tags: ["navigazione", "tasti", "menu"]
 
 | Tasto | Azione |
 |-------|--------|
-| **SU** | Metrica precedente (Riepilogo) / diminuisci valore (procedura guidata) / scorri su (Info) |
-| **GIÙ** | Metrica successiva (Riepilogo) / aumenta valore (procedura guidata) / scorri giù (Info) |
+| **SU** | Metrica precedente (Riepilogo) / aumenta valore (procedura guidata) / scorri su (Info) |
+| **GIÙ** | Metrica successiva (Riepilogo) / diminuisci valore (procedura guidata) / scorri giù (Info) |
 | **ENTER** / **START** | Conferma / apri vista più profonda |
 | **BACK** / **ESC** / **LAP** | Chiudi la vista corrente e torna indietro |
-| **MENU** | Apri menu contestuale o principale |
-| **Tieni premuto SU** | Apri la schermata Info direttamente dal Riepilogo |
+| **MENU** / **Tieni premuto SU** | Apri il menu principale (dal Riepilogo: Info metrica è la prima voce) |
 
 {{< callout type="note" >}}
 In qualsiasi schermata della procedura guidata (Profilo, Check-in, Obiettivi), **MENU è bloccato** e non aprirà il menu di sistema. Questo evita navigazioni accidentali mentre stai modificando un campo.
+{{< /callout >}}
+
+{{< callout type="tip" >}}
+Nelle schermate della procedura guidata, **SU e GIÙ** supportano l'accelerazione per pressioni rapide: tocchi consecutivi entro 600 ms aumentano progressivamente il moltiplicatore (×1 → ×5 → ×10 → ×50). La serie si azzera quando ci si ferma o si cambia direzione.
 {{< /callout >}}
 
 ## Mappa delle Viste
 
 ```
 Riepilogo
-├── ENTER                    → Dettaglio
-│   └── BACK                 → Riepilogo
-├── Tieni premuto SU         → Info (per la metrica corrente)
-│   └── BACK                 → Riepilogo
-├── BACK                     → Esci dall'app
-└── MENU                     → Menu Principale
+├── ENTER                        → Dettaglio
+│   └── BACK                     → Riepilogo
+├── BACK                         → Esci dall'app
+└── MENU / Tieni premuto SU      → Menu Principale
+    ├── Info metrica              → Info (per la metrica corrente)  [solo Riepilogo]
+    │   └── BACK                  → Riepilogo
     ├── Dati utente
-    │   ├── Profilo           → Procedura guidata profilo
+    │   ├── Profilo               → Procedura guidata profilo
     │   ├── Check-in
-    │   │   ├── Inserisci dati  → Procedura guidata misurazioni
-    │   │   └── Azzera dati     → Conferma e azzera
+    │   │   ├── Inserisci dati    → Procedura guidata misurazioni
+    │   │   └── Azzera dati       → Conferma e azzera
     │   └── Obiettivi
-    │       ├── Imposta         → Procedura guidata obiettivi
+    │       ├── Imposta           → Procedura guidata obiettivi
     │       └── Reimposta tutti gli obiettivi
     ├── Preferenze
-    │   └── Lingua            → Selettore lingua
+    │   └── Lingua                → Selettore lingua
     ├── Sistema
-    │   ├── Informazioni      → Info di sistema (+ QR code)
-    │   └── Reimposta dati    → Conferma e reimposta
+    │   ├── Informazioni          → Info di sistema (+ QR code)
+    │   └── Reimposta dati        → Conferma e reimposta
     └── Debug (solo build dev)
 ```
 
@@ -55,18 +58,19 @@ Riepilogo
 
 | Destinazione | Sequenza Tasti |
 |--------------|---------------|
-| Dati utente | `MENU` → `ENTER` |
-| Preferenze | `MENU` → `GIÙ` → `ENTER` |
-| Sistema | `MENU` → `GIÙ` → `GIÙ` → `ENTER` |
-| Debug | `MENU` → `GIÙ` → `GIÙ` → `GIÙ` → `ENTER` |
+| Info metrica (solo Riepilogo) | `MENU` → `ENTER` |
+| Dati utente | `MENU` → `GIÙ` → `ENTER` |
+| Preferenze | `MENU` → `GIÙ` → `GIÙ` → `ENTER` |
+| Sistema | `MENU` → `GIÙ` → `GIÙ` → `GIÙ` → `ENTER` |
+| Debug | `MENU` → `GIÙ` → `GIÙ` → `GIÙ` → `GIÙ` → `ENTER` |
 
 ### Sotto-menu Dati Utente
 
 | Destinazione | Sequenza Tasti |
 |--------------|---------------|
-| Profilo | `MENU` → `ENTER` → `ENTER` |
-| Check-in | `MENU` → `ENTER` → `GIÙ` → `ENTER` |
-| Obiettivi | `MENU` → `ENTER` → `GIÙ` → `GIÙ` → `ENTER` |
+| Profilo | `MENU` → `GIÙ` → `ENTER` → `ENTER` |
+| Check-in | `MENU` → `GIÙ` → `ENTER` → `GIÙ` → `ENTER` |
+| Obiettivi | `MENU` → `GIÙ` → `ENTER` → `GIÙ` → `GIÙ` → `ENTER` |
 
 ### Sotto-menu Check-in
 
@@ -86,18 +90,11 @@ Riepilogo
 
 | Destinazione | Sequenza Tasti |
 |--------------|---------------|
-| Lingua | `MENU` → `GIÙ` → `ENTER` → `ENTER` |
+| Lingua | `MENU` → `GIÙ` → `GIÙ` → `ENTER` → `ENTER` |
 
 ### Sotto-menu Sistema
 
 | Destinazione | Sequenza Tasti |
 |--------------|---------------|
-| Informazioni | `MENU` → `GIÙ` → `GIÙ` → `ENTER` → `ENTER` |
-| Reimposta dati | `MENU` → `GIÙ` → `GIÙ` → `ENTER` → `GIÙ` → `ENTER` |
-
-## Menu Contestuali dei Campi (Nelle Procedure Guidate)
-
-| Azione | Sequenza Tasti |
-|--------|---------------|
-| Azzera campo corrente (procedura guidata Check-in) | `MENU` → `ENTER` |
-| Reimposta al valore predefinito (procedura guidata Obiettivi) | `MENU` → `ENTER` |
+| Informazioni | `MENU` → `GIÙ` → `GIÙ` → `GIÙ` → `ENTER` → `ENTER` |
+| Reimposta dati | `MENU` → `GIÙ` → `GIÙ` → `GIÙ` → `ENTER` → `GIÙ` → `ENTER` |

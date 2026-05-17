@@ -33,7 +33,7 @@ tags: ["changelog", "release"]
 ### Rifinitura UX
 
 - **Tasto MENU nelle procedure guidate**: bloccato durante l'inserimento dati per evitare l'apertura accidentale del menu di sistema.
-- **Navigazione nella procedura guidata**: accelerazione per pressioni rapide consecutive su SU/GIÙ — pressioni ravvicinate entro 500 ms aumentano progressivamente il moltiplicatore (×1 → ×5 → ×10 → ×50).
+- **Navigazione nella procedura guidata**: accelerazione per pressioni rapide consecutive su SU/GIÙ — pressioni ravvicinate entro 600 ms aumentano progressivamente il moltiplicatore (×1 → ×5 → ×10 → ×50).
 
 ### Architettura
 

@@ -44,7 +44,7 @@ Il reset dei dati non può essere annullato. Assicurati di voler davvero elimina
 
 ### Come azzero il valore di una singola metrica?
 
-Dentro la **procedura guidata Check-in**, premi **MENU → Azzera campo** per resettare il campo attivo senza influenzare gli altri.
+Dentro la **procedura guidata Check-in**, usa **SU** o **GIÙ** per scorrere il valore del campo. Non esiste una scorciatoia in-procedura guidata per azzerare un singolo campo (MENU è bloccato nelle schermate della procedura guidata). Per cancellare tutte le misurazioni usa **Menu → Sistema → Reimposta dati**.
 
 ---
 
@@ -52,7 +52,7 @@ Dentro la **procedura guidata Check-in**, premi **MENU → Azzera campo** per re
 
 ### Come apro rapidamente la schermata Info?
 
-Dalla schermata **Riepilogo**, **tieni premuto SU**. Questo apre direttamente la schermata Info per la metrica selezionata.
+Dalla schermata **Riepilogo**, premi **MENU** (tieni premuto SU sul FR265), poi **ENTER** per selezionare **Info metrica**. Questo apre la schermata Info per la metrica selezionata.
 
 ### Il grafico Trend mostra "dati insufficienti" — perché?
 
@@ -72,7 +72,7 @@ Se hai impostato un obiettivo personalizzato per una metrica, viene usato quel v
 
 ### Come reimposto un singolo obiettivo?
 
-Apri la **procedura guidata Obiettivi** (Menu → Dati utente → Obiettivi → Imposta), naviga fino alla metrica e premi **MENU → Reimposta al predefinito** per ripristinare solo quell'obiettivo.
+Apri la **procedura guidata Obiettivi** (Menu → Dati utente → Obiettivi → Imposta) e modifica manualmente il valore per quella metrica. Non esiste un reset per campo in procedura guidata (MENU è bloccato nelle schermate della procedura guidata). Per reimpostare tutti gli obiettivi ai valori predefiniti, usa **Menu → Dati utente → Obiettivi → Reimposta tutti gli obiettivi**.
 
 ---
 

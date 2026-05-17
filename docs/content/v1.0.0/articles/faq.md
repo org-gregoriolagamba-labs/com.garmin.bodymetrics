@@ -44,7 +44,7 @@ Reset Data cannot be undone. Make sure you really want to delete everything befo
 
 ### How do I clear a single metric value?
 
-Inside the **Check-ins wizard**, press **MENU → Clear field** to reset the currently active field without affecting the others.
+Inside the **Check-ins wizard**, use **UP** or **DOWN** to cycle the field value. There is no in-wizard shortcut to clear a single field (MENU is blocked inside wizard screens). To erase all measurements, use **Menu → System → Reset Data**.
 
 ---
 
@@ -52,7 +52,7 @@ Inside the **Check-ins wizard**, press **MENU → Clear field** to reset the cur
 
 ### How do I open the Info screen quickly?
 
-From the **Summary** screen, **long-press UP**. This opens the Info screen directly for the currently selected metric.
+From the **Summary** screen, press **MENU** (long-press UP on FR265), then **ENTER** to select **Metric Info**. This opens the Info screen for the currently selected metric.
 
 ### The Trend chart shows "not enough data" — why?
 
@@ -72,7 +72,7 @@ If you have set a custom target for a metric, that value is used. If you have no
 
 ### How do I reset a single target?
 
-Open the **Targets wizard** (Menu → User data → Targets → Set), navigate to the metric, and press **MENU → Reset to default** to revert only that target.
+Open the **Targets wizard** (Menu → User data → Targets → Set) and manually adjust the value for that metric. There is no in-wizard per-field reset (MENU is blocked inside wizard screens). To reset all targets to policy-derived defaults at once, use **Menu → User data → Targets → Reset all targets**.
 
 ---
 
