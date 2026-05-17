@@ -52,7 +52,7 @@ Inside the **Check-ins wizard**, press **MENU → Clear field** to reset the cur
 
 ### How do I open the Info screen quickly?
 
-From the **Summary** screen, **long-press ENTER** (or START). This opens the Info screen directly for the currently selected metric.
+From the **Summary** screen, **long-press UP**. This opens the Info screen directly for the currently selected metric.
 
 ### The Trend chart shows "not enough data" — why?
 

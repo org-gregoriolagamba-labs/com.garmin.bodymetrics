@@ -17,7 +17,7 @@ tags: ["navigation", "keys", "menus"]
 | **ENTER** / **START** | Confirm / open deeper view |
 | **BACK** / **ESC** / **LAP** | Close current view and go back |
 | **MENU** | Open context or main menu |
-| **Long-press ENTER** | Open Info screen directly from Summary |
+| **Long-press UP** | Open Info screen directly from Summary |
 
 {{< callout type="note" >}}
 In any wizard screen (Profile, Check-ins, Targets), **MENU is blocked** and will not open the system menu. This prevents accidental navigation away while you are editing a field.
@@ -29,7 +29,7 @@ In any wizard screen (Profile, Check-ins, Targets), **MENU is blocked** and will
 Summary
 ├── ENTER                → Detail
 │   └── BACK             → Summary
-├── Long-press ENTER     → Info (for current metric)
+├── Long-press UP        → Info (for current metric)
 │   └── BACK             → Summary
 ├── BACK                 → Exit app
 └── MENU                 → Main Menu

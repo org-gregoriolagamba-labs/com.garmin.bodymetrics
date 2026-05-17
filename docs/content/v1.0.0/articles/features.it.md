@@ -36,7 +36,7 @@ Premi **ENTER** nella schermata Riepilogo per aprire il Dettaglio. Mostra un'ana
 
 ## Schermata Info
 
-Dal Riepilogo, **tieni premuto ENTER** (o START) per aprire la schermata Info per la metrica corrente.
+Dal Riepilogo, **tieni premuto SU** per aprire la schermata Info per la metrica corrente.
 
 Info mostra:
 

@@ -36,7 +36,7 @@ Press **ENTER** on the Summary screen to open Detail. It shows a richer numeric 
 
 ## Info Screen
 
-From Summary, **long-press ENTER** (or START) to open the Info screen for the current metric.
+From Summary, **long-press UP** to open the Info screen for the current metric.
 
 Info displays:
 

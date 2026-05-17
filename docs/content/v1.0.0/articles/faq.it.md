@@ -52,7 +52,7 @@ Dentro la **procedura guidata Check-in**, premi **MENU → Azzera campo** per re
 
 ### Come apro rapidamente la schermata Info?
 
-Dalla schermata **Riepilogo**, **tieni premuto ENTER** (o START). Questo apre direttamente la schermata Info per la metrica selezionata.
+Dalla schermata **Riepilogo**, **tieni premuto SU**. Questo apre direttamente la schermata Info per la metrica selezionata.
 
 ### Il grafico Trend mostra "dati insufficienti" — perché?
 

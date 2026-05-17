@@ -17,7 +17,7 @@ tags: ["navigazione", "tasti", "menu"]
 | **ENTER** / **START** | Conferma / apri vista più profonda |
 | **BACK** / **ESC** / **LAP** | Chiudi la vista corrente e torna indietro |
 | **MENU** | Apri menu contestuale o principale |
-| **Tieni premuto ENTER** | Apri la schermata Info direttamente dal Riepilogo |
+| **Tieni premuto SU** | Apri la schermata Info direttamente dal Riepilogo |
 
 {{< callout type="note" >}}
 In qualsiasi schermata della procedura guidata (Profilo, Check-in, Obiettivi), **MENU è bloccato** e non aprirà il menu di sistema. Questo evita navigazioni accidentali mentre stai modificando un campo.
@@ -29,7 +29,7 @@ In qualsiasi schermata della procedura guidata (Profilo, Check-in, Obiettivi), *
 Riepilogo
 ├── ENTER                    → Dettaglio
 │   └── BACK                 → Riepilogo
-├── Tieni premuto ENTER      → Info (per la metrica corrente)
+├── Tieni premuto SU         → Info (per la metrica corrente)
 │   └── BACK                 → Riepilogo
 ├── BACK                     → Esci dall'app
 └── MENU                     → Menu Principale
