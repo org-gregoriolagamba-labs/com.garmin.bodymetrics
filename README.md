@@ -7,6 +7,9 @@
 
 **BodyMetrics** is a native **Garmin Connect IQ widget** that brings comprehensive body composition tracking directly to your Forerunner 265 wrist. Monitor weight, body fat, muscle mass, hydration, bone mass, BMI, BMR, and muscular power — with historical trends, personalized targets, and color-coded health zones.
 
+**v1.0.0** — First stable release (May 12, 2026)  
+**Status:** Production-ready | **License:** Commons Clause + MIT | **Languages:** 4 (EN/IT/FR/ES)
+
 ---
 
 ## ✨ Features
@@ -61,6 +64,14 @@ Customize your body type:
 - **Strength** — optimized for power athletes
 
 Each type adjusts thresholds automatically for more accurate assessment.
+
+### 🔐 Privacy & Data Security
+
+- **All data is stored locally** on your device only — no transmission to external servers
+- **No analytics, advertising, or third-party tracking**
+- **No personal data sharing** with anyone
+- Complete control over data deletion via "Reset All Data" option
+- See [Privacy Policy](https://gregoriolagamba.github.io/bodymetrics/privacy/) for details
 
 ---
 
@@ -160,26 +171,36 @@ com.garmin.bodymetrics/
 
 ### Building
 
-From VS Code command palette:
+**From VS Code:**
 ```
 Monkey C: Build
 ```
 
-Or from terminal:
+**From Terminal:**
 ```bash
-cd /home/gregorio/Software/myProjects/com.garmin.bodymetrics
-monk build
+cd com.garmin.bodymetrics
+monkey build
 ```
 
 ### Running in Simulator
 
+**From VS Code:**
 ```
 Monkey C: Run (FR265 Simulator)
 ```
 
-Or use the provided build task:
+**Using the build task:**
 ```bash
 .vscode/run-bodymetrics-sim.sh
+```
+
+### Manual Installation (Developers)
+
+To install directly on device or simulator:
+```bash
+git clone https://github.com/org-gregoriolagamba-labs/com.garmin.bodymetrics.git
+cd com.garmin.bodymetrics
+monkeyc -d FR265 -y developer_key.key -z manifest.xml -o bin/BodyMetrics.prg
 ```
 
 ### Code Quality
@@ -210,22 +231,31 @@ Full documentation is available at:
 
 ---
 
-## ⚠️ Important Disclaimer
+## ⚠️ Important Disclaimers
 
+### Medical Information
 **BodyMetrics provides general health indicators based on standard formulas, NOT clinical data.**
 
-### Data Accuracy
-- Metrics are calculated using generic formulas valid for most individuals with indicated profile characteristics
-- They are **not** Garmin-certified clinical measurements
-- They are approximate indicators, not medical reference values
+- Metrics use **generic scientific formulas** (BMI, BMR, Mifflin-St Jeor formula)
+- Results are **NOT certified clinical data** and do NOT replace professional medical consultation
+- Results are for **personal informational purposes only**
+- NOT intended for medical diagnosis, treatment, or clinical decision-making
 
-### Medical Guidance
-- Do NOT interpret BodyMetrics data as medical diagnosis or clinical advice
-- A green zone does NOT guarantee good health; a red zone does NOT mean illness
-- Biological variability is normal; data can be influenced by hydration, measurement timing, scale accuracy, etc.
+**Always consult a healthcare professional** before making significant changes to your health habits, diet, or exercise routine.
 
-### Professional Consultation
-For accurate body composition assessment and health advice, **consult a qualified nutritionist or your trusted doctor.** BodyMetrics is a **personal monitoring tool**, not a diagnostic device. Important health decisions must be based on verified clinical data, not generic indicators.
+### Data Accuracy & Biological Variability
+- Calculations are valid for most individuals but individual variation is normal
+- Not Garmin-certified clinical measurements
+- Data can be influenced by hydration, measurement timing, scale accuracy, and other factors
+- A green zone does NOT guarantee good health; a red zone does NOT indicate illness
+
+### Data Synchronization
+**Important:** BodyMetrics **does NOT automatically sync body composition data** from your Garmin Index S2 smart scale (API limitation).
+- Weight synchronizes automatically via Garmin Connect ✅
+- Body composition metrics (fat %, muscle mass, water %, bone mass) require **manual entry** ✅
+  - Takes ~10-15 seconds per entry
+  - Data is read from Garmin Connect and entered into the app
+  - Fully local, no external transmission
 
 ---
 
@@ -233,14 +263,22 @@ For accurate body composition assessment and health advice, **consult a qualifie
 
 This project is licensed under the **Commons Clause License Condition** combined with the **MIT License** — see [LICENSE](LICENSE) file for details.
 
-**Key Points:**
-- ✅ Free for personal, non-commercial use and internal organizational use
-- ✅ You can modify the code for your own purposes
-- ✅ You can study and contribute via pull requests
-- ❌ Redistribution, resale, or commercial use requires explicit written permission
-- ❌ Hosting as a service without permission is not allowed
+### ✅ Permitted Uses
+- Personal, non-commercial use
+- Internal organizational use (non-commercial)
+- Code study and learning
+- PR contributions and improvements
+- Modification for own use
+- Reporting issues and feedback
 
-If you wish to use BodyMetrics commercially or redistribute it, please contact the author for licensing terms.
+### ❌ Restricted Uses
+- Redistribute, resell, or re-license without written consent
+- Use as core component of commercial product without permission
+- Host, deploy, or provide as a service without permission
+- Modify and redistribute without consent from copyright holder
+- Commercial sale or commercialization in any form
+
+**For commercial licensing or redistribution exceptions**, contact: **gregoriolagamba@gmail.com**
 
 ---
 
@@ -276,18 +314,25 @@ Contributions are welcome! Please follow these guidelines:
 
 ## 🗓️ Roadmap
 
-### v1.0.0 (Current - May 2026)
-✅ First stable release with core features:
-- 9 complete body composition metrics
-- Health zone classification system
-- Personalized targets and goals
-- 7/30/90-day historical trends
-- Multilingual support (4 languages)
-- Full documentation
+### v1.0.0 (Current - May 30, 2026) ✅
+**First stable release** with all core features:
+- ✅ 9 complete body composition metrics
+- ✅ Health zone classification system (Green/Yellow/Orange/Red)
+- ✅ Personalized targets and adaptive profiles
+- ✅ 7/30/90-day historical trends with visual indicators
+- ✅ Multilingual support (4 languages: EN, IT, FR, ES)
+- ✅ Full documentation with examples
+- ✅ 100% compiler warning resolution
+- ✅ Domain-Driven Design architecture
 
-### Planned Features
-- 🎯 Support for additional Garmin devices (Lite build for FR55, FR735XT)
-- 📱 Companion mobile app for detailed analytics
+---
+
+## 🐛 Known Limitations
+
+- Body composition data from Index S2 requires manual entry (Garmin API limitation)
+- Historical graphs display 7, 30, and 90-day periods only
+- Metric calculations based on general population formulas (not clinical-grade)
+- Currently optimized for Forerunner 265 (other devices may follow in future releases)
 
 ---
 
@@ -297,17 +342,27 @@ Contributions are welcome! Please follow these guidelines:
 
 - GitHub: [@gregoriolagamba](https://github.com/gregoriolagamba)
 - Website: [gregoriolagamba.github.io](https://gregoriolagamba.github.io)
+- Email: gregoriolagamba@gmail.com
 
 ---
 
-## 🎉 Acknowledgments
+## 🎉 Credits & Acknowledgments
 
+**BodyMetrics** was developed with a commitment to:
+- Transparency in data collection and processing
+- Scientific accuracy in calculations
+- User privacy and data security
+- Open-source accessibility
+
+**Special thanks to:**
 - **Garmin** for the Connect IQ platform and SDK
 - **Hugo** and **Shiori** theme for documentation site
-- **Community contributors** and beta testers
+- All testers and early adopters for feedback and support
 
 ---
 
 **BodyMetrics** — Monitor your body composition with awareness.
 
-*A tool to support your wellness journey, not a medical device.*
+*A personal monitoring tool to support your wellness journey, not a medical device.*
+
+**[Documentation](https://gregoriolagamba.github.io/bodymetrics/)** | **[Privacy Policy](https://gregoriolagamba.github.io/bodymetrics/privacy/)**
