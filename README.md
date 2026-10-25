@@ -7,7 +7,7 @@
 
 **BodyMetrics** is a native **Garmin Connect IQ widget** that brings comprehensive body composition tracking directly to your wrist. Monitor weight, body fat, muscle mass, hydration, bone mass, BMI, BMR, and muscular power — with historical trends, personalized targets, and color-coded health zones. **Now supports 53+ Garmin devices.**
 
-**v1.1.0** — Multi-device expansion (June 14, 2026)  
+**v1.1.0** — Multi-device expansion (October 26, 2026)  
 **Status:** Production-ready | **License:** Commons Clause + MIT | **Languages:** 4 (EN/IT/FR/ES) | **Devices:** 53
 
 ---
@@ -363,7 +363,7 @@ Contributions are welcome! Please follow these guidelines:
 
 ## 🗓️ Roadmap
 
-### v1.1.0 (Current - June 14, 2026) ✅
+### v1.1.0 (Current - October 26, 2026) ✅
 **Multi-device expansion and enhanced build system**:
 - ✅ Expanded device support from 1 to 53 Garmin models
   - Forerunner: fr165/m, fr255m/sm, fr265/s, fr955/965/970, fr57042mm/47mm

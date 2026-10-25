@@ -261,7 +261,7 @@ class BodyMetricsView extends WatchUi.View {
         var lines = [
             {:label => text("sysinfo.app"),     :value => "BodyMetrics"},
             {:label => text("sysinfo.version"),  :value => "1.1.0"},
-            {:label => text("sysinfo.release"),  :value => "14 giu 2026"},
+            {:label => text("sysinfo.release"),  :value => "26 ott 2026"},
             {:label => text("sysinfo.author"),   :value => "Gregorio La Gamba"},
             {:label => text("sysinfo.website"), :action => true, :actionId => :open_qrcode}
         ] as Array;

@@ -2,7 +2,7 @@
 
 All notable changes to BodyMetrics will be documented in this file.
 
-## [1.1.0] - 2026-06-14
+## [1.1.0] - 2026-10-26
 
 ### 🎉 Added
 
