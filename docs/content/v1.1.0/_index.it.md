@@ -18,21 +18,23 @@ BodyMetrics è un widget Garmin Connect IQ che mostra le principali metriche del
 
 BodyMetrics ora supporta **53 dispositivi Garmin Connect IQ** su diverse famiglie di prodotti:
 
-| Famiglia | Dispositivi | API Min |
-|----------|-------------|---------|
-| Forerunner | 165/165M, 255M/255SM, 265/265S, 955/965/970, 57 (42mm/47mm) | 4.0+ |
-| Fenix | serie 7 (tutte le varianti), serie 8, Fenix E | 4.0+ |
-| Epix | Epix 2 (tutte le varianti) | 4.0+ |
-| Venu | serie 2, serie 3 (tutte le varianti) | 4.0+ |
-| Vivoactive | 5, 6 | 4.0+ |
-| MARQ | serie 2 (Aviator, Athlete) | 4.0+ |
-| Enduro | 3 | 4.0+ |
-| D2 | Air, Air X10, Mach 1, Delta | 4.0+ |
-| Instinct | 3 AMOLED | 5.0+ |
-| Descent | G2, MK, MK 2S | 4.0+ |
-| Approach | S70, S70 42mm | 4.0+ |
+| Famiglia | Modelli |
+|--------|-------|
+| Forerunner | 11 |
+| Fenix | 14 |
+| Epix | 4 |
+| Venu | 7 |
+| Vivoactive | 2 |
+| MARQ 2 | 2 |
+| Enduro | 1 |
+| D2 | 4 |
+| Instinct 3 AMOLED | 3 |
+| Descent | 3 |
+| Approach | 2 |
 
 **API Level Globale Minimo:** 2.3.0 (per compatibilità Application.Storage)
+
+L'elenco completo, con tipo di display e dimensione dello schermo, è in [Dispositivi Supportati](articles/supported-devices/).
 
 ## Metriche Monitorate
 
@@ -49,4 +51,4 @@ BodyMetrics ora supporta **53 dispositivi Garmin Connect IQ** su diverse famigli
 
 ## Ultima Release
 
-**v1.1.0** — 14 giugno 2026 — espansione multi-dispositivo. Vedi il [Changelog](articles/changelog/) per i dettagli.
+**v1.1.0** — 26 ottobre 2026 — espansione multi-dispositivo. Vedi il [Changelog](articles/changelog/) per i dettagli.

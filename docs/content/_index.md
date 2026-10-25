@@ -4,7 +4,7 @@ description: "Official documentation for BodyMetrics — the Garmin Connect IQ w
 layout: "home"
 ---
 
-BodyMetrics is a **Garmin Connect IQ widget** that lets you monitor your body metrics — weight, body fat, muscle mass, hydration, and bone mass — directly on your FR265, with trend history, target tracking, and clinical reference zones.
+BodyMetrics is a **Garmin Connect IQ widget** that lets you monitor your body metrics — weight, body fat, muscle mass, hydration, and bone mass — directly on your Garmin watch (53 supported models), with trend history, target tracking, and clinical reference zones.
 
 ## Documentation Versions
 

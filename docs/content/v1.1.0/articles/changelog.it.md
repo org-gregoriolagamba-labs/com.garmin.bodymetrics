@@ -1,6 +1,6 @@
 ---
 title: "Changelog"
-date: 2026-06-14
+date: 2026-10-26
 draft: false
 summary: "Cronologia dei rilasci e principali cambiamenti per BodyMetrics."
 toc: true
@@ -8,7 +8,7 @@ weight: 70
 tags: ["changelog", "rilasci"]
 ---
 
-## v1.1.0 — 14 giugno 2026
+## v1.1.0 — 26 ottobre 2026
 
 {{< badge color="blue" >}}espansione multi-dispositivo{{< /badge >}}
 
@@ -43,25 +43,29 @@ tags: ["changelog", "rilasci"]
 - Evita il limite di argomenti del metodo API 3.x (max 9 argomenti per metodo)
 - Validazione build: **53/53 dispositivi superano** (100% di successo)
 
+### Corretti
+
+- Corretto un crash in modalità wizard durante la pressione rapida oltre il primo o l'ultimo valore di un campo profilo o di una finestra di trend (avvolgimento dell'indice con valori negativi)
+
 ### Documentazione
 
 - Aggiunta sezione "Dispositivi Supportati" nel README con elenco completo dei dispositivi
 - Creata tabella completa di compatibilità dei dispositivi
 - Aggiunta guida di test specifica per dispositivo
+- Nuova pagina [Dispositivi Supportati](../supported-devices/) con tutti i 53 modelli, tipo di display e dimensione dello schermo
 - Changelog esteso con breakdown completo delle funzionalità per v1.1.0
 
 ### Limitazioni Note ed Esclusioni
 
 **Dispositivi Esclusi (incompatibilità API 3.x):**
 - Forerunner 745, 945, 945 LTE (API 3.3/3.4)
-- Descent MK 1, Descent MK 2, Descent 2 (API 3.4)
-- MARQ Gen 1 (tutte le varianti: 2, Aviation, Athlete, Commander, Golfer, Expedition, Captain) - API 3.x
+- Descent MK1, Descent MK2, Descent MK2S (API 3.x)
+- Modelli MARQ Gen 1 (API 3.4)
 
 **Motivo:** Monkey C API 3.x ha un limite fisso di 9 argomenti per metodo. I metodi BodyMetrics `buildTargetMetric()`, `buildTargetMetricThresholds()` e `_drawMiniChart()` richiedono 10+ argomenti, causando errori di compilazione. Questi dispositivi verranno ri-aggiunti in un futuro rilascio quando Garmin risolverà questa limitazione API.
 
-**Dispositivi a Bassa Memoria (esclusi pre-build):**
-- 8 dispositivi con memoria widget < 256 KB (margine di sicurezza)
-- Esempi selezionati: Forerunner 245, Instinct 2 varianti, ecc.
+**Altre esclusioni:**
+- D2 Air: memoria widget di 512 KB, inferiore ai 768 KB usati dagli altri dispositivi supportati
 
 ---
 

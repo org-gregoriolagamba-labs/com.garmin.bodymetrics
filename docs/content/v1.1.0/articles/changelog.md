@@ -1,6 +1,6 @@
 ---
 title: "Changelog"
-date: 2026-06-14
+date: 2026-10-26
 draft: false
 summary: "Release history and notable changes for BodyMetrics."
 toc: true
@@ -8,7 +8,7 @@ weight: 70
 tags: ["changelog", "releases"]
 ---
 
-## v1.1.0 — June 14, 2026
+## v1.1.0 — October 26, 2026
 
 {{< badge color="blue" >}}multi-device expansion{{< /badge >}}
 
@@ -43,25 +43,29 @@ tags: ["changelog", "releases"]
 - Avoids API 3.x method argument limitation (max 9 arguments per method)
 - Build validation: **53/53 devices pass** (100% success rate)
 
+### Fixed
+
+- Crash in wizard mode when rapid-pressing past the first or last value of a profile field or trend window (index wrap-around with negative values)
+
 ### Documentation
 
 - Added "Supported Devices" section in README with full device list
 - Created comprehensive device compatibility table
 - Added device-specific testing guide
+- New [Supported Devices](../supported-devices/) page with all 53 models, display type and screen size
 - Extended changelog with full feature breakdown for v1.1.0
 
 ### Known Limitations & Exclusions
 
 **Excluded Devices (API 3.x incompatibility):**
 - Forerunner 745, 945, 945 LTE (API 3.3/3.4)
-- Descent MK 1, Descent MK 2, Descent 2 (API 3.4)
-- MARQ Gen 1 (all variants: 2, Aviation, Athlete, Commander, Golfer, Expedition, Captain) - API 3.x
+- Descent MK1, Descent MK2, Descent MK2S (API 3.x)
+- MARQ Gen 1 models (API 3.4)
 
 **Reason:** Monkey C API 3.x has a hard limit of 9 arguments per method. BodyMetrics methods `buildTargetMetric()`, `buildTargetMetricThresholds()`, and `_drawMiniChart()` require 10+ arguments, causing compilation failures. These devices will be re-added in a future release when Garmin resolves this API limitation.
 
-**Low-Memory Devices (excluded pre-build):**
-- 8 devices with widget memory < 256 KB (safety margin)
-- Selected examples: Forerunner 245, Instinct 2 variants, etc.
+**Other exclusions:**
+- D2 Air: widget memory of 512 KB, below the 768 KB used by the other supported devices
 
 ---
 

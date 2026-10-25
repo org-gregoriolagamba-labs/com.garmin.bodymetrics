@@ -10,21 +10,21 @@ defaultContentLanguageInSubdir = false
     languageName = "English"
     weight       = 1
     [languages.en.params]
-      description   = "Official documentation for BodyMetrics — a Garmin Connect IQ widget for body metrics tracking on your Forerunner 265."
-      quickStartURL = "/v1.0.0/articles/getting-started/"
+      description   = "Official documentation for BodyMetrics — a Garmin Connect IQ widget for body metrics tracking on your Garmin watch."
+      quickStartURL = "/v1.1.0/articles/getting-started/"
       heroTitle     = "BodyMetrics <span>Documentation</span>"
   [languages.it]
     languageName = "Italiano"
     weight       = 2
     [languages.it.params]
-      description   = "Documentazione ufficiale di BodyMetrics — il widget Garmin Connect IQ per il monitoraggio delle metriche corporee sul tuo Forerunner 265."
-      quickStartURL = "/v1.0.0/articles/getting-started/"
+      description   = "Documentazione ufficiale di BodyMetrics — il widget Garmin Connect IQ per il monitoraggio delle metriche corporee sul tuo orologio Garmin."
+      quickStartURL = "/v1.1.0/articles/getting-started/"
       heroTitle     = "BodyMetrics <span>Documentazione</span>"
 
 [params]
   author         = "Gregorio La Gamba"
-  version        = "1.0.0"
-  currentVersion = "v1.0.0"
+  version        = "1.1.0"
+  currentVersion = "v1.1.0"
   tagline        = "A Garmin Connect IQ widget for body metrics tracking on your wrist"
   licenseName    = "Commons Clause + MIT"
   license        = "https://github.com/org-gregoriolagamba-labs/com.garmin.bodymetrics/blob/main/LICENSE"
@@ -35,9 +35,13 @@ defaultContentLanguageInSubdir = false
   logoText       = "BodyMetrics"
   dateFormat     = "January 2, 2006"
 
+  # Multi-version support
   [[params.versions]]
     label = "v1.0.0"
     url   = "/v1.0.0/"
+  [[params.versions]]
+    label = "v1.1.0"
+    url   = "/v1.1.0/"
 
 [markup]
   [markup.highlight]
