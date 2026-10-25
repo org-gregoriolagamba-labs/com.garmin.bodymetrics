@@ -48,12 +48,14 @@ The Info screen supports **scrolling** with UP / DOWN when the text exceeds the 
 
 ## Trend Screen
 
-Accessible from the **Detail** screen or via the **Menu → Trend** path.
+Reached from the **Summary** screen: press **ENTER** to open Detail, **ENTER** again for Target delta, and **ENTER** once more for Trend.
 
-Trend shows a line chart of your historical readings for the selected metric. You can switch between available time windows (e.g. last 7 days, 30 days, 90 days) using the menu.
+Trend shows a line chart of your historical readings for the selected metric. Press **UP** or **DOWN** to switch between the available time windows (7, 30 and 90 days). A window is listed only when at least two check-ins fall within it; the dots on the left show the active window.
 
 {{< callout type="note" >}}
+
 When only one historical data point exists, BodyMetrics shows a dedicated "not enough data" state instead of an incomplete or misleading chart.
+
 {{< /callout >}}
 
 ## Target Delta Screen
@@ -71,7 +73,9 @@ From **Menu → User data → Check-ins → Enter data**, the measurement wizard
 Each field uses a bounded min/max/step cycle — **UP increases** the value, **DOWN decreases** it.
 
 {{< callout type="tip" >}}
+
 Press the same button repeatedly within 600 ms to activate rapid-press acceleration: ×1 → ×5 → ×10 → ×50 step. Pause or change direction to reset.
+
 {{< /callout >}}
 
 On save, the app:
@@ -110,5 +114,7 @@ Pressing **ENTER** on the website entry opens a full-screen QR code view.
 From **Menu → System → Reset Data**, you can erase all locally stored measurements, history, and targets. The profile is preserved by default.
 
 {{< callout type="danger" >}}
+
 Reset Data is irreversible. All historical readings and custom targets will be permanently deleted.
+
 {{< /callout >}}

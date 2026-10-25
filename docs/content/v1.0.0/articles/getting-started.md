@@ -39,7 +39,9 @@ monkeyc -f monkey.jungle -d fr265 \
 ```
 
 {{< callout type="note" >}}
+
 Developer builds require a personal signing key. Generate one with the Connect IQ SDK tools and never share the private `.pk8.der` file.
+
 {{< /callout >}}
 
 ## First Launch
@@ -67,7 +69,9 @@ Use **UP / DOWN** to set your height in centimetres. Press **ENTER** to confirm.
 After the last field, the wizard saves the profile and lands you on the **Summary screen** — the main view of the app.
 
 {{< callout type="tip" >}}
+
 The app automatically merges your weight from Garmin UserProfile when it is available on the device, so you may already see a weight reading on the Summary screen without entering it manually.
+
 {{< /callout >}}
 
 ## What's Next?

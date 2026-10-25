@@ -42,7 +42,9 @@ Renderers receive a **rendering-ready model dictionary** and must not read from 
 `source/BodyMetricsDomain.mc` is the **compatibility surface** consumed by the view. It coordinates use cases, policies, locale, and trend cache without duplicating presentation logic.
 
 {{< callout type="note" >}}
+
 The Domain must not redefine storage key constants. Each use case owns its own keys.
+
 {{< /callout >}}
 
 ### Layer 4 — Application Workflows (Use Cases)

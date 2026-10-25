@@ -48,12 +48,14 @@ La schermata Info supporta lo **scorrimento** con SU / GIÙ quando il testo supe
 
 ## Schermata Trend
 
-Accessibile dalla schermata **Dettaglio** o tramite il percorso **Menu → Trend**.
+Si raggiunge dalla schermata **Riepilogo**: premi **ENTER** per aprire il **Dettaglio**, di nuovo **ENTER** per **Delta target**, e ancora **ENTER** per il **Trend**.
 
-Il Trend mostra un grafico a linee delle tue letture storiche per la metrica selezionata. Puoi cambiare tra le finestre temporali disponibili (ad es. ultimi 7 giorni, 30 giorni, 90 giorni) tramite il menu.
+Il Trend mostra un grafico a linee delle tue letture storiche per la metrica selezionata. Premi **SU** o **GIÙ** per passare tra le finestre temporali disponibili (7, 30 e 90 giorni). Una finestra compare solo se almeno due check-in cadono al suo interno; i puntini a sinistra indicano la finestra attiva.
 
 {{< callout type="note" >}}
+
 Quando esiste un solo punto dati storico, BodyMetrics mostra uno stato dedicato "dati insufficienti" invece di un grafico incompleto o fuorviante.
+
 {{< /callout >}}
 
 ## Schermata Delta Obiettivo
@@ -71,7 +73,9 @@ Da **Menu → Dati utente → Check-in → Inserisci dati**, la procedura guidat
 Ogni campo usa un ciclo min/max/step — **SU aumenta** il valore, **GIÙ lo diminuisce**.
 
 {{< callout type="tip" >}}
+
 Premi lo stesso tasto più volte entro 600 ms per attivare l'accelerazione: ×1 → ×5 → ×10 → ×50. Fai una pausa o cambia direzione per azzerare.
+
 {{< /callout >}}
 
 Al salvataggio, l'app:
@@ -110,5 +114,7 @@ Premendo **ENTER** sulla voce sito web si apre una vista a schermo intero con il
 Da **Menu → Sistema → Reimposta dati**, puoi cancellare tutte le misurazioni locali, lo storico e gli obiettivi. Il profilo viene conservato per impostazione predefinita.
 
 {{< callout type="danger" >}}
+
 Il reset dei dati è irreversibile. Tutte le letture storiche e gli obiettivi personalizzati verranno eliminati definitivamente.
+
 {{< /callout >}}

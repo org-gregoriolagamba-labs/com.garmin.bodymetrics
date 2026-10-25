@@ -19,11 +19,15 @@ tags: ["navigation", "keys", "menus"]
 | **MENU** / **Long-press UP** | Open main menu (from Summary: Metric Info is the first item) |
 
 {{< callout type="note" >}}
+
 In any wizard screen (Profile, Check-ins, Targets), **MENU is blocked** and will not open the system menu. This prevents accidental navigation away while you are editing a field.
+
 {{< /callout >}}
 
 {{< callout type="tip" >}}
+
 In wizard screens, **UP and DOWN** support rapid-press acceleration: consecutive taps within 600 ms progressively increase the step multiplier (×1 → ×5 → ×10 → ×50). The streak resets when you pause or change direction.
+
 {{< /callout >}}
 
 ## View Map
