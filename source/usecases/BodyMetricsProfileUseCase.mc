@@ -171,7 +171,8 @@ class BodyMetricsProfileUseCase {
             }
         }
 
-        currentIndex = (currentIndex + delta + values.size()) % values.size();
+        var count = values.size();
+        currentIndex = ((currentIndex + delta) % count + count) % count;
         if (key == :sex) {
             nextProfile[:sex] = values[currentIndex];
         } else if (key == :ageBand) {

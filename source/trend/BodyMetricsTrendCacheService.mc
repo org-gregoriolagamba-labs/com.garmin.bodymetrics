@@ -73,7 +73,8 @@ class BodyMetricsTrendCacheService {
             }
         }
 
-        currentIndex = (currentIndex + delta + windows.size()) % windows.size();
+        var count = windows.size();
+        currentIndex = ((currentIndex + delta) % count + count) % count;
         return cacheTrendData(domain, metricIndex, windows[currentIndex] as Number);
     }
 
