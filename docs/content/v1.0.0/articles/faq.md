@@ -39,7 +39,9 @@ No. BodyMetrics records a history snapshot each time you press **Enter data** in
 Go to **Menu → System → Reset Data** and confirm. This permanently deletes all measurements, history, and targets. Your profile is preserved.
 
 {{< callout type="danger" >}}
+
 Reset Data cannot be undone. Make sure you really want to delete everything before confirming.
+
 {{< /callout >}}
 
 ### How do I clear a single metric value?
@@ -60,7 +62,7 @@ At least **two historical data points** are required to draw a trend line. Enter
 
 ### Can I change the trend time window?
 
-Yes. Open the Trend screen and press **MENU** to select a different time window.
+Yes. Open the Trend screen and press **UP** or **DOWN** to move between the available time windows. The dots on the left show the active window. A window is listed only when at least two check-ins fall within it, so with few check-ins you may see only some windows (for example only 90 days).
 
 ---
 

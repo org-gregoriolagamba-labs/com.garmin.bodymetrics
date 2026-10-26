@@ -1,0 +1,101 @@
+---
+title: "FAQ"
+date: 2026-05-11
+draft: false
+summary: "Answers to the most common questions about BodyMetrics."
+toc: true
+weight: 60
+tags: ["faq", "troubleshooting"]
+---
+
+## Installation & Compatibility
+
+### Which devices are supported?
+
+BodyMetrics v1.1.0 supports **53 Garmin Connect IQ devices** across 11 product families, with a minimum Connect IQ API level of 2.3.0. See [Supported Devices](../supported-devices/) for the full list. A Lite build targeting the FR55 and FR735XT is in planning for a future release.
+
+### Where do I download BodyMetrics?
+
+From the **Garmin Connect IQ Store** via the Garmin Connect phone app, or directly at [apps.garmin.com](https://apps.garmin.com).
+
+### Does BodyMetrics require a data connection?
+
+No. All data is stored locally on the watch. An internet connection is only needed to download or update the widget.
+
+---
+
+## Data & Measurements
+
+### Where does my weight come from if I never entered it?
+
+BodyMetrics automatically reads weight from the **Garmin UserProfile** if it is available on the device (e.g. synced from Garmin Connect or a Garmin smart scale). If no Garmin weight is available, it will show the last manually entered value.
+
+### Can I enter historical data?
+
+No. BodyMetrics records a history snapshot each time you press **Enter data** in the Check-ins wizard. There is no interface to enter backdated readings.
+
+### How do I clear all my data?
+
+Go to **Menu → System → Reset Data** and confirm. This permanently deletes all measurements, history, and targets. Your profile is preserved.
+
+{{< callout type="danger" >}}
+
+Reset Data cannot be undone. Make sure you really want to delete everything before confirming.
+
+{{< /callout >}}
+
+### How do I clear a single metric value?
+
+Inside the **Check-ins wizard**, use **UP** or **DOWN** to cycle the field value. There is no in-wizard shortcut to clear a single field (MENU is blocked inside wizard screens). To erase all measurements, use **Menu → System → Reset Data**.
+
+---
+
+## Views & Navigation
+
+### How do I open the Info screen quickly?
+
+From the **Summary** screen, press **MENU** (or long-press **UP**, depending on the device), then **ENTER** to select **Metric Info**. This opens the Info screen for the currently selected metric.
+
+### The Trend chart shows "not enough data" — why?
+
+At least **two historical data points** are required to draw a trend line. Enter at least two check-ins on different days to see a chart.
+
+### Can I change the trend time window?
+
+Yes. Open the Trend screen and press **UP** or **DOWN** to move between the available time windows. The dots on the left show the active window. A window is listed only when at least two check-ins fall within it, so with few check-ins you may see only some windows (for example only 90 days).
+
+---
+
+## Targets
+
+### What is the "effective target"?
+
+If you have set a custom target for a metric, that value is used. If you have not, BodyMetrics calculates a **policy-derived target** automatically from your profile (sex, age band, body profile, height). The effective target is always displayed — you never see an empty target.
+
+### How do I reset a single target?
+
+Open the **Targets wizard** (Menu → User data → Targets → Set) and manually adjust the value for that metric. There is no in-wizard per-field reset (MENU is blocked inside wizard screens). To reset all targets to policy-derived defaults at once, use **Menu → User data → Targets → Reset all targets**.
+
+---
+
+## Language
+
+### How do I change the language?
+
+Go to **Menu → Preferences → Language**, choose a language, and press **ENTER**. The change takes effect immediately. See [Localization](../localization/) for all supported languages.
+
+---
+
+## Privacy & Data Storage
+
+### Is any data sent to the cloud?
+
+No. BodyMetrics does not send any data to external servers. All data is stored exclusively in the watch's local persistent storage.
+
+### What data does the app store?
+
+- User profile (sex, age band, body profile, height)
+- Body measurements (weight, body fat, muscle mass, hydration, bone mass)
+- History snapshots for each measurement entry
+- Custom targets (if set)
+- Selected language preference

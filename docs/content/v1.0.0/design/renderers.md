@@ -43,7 +43,9 @@ This separation means renderers can be tested or swapped independently, and the 
 | `pct(value, total)` | Returns `value / total` as a percentage float |
 
 {{< callout type="note" >}}
+
 These are the only authoritative implementations of text layout in the codebase. No renderer or view file may define local equivalents.
+
 {{< /callout >}}
 
 ## Circular Screen Geometry

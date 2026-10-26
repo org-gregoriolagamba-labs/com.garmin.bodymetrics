@@ -17,3 +17,7 @@ docs/public/
 *.lock
 
 
+
+# Claude Code local state
+.claude/.allow-manifest-edit
+.claude/settings.local.json

@@ -43,7 +43,9 @@ Questa separazione significa che i renderer possono essere testati o sostituiti 
 | `pct(value, total)` | Restituisce `value / total` come percentuale float |
 
 {{< callout type="note" >}}
+
 Queste sono le uniche implementazioni autoritative del layout testuale nell'intero codebase. Nessun file renderer o view può definire equivalenti locali.
+
 {{< /callout >}}
 
 ## Geometria dello Schermo Circolare

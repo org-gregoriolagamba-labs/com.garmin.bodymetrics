@@ -39,7 +39,9 @@ No. BodyMetrics registra uno snapshot storico ogni volta che premi **Inserisci d
 Vai su **Menu → Sistema → Reimposta dati** e conferma. Questo elimina definitivamente tutte le misurazioni, lo storico e gli obiettivi. Il profilo viene conservato.
 
 {{< callout type="danger" >}}
+
 Il reset dei dati non può essere annullato. Assicurati di voler davvero eliminare tutto prima di confermare.
+
 {{< /callout >}}
 
 ### Come azzero il valore di una singola metrica?
@@ -60,7 +62,7 @@ Servono almeno **due punti dati storici** per tracciare una linea di trend. Inse
 
 ### Posso cambiare la finestra temporale del trend?
 
-Sì. Apri la schermata Trend e premi **MENU** per selezionare una finestra temporale diversa.
+Sì. Apri la schermata Trend e premi **SU** o **GIÙ** per passare tra le finestre temporali disponibili. I puntini a sinistra indicano la finestra attiva. Una finestra compare solo se almeno due check-in cadono al suo interno: con pochi check-in potresti vedere solo alcune finestre (ad esempio solo 90 giorni).
 
 ---
 

@@ -84,7 +84,9 @@ Per aggiungere una nuova stringa:
 1. **Aggiungi la chiave a tutte e quattro le lingue** nel catalogo.
 
 {{< callout type="danger" >}}
+
 Non aggiungere una chiave solo per una o due lingue. Il validator segnala le chiavi mancanti come errore. Una chiave mancante in produzione cade nel fallback inglese (o alla stringa grezza se manca anche in inglese).
+
 {{< /callout >}}
 
 2. **Usa il validator** per verificare la completezza:

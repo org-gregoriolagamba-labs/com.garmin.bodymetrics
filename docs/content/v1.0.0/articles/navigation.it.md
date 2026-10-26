@@ -19,11 +19,15 @@ tags: ["navigazione", "tasti", "menu"]
 | **MENU** / **Tieni premuto SU** | Apri il menu principale (dal Riepilogo: Info metrica è la prima voce) |
 
 {{< callout type="note" >}}
+
 In qualsiasi schermata della procedura guidata (Profilo, Check-in, Obiettivi), **MENU è bloccato** e non aprirà il menu di sistema. Questo evita navigazioni accidentali mentre stai modificando un campo.
+
 {{< /callout >}}
 
 {{< callout type="tip" >}}
+
 Nelle schermate della procedura guidata, **SU e GIÙ** supportano l'accelerazione per pressioni rapide: tocchi consecutivi entro 600 ms aumentano progressivamente il moltiplicatore (×1 → ×5 → ×10 → ×50). La serie si azzera quando ci si ferma o si cambia direzione.
+
 {{< /callout >}}
 
 ## Mappa delle Viste

@@ -43,7 +43,9 @@ BodyMetricsLocale.get(key)   // returns the localized string
 Internally it reads the current language setting and delegates to the catalog.
 
 {{< callout type="note" >}}
+
 Do **not** add new `if (key.equals(…))` ladders directly to `BodyMetricsLocale`. Add the key to the catalog and let the adapter's generic lookup handle it.
+
 {{< /callout >}}
 
 ## Fallback Chain
@@ -65,7 +67,9 @@ In production, all four languages are complete, so the fallback path is never re
 3. Run the locale validator (Debug menu → Locale Validator) to confirm completeness.
 
 {{< callout type="danger" >}}
+
 Never ship a release with missing translations. The validator will report any gaps. Missing keys produce raw key output on real devices.
+
 {{< /callout >}}
 
 ## Locale Validator

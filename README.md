@@ -2,13 +2,13 @@
 
 [![License](https://img.shields.io/badge/license-Commons%20Clause%20%2B%20MIT-orange.svg)](LICENSE)
 [![Monkey C](https://img.shields.io/badge/language-Monkey%20C-blue.svg)](https://developer.garmin.com/connect-iq/overview/)
-[![Version](https://img.shields.io/badge/version-1.0.0-brightgreen.svg)](#releases)
-[![API Level](https://img.shields.io/badge/API%20Level-1.2.0+-brightgreen.svg)](#requirements)
+[![Version](https://img.shields.io/badge/version-1.1.0-brightgreen.svg)](#releases)
+[![API Level](https://img.shields.io/badge/API%20Level-2.3.0+-brightgreen.svg)](#requirements)
 
-**BodyMetrics** is a native **Garmin Connect IQ widget** that brings comprehensive body composition tracking directly to your Forerunner 265 wrist. Monitor weight, body fat, muscle mass, hydration, bone mass, BMI, BMR, and muscular power — with historical trends, personalized targets, and color-coded health zones.
+**BodyMetrics** is a native **Garmin Connect IQ widget** that brings comprehensive body composition tracking directly to your wrist. Monitor weight, body fat, muscle mass, hydration, bone mass, BMI, BMR, and muscular power — with historical trends, personalized targets, and color-coded health zones. **Now supports 53+ Garmin devices.**
 
-**v1.0.0** — First stable release (May 12, 2026)  
-**Status:** Production-ready | **License:** Commons Clause + MIT | **Languages:** 4 (EN/IT/FR/ES)
+**v1.1.0** — Multi-device expansion (October 26, 2026)  
+**Status:** Production-ready | **License:** Commons Clause + MIT | **Languages:** 4 (EN/IT/FR/ES) | **Devices:** 53
 
 ---
 
@@ -78,7 +78,7 @@ Each type adjusts thresholds automatically for more accurate assessment.
 ## 📋 Requirements
 
 ### Hardware
-- **Garmin Forerunner 265** or compatible device with Connect IQ support
+- **Garmin device** from 53 supported models (see [Supported Devices](#supported-devices) section)
 - **Garmin Index S2** smart scale (recommended for automatic body composition sync)
 
 ### Software
@@ -86,8 +86,8 @@ Each type adjusts thresholds automatically for more accurate assessment.
 - Active phone-to-watch connection for data synchronization
 
 ### API Level
-- Minimum: **Monkey C SDK 1.2.0**
-- Target: **Monkey C SDK 4.x+**
+- Minimum: **Monkey C SDK 2.3.0**
+- Target: **Monkey C SDK 6.x+**
 
 ---
 
@@ -116,6 +116,55 @@ After each weighing on your smart scale:
 3. **Tap BodyMetrics widget** → Data Entry menu
 4. **Enter values** in seconds
 5. **Done** — widget updates instantly
+
+---
+
+## 📱 Supported Devices
+
+BodyMetrics is compatible with **53 Garmin Connect IQ devices**, organized by product family:
+
+### **Forerunner**
+- Forerunner 165 / 165M
+- Forerunner 255M / 255SM
+- Forerunner 265 / 265S
+- Forerunner 955 / 965 / 970
+- Forerunner 57 (42mm / 47mm)
+
+### **Fenix**
+- Fenix 7 / 7S / 7X / 7 Pro / 7S Pro / 7X Pro / 7 Pro No WiFi / 7X Pro No WiFi
+- Fenix 8 (43mm / 47mm) / Fenix 8 Pro (47mm) / Fenix 8 Solar (47mm / 51mm)
+- Fenix E
+
+### **Epix**
+- Epix 2 / Epix 2 Pro (42mm / 47mm / 51mm)
+
+### **Venu**
+- Venu 2 / 2S / 2 Plus / SQ / SQ Music
+- Venu 3 / 3S
+
+### **Vivoactive**
+- Vivoactive 5
+- Vivoactive 6
+
+### **MARQ**
+- MARQ 2 Aviator / Athlete
+
+### **Enduro**
+- Enduro 3
+
+### **D2**
+- D2 Air / Air X10 / Mach 1 / Delta
+
+### **Instinct**
+- Instinct 3 AMOLED
+
+### **Descent**
+- Descent G2 / Descent MK / Descent MK 2S
+
+### **Approach**
+- Approach S70 / S70 42mm
+
+**Note:** Minimum API level required is **2.3.0**. All listed devices meet this requirement and have been validated to build successfully.
 
 ---
 
@@ -222,12 +271,12 @@ Full documentation is available at:
 
 ### Key Articles
 
-- **[Getting Started](https://gregoriolagamba.github.io/bodymetrics/v1.0.0/articles/getting-started/)** — step-by-step setup guide
-- **[Features](https://gregoriolagamba.github.io/bodymetrics/v1.0.0/articles/features/)** — comprehensive feature reference
-- **[Navigation](https://gregoriolagamba.github.io/bodymetrics/v1.0.0/articles/navigation/)** — all keys, menus, and view paths
-- **[FAQ](https://gregoriolagamba.github.io/bodymetrics/v1.0.0/articles/faq/)** — common questions and troubleshooting
-- **[Architecture](https://gregoriolagamba.github.io/bodymetrics/v1.0.0/design/architecture/)** — internal design and data flow
-- **[Changelog](https://gregoriolagamba.github.io/bodymetrics/v1.0.0/articles/changelog/)** — version history and updates
+- **[Getting Started](https://gregoriolagamba.github.io/bodymetrics/v1.1.0/articles/getting-started/)** — step-by-step setup guide
+- **[Features](https://gregoriolagamba.github.io/bodymetrics/v1.1.0/articles/features/)** — comprehensive feature reference
+- **[Navigation](https://gregoriolagamba.github.io/bodymetrics/v1.1.0/articles/navigation/)** — all keys, menus, and view paths
+- **[FAQ](https://gregoriolagamba.github.io/bodymetrics/v1.1.0/articles/faq/)** — common questions and troubleshooting
+- **[Architecture](https://gregoriolagamba.github.io/bodymetrics/v1.1.0/design/architecture/)** — internal design and data flow
+- **[Changelog](https://gregoriolagamba.github.io/bodymetrics/v1.1.0/articles/changelog/)** — version history and updates
 
 ---
 
@@ -307,14 +356,28 @@ Contributions are welcome! Please follow these guidelines:
 ## 📞 Support & Feedback
 
 - **GitHub Issues** — Report bugs or request features
-- **Documentation** — Check the [FAQ](https://gregoriolagamba.github.io/bodymetrics/v1.0.0/articles/faq/) for common questions
+- **Documentation** — Check the [FAQ](https://gregoriolagamba.github.io/bodymetrics/v1.1.0/articles/faq/) for common questions
 - **Pull Requests** — Contribute improvements directly
 
 ---
 
 ## 🗓️ Roadmap
 
-### v1.0.0 (Current - May 30, 2026) ✅
+### v1.1.0 (Current - October 26, 2026) ✅
+**Multi-device expansion and enhanced build system**:
+- ✅ Expanded device support from 1 to 53 Garmin models
+  - Forerunner: fr165/m, fr255m/sm, fr265/s, fr955/965/970, fr57042mm/47mm
+  - Fenix: 7 series (all variants), 8 series, fenixe
+  - Epix: epix2 (all variants)
+  - Venu: 2 series, 3 series (all variants)
+  - Vivoactive: 5, 6
+  - MARQ 2 series, Enduro 3, D2 series, Instinct 3 AMOLED, Descent G2/MK, Approach S70
+- ✅ Increased minimum API Level from 1.2.0 to 2.3.0 (better device compatibility)
+- ✅ Automated multi-device build system with comprehensive test suite
+- ✅ Device-specific simulator testing (parametrized simulator runner)
+- ✅ Complete validation: all 53 devices build successfully
+
+### v1.0.0 (May 30, 2026) ✅
 **First stable release** with all core features:
 - ✅ 9 complete body composition metrics
 - ✅ Health zone classification system (Green/Yellow/Orange/Red)
@@ -332,7 +395,7 @@ Contributions are welcome! Please follow these guidelines:
 - Body composition data from Index S2 requires manual entry (Garmin API limitation)
 - Historical graphs display 7, 30, and 90-day periods only
 - Metric calculations based on general population formulas (not clinical-grade)
-- Currently optimized for Forerunner 265 (other devices may follow in future releases)
+- Supported on 53 Garmin devices; extensive testing performed on representative sample
 
 ---
 

@@ -39,7 +39,9 @@ monkeyc -f monkey.jungle -d fr265 \
 ```
 
 {{< callout type="note" >}}
+
 Le build per sviluppatori richiedono una chiave di firma personale. Generala con gli strumenti del Connect IQ SDK e non condividere mai il file privato `.pk8.der`.
+
 {{< /callout >}}
 
 ## Primo Avvio
@@ -67,7 +69,9 @@ Usa **SU / GIÙ** per impostare la tua altezza in centimetri. Premi **ENTER** pe
 Dopo l'ultimo campo, la procedura guidata salva il profilo e ti porta alla **schermata Riepilogo** — la vista principale dell'app.
 
 {{< callout type="tip" >}}
+
 L'app integra automaticamente il peso dal Garmin UserProfile quando è disponibile sul dispositivo, quindi potresti già vedere una lettura del peso nella schermata Riepilogo senza averlo inserito manualmente.
+
 {{< /callout >}}
 
 ## Passi Successivi

@@ -42,7 +42,9 @@ I renderer ricevono un **dizionario modello pronto per il rendering** e non devo
 `source/BodyMetricsDomain.mc` è la **superficie di compatibilità** consumata dalla view. Coordina use case, policy, locale e cache trend senza duplicare la logica di presentazione.
 
 {{< callout type="note" >}}
+
 Il Domain non deve ridefinire le costanti delle chiavi di storage. Ogni use case possiede le proprie chiavi.
+
 {{< /callout >}}
 
 ### Layer 4 — Flussi Applicativi (Use Case)
